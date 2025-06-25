@@ -4,7 +4,7 @@ This document outlines the high-level architecture for the multi-tenant web appl
 
 ## System Overview
 
-The application will be structured as a monorepo containing two main packages:
+The application will be structured as a monorepo containing three main packages:
 
 1.  **`packages/api` (Backend):** A Node.js application using the Express.js framework. Its responsibilities include:
     *   Providing a secure RESTful API for all data operations.
@@ -17,6 +17,9 @@ The application will be structured as a monorepo containing two main packages:
     *   Managing client-side state using Zustand.
     *   Communicating with the backend `api` service.
     *   Styling will be handled by Tailwind CSS v4.
+
+3.  **`packages/emails` (Transactional Emails):** A mini repo for building transactional emails. Its responsibilities include:
+    *   Building and previewing emails to be sent by the app
 
 ## Data Model & Tenancy
 

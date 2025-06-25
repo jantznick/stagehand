@@ -14,13 +14,13 @@ import * as React from 'react';
 export const MagicLinkLogin = ({ magicLink }) => (
   <Html>
     <Head />
-    <Preview>Your Magic Login Link for Campground</Preview>
+    <Preview>Your Magic Login Link for Stagehand</Preview>
     <Body style={main}>
       <Container style={container}>
-        <Heading style={h1}>Log in to Campground</Heading>
+        <Heading style={h1}>Log in to Stagehand</Heading>
         <Section>
           <Text style={text}>
-            Welcome! Click the button below to securely log in to your Campground account. This link will expire in 15 minutes and can only be used once.
+            Welcome! Click the button below to securely log in to your Stagehand account. This link will expire in 15 minutes and can only be used once.
           </Text>
           <Button style={button} href={magicLink}>
             Log In

@@ -1,6 +1,6 @@
 # Authentication Architecture
 
-This document provides a comprehensive overview of the different methods for user authentication and provisioning within the Campground application.
+This document provides a comprehensive overview of the different methods for user authentication and provisioning within the Stagehand application.
 
 ## 1. Core Concepts
 
@@ -93,27 +93,27 @@ This guide provides generic steps for setting up OIDC with a provider like Okta,
 
 **Step 2: Configure the Application**
 
-1.  **Application Name**: Give the application a name, like "Campground".
+1.  **Application Name**: Give the application a name, like "Stagehand".
 2.  **Sign-in redirect URI / Callback URL**: This is the most important step.
-    *   In Campground, go to your Organization's settings page, find the "Single Sign-On (OIDC)" section.
+    *   In Stagehand, go to your Organization's settings page, find the "Single Sign-On (OIDC)" section.
     *   You will see a read-only field labeled **"Callback / Redirect URL"**.
     *   Copy this URL.
     *   Paste it into the "Sign-in redirect URI" (or similarly named) field in your IdP's application settings.
-3.  **Assignments**: Assign the users or groups from your organization who should be allowed to log in to Campground.
+3.  **Assignments**: Assign the users or groups from your organization who should be allowed to log in to Stagehand.
 4.  Save the application.
 
-**Step 3: Transfer Credentials to Campground**
+**Step 3: Transfer Credentials to Stagehand**
 
-1.  After saving, your IdP will provide you with the credentials Campground needs. These are typically found on the application's main page.
+1.  After saving, your IdP will provide you with the credentials Stagehand needs. These are typically found on the application's main page.
     *   **Client ID**: Copy this value.
     *   **Client Secret**: Copy this value.
     *   **Issuer URL**: This is often just your main Okta or Auth0 domain (e.g., `https://your-org.okta.com`).
-2.  In Campground's OIDC settings, paste these values into the corresponding fields: `Client ID`, `Client Secret`, and `Issuer URL`.
+2.  In Stagehand's OIDC settings, paste these values into the corresponding fields: `Client ID`, `Client Secret`, and `Issuer URL`.
 3.  Most providers will also give you specific endpoint URLs. Fill these in as well: `Authorization URL`, `Token URL`, and `User Info URL`. Often these can be found in your provider's "Well-Known Configuration" endpoint.
 4.  **Default Role**: Choose the role (e.g., Reader, Editor) that new users provisioned via SSO should receive.
-5.  Save the configuration in Campground.
+5.  Save the configuration in Stagehand.
 
-Your OIDC connection is now active. Assigned users can now log in to Campground from your IdP's dashboard or by entering their email on the Campground login page.
+Your OIDC connection is now active. Assigned users can now log in to Stagehand from your IdP's dashboard or by entering their email on the Stagehand login page.
 
 ---
 
@@ -150,4 +150,4 @@ Currently, we only provision a user with their email. We could sync more data fr
     1.  Add new fields to the `User` model in `prisma.schema` (e.g., `firstName`, `lastName`, `avatarUrl`).
     2.  In the OIDC verify callback within `dynamicOidcStrategy` (`packages/api/src/utils/passport.js`), expand the user creation and update logic.
     3.  Map fields from the `profile` object provided by Passport (e.g., `profile.name.givenName`, `profile.name.familyName`) to the new fields on your `User` model.
-    4.  This would allow Campground to have richer user profiles populated automatically from the IdP. 
+    4.  This would allow Stagehand to have richer user profiles populated automatically from the IdP. 

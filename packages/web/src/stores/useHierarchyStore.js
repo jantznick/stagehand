@@ -161,6 +161,22 @@ const useHierarchyStore = create((set, get) => {
     setSelectedItem: (item) => set({ selectedItem: item }),
     setActiveCompany: (company) => set({ activeCompany: company, selectedItem: company }),
 
+    fetchAndSetSelectedItem: async (type, id) => {
+        set({ isLoading: true, error: null, selectedItem: null });
+        try {
+            // The API endpoints for single items are plural (e.g., /api/v1/teams/:id)
+            const response = await fetch(`/api/v1/${type}s/${id}`);
+            if (!response.ok) {
+                const err = await response.json();
+                throw new Error(err.error || `Failed to fetch ${type}`);
+            }
+            const data = await response.json();
+            set({ selectedItem: { ...data, type }, isLoading: false });
+        } catch (error) {
+            set({ error: error.message, isLoading: false });
+        }
+    },
+
     // Replaces the old complex updateItem with granular, immutable updates using Immer
     addItem: (item, parentId, parentType) => set(produce(draft => {
         if (!parentId) { // This handles adding an organization at the root

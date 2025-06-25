@@ -22,6 +22,9 @@ router.get('/:id', async (req, res) => {
     try {
         const team = await prisma.team.findUnique({
             where: { id },
+            include: {
+                projects: true,
+            }
         });
 
         if (!team) {

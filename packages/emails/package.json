@@ -1,8 +1,8 @@
 {
-  "name": "@campground/emails",
+  "name": "@stagehand/emails",
   "version": "1.0.0",
   "private": true,
-  "description": "Email templates for Campground",
+  "description": "Email templates for Stagehand",
   "main": "dist/index.js",
   "scripts": {
     "dev": "email dev",

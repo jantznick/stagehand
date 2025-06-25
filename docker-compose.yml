@@ -1,11 +1,11 @@
 services:
   database:
     image: postgres:16-alpine
-    container_name: campground-db
+    container_name: stagehand-db
     ports:
       - "5432:5432"
     volumes:
-      - campground-db-data:/var/lib/postgresql/data
+      - stagehand-db-data:/var/lib/postgresql/data
     environment:
       - POSTGRES_USER=${POSTGRES_USER}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
@@ -22,7 +22,7 @@ services:
       dockerfile: packages/api/Dockerfile.dev
     working_dir: /app
     command: sh -c "./packages/api/entrypoint.dev.sh"
-    container_name: campground-api
+    container_name: stagehand-api
     ports:
       - "3001:3001"
     volumes:
@@ -42,7 +42,7 @@ services:
       dockerfile: packages/web/Dockerfile.dev
     working_dir: /app
     command: npm run dev --workspace=web
-    container_name: campground-web
+    container_name: stagehand-web
     ports:
       - "3000:3000"
     volumes:
@@ -52,4 +52,4 @@ services:
       - api
 
 volumes:
-  campground-db-data: 
+  stagehand-db-data: 

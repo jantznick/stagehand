@@ -18,7 +18,7 @@ This approach packages the entire application (web, API, database, and a data se
 
 ```bash
 git clone <your-repository-url>
-cd campground
+cd stagehand
 ```
 
 **2. Configure Environment Variables**

@@ -61,7 +61,7 @@ export const UserInvitation = ({
 }) => (
   <Html>
     <Head />
-    <Preview>You've been invited to Campground</Preview>
+    <Preview>You've been invited to Stagehand</Preview>
     <Body style={main}>
       <Container style={container}>
         <Heading style={heading}>You're Invited!</Heading>
@@ -72,7 +72,7 @@ export const UserInvitation = ({
             textAlign: 'center',
           }}
         >
-          {inviterName} has invited you to join {organizationName} on Campground.
+          {inviterName} has invited you to join {organizationName} on Stagehand.
         </Text>
         <Text
           style={{

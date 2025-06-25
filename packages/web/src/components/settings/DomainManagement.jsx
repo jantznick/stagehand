@@ -91,7 +91,7 @@ const DomainManagement = ({ resourceType, resourceId }) => {
     };
 
     const handleCopy = (code) => {
-        navigator.clipboard.writeText(`campground-verification=${code}`);
+        navigator.clipboard.writeText(`stagehand-verification=${code}`);
         setCopiedCode(code);
         setTimeout(() => setCopiedCode(null), 2000);
     };
@@ -197,7 +197,7 @@ const DomainManagement = ({ resourceType, resourceId }) => {
                                         <input
                                             type="text"
                                             readOnly
-                                            value={`campground-verification=${d.verificationCode}`}
+                                            value={`stagehand-verification=${d.verificationCode}`}
                                             className="flex-1 bg-transparent text-white/90 ml-2 outline-none"
                                         />
                                         <button onClick={() => handleCopy(d.verificationCode)} className="p-1 text-gray-300 hover:text-white">

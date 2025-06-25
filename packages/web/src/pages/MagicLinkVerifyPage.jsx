@@ -36,8 +36,8 @@ const MagicLinkVerifyPage = () => {
         <div className="flex items-center justify-center min-h-screen bg-[var(--prussian-blue)] text-white">
             <div className="w-full max-w-md p-8 space-y-8 bg-white/5 rounded-2xl shadow-lg border border-white/10 text-center">
                 <div className="flex justify-center items-center space-x-3">
-                    <img className="h-12 w-auto" src={logo} alt="Campground logo" />
-                    <span className="text-4xl font-extrabold text-[var(--xanthous)]">Campground</span>
+                    <img className="h-12 w-auto" src={logo} alt="Stagehand logo" />
+                    <span className="text-4xl font-extrabold text-[var(--xanthous)]">Stagehand</span>
                 </div>
                 
                 <div className="pt-4">

@@ -60,7 +60,7 @@ export const ForgotPassword = ({
 }) => (
   <Html>
     <Head />
-    <Preview>Reset your Campground password</Preview>
+    <Preview>Reset your Stagehand password</Preview>
     <Body style={main}>
       <Container style={container}>
         <Heading style={heading}>Reset Your Password</Heading>
@@ -74,7 +74,7 @@ export const ForgotPassword = ({
             textAlign: 'center',
           }}
         >
-          Someone recently requested a password change for your Campground account. If this was you, you can set a new password here:
+          Someone recently requested a password change for your Stagehand account. If this was you, you can set a new password here:
         </Text>
         <Button style={btn} href={resetLink}>
           Reset Password

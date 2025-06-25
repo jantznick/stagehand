@@ -1,12 +1,12 @@
 services:
   database:
     image: postgres:16-alpine
-    container_name: campground-db-prod
+    container_name: stagehand-db-prod
     ports:
       # Use port 5433 on the host to avoid conflicts with local dev setup
       - "5432:5432"
     volumes:
-      - campground-db-data-prod:/var/lib/postgresql/data
+      - stagehand-db-data-prod:/var/lib/postgresql/data
     env_file: ".env"
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
@@ -19,7 +19,7 @@ services:
     build:
       context: .
       dockerfile: packages/api/Dockerfile.prod
-    container_name: campground-api-prod
+    container_name: stagehand-api-prod
     ports:
       - "3001:3001"
     env_file: ".env"
@@ -36,7 +36,7 @@ services:
     build:
       context: .
       dockerfile: packages/web/Dockerfile.prod
-    container_name: campground-web-prod
+    container_name: stagehand-web-prod
     ports:
       # Map to standard HTTP/S ports
       - "80:80"
@@ -50,7 +50,7 @@ services:
 
   certbot:
     image: certbot/certbot
-    container_name: campground-certbot-prod
+    container_name: stagehand-certbot-prod
     volumes:
       - ./data/certbot/conf:/etc/letsencrypt
       - ./data/certbot/www:/var/www/certbot
@@ -61,7 +61,7 @@ services:
   #   build:
   #     context: .
   #     dockerfile: packages/api/Dockerfile.prod
-  #   container_name: campground-seeder-prod
+  #   container_name: stagehand-seeder-prod
   #   command: sh -c "while true; do echo '--- Seeder: Waiting for 1 hour before next seed. ---'; sleep 3600; echo '--- Seeder: Starting database seed. ---'; node packages/api/prisma/seed.js; done"
   #   env_file: ".env"
   #   depends_on:
@@ -73,4 +73,4 @@ services:
   #   restart: unless-stopped
 
 volumes:
-  campground-db-data-prod: 
+  stagehand-db-data-prod: 

@@ -44,7 +44,7 @@ const sendMagicLink = async (user) => {
   
   await sendEmail({
     to: user.email,
-    subject: 'Your Magic Login Link for Campground',
+    subject: 'Your Magic Login Link for Stagehand',
     react: React.createElement(MagicLinkLogin, {
       magicLink: magicLink,
     }),
@@ -152,7 +152,7 @@ router.post('/register', async (req, res) => {
       const entity = await prisma[entityType].findUnique({ where: { id: entityId } });
       for (const admin of admins) {
         await sendEmail({
-          from: 'Campground <donotreply@mail.campground.creativeendurancelab.com>',
+          from: 'Stagehand <donotreply@mail.stagehand.creativeendurancelab.com>',
           to: admin.email,
           subject: `A new user has joined ${entity.name}`,
           react: React.createElement(AdminAutoJoinNotification, {
@@ -178,7 +178,7 @@ router.post('/register', async (req, res) => {
       const loginUrl = `${process.env.WEB_URL}/login`;
       await sendEmail({
         to: newUser.email,
-        subject: 'Welcome to Campground!',
+        subject: 'Welcome to Stagehand!',
         react: React.createElement(NewUserWelcome, {
           firstName: newUser.name || newUser.email.split('@')[0],
           loginUrl: loginUrl,
@@ -293,7 +293,7 @@ router.post('/forgot-password', async (req, res) => {
 
     await sendEmail({
       to: email,
-      subject: 'Reset Your Campground Password',
+      subject: 'Reset Your Stagehand Password',
       react: React.createElement(ForgotPassword, {
         firstName: user.name || 'User',
         resetLink: resetLink,

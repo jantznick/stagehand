@@ -9,7 +9,7 @@ const router = Router();
 // All routes in this file are protected
 router.use(protect);
 
-// GET /api/v1/projects/:id - Get a single project
+// GET /api/v1/projects/:id - Get a single project with all Stagehand details
 router.get('/:id', async (req, res) => {
     const { id } = req.params;
 
@@ -22,6 +22,19 @@ router.get('/:id', async (req, res) => {
     try {
         const project = await prisma.project.findUnique({
             where: { id },
+            include: {
+                contacts: {
+                    include: {
+                        contact: true,
+                    },
+                },
+                technologies: {
+                    include: {
+                        technology: true,
+                    },
+                },
+                dependencies: true,
+            },
         });
 
         if (!project) {
@@ -89,10 +102,10 @@ router.post('/', async (req, res) => {
 // PUT /api/v1/projects/:id - Update a project
 router.put('/:id', async (req, res) => {
     const { id } = req.params;
-    const { name, description } = req.body;
+    const { name, description, applicationUrl, version, deploymentStatus, repositoryUrl, ciCdPipelineUrl } = req.body;
 
-    // Authorization: User must be an ADMIN of the project to update it.
-    const canUpdate = await hasPermission(req.user, 'ADMIN', 'project', id);
+    // Authorization: User must be an ADMIN or EDITOR of the project to update it.
+    const canUpdate = await hasPermission(req.user, ['ADMIN', 'EDITOR'], 'project', id);
     if (!canUpdate) {
         return res.status(403).json({ error: 'You are not authorized to update this project.' });
     }
@@ -100,7 +113,15 @@ router.put('/:id', async (req, res) => {
     try {
         const updatedProject = await prisma.project.update({
             where: { id },
-            data: { name, description }
+            data: { 
+                name, 
+                description,
+                applicationUrl,
+                version,
+                deploymentStatus,
+                repositoryUrl,
+                ciCdPipelineUrl,
+            }
         });
         res.status(200).json(updatedProject);
     } catch (error) {
@@ -127,6 +148,5 @@ router.delete('/:id', async (req, res) => {
         res.status(500).json({ error: 'Failed to delete project.' });
     }
 });
-
 
 export default router; 

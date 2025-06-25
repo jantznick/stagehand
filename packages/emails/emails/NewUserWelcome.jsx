@@ -78,10 +78,10 @@ export function NewUserWelcome({
   return (
   <Html>
     <Head />
-    <Preview>Welcome to Campground</Preview>
+    <Preview>Welcome to Stagehand</Preview>
     <Body style={main}>
       <Container style={container}>
-        <Heading style={heading}>Welcome to Campground!</Heading>
+        <Heading style={heading}>Welcome to Stagehand!</Heading>
         <Text style={{ ...text, textAlign: 'center' }}>
           Hi {firstName},
         </Text>

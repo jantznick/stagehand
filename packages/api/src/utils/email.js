@@ -1,5 +1,6 @@
 import { Resend } from 'resend';
 import * as React from 'react';
+import 'dotenv/config';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
@@ -16,7 +17,7 @@ export const sendEmail = async ({ to, subject, react }) => {
 
   try {
     const { data, error } = await resend.emails.send({
-      from: 'Campground <donotreply@mail.campground.creativeendurancelab.com>', // TODO: This should be a configured domain
+      from: 'Stagehand <donotreply@mail.stagehand.creativeendurancelab.com>', // TODO: This should be a configured domain
       to,
       subject,
       react,

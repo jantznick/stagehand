@@ -4,6 +4,12 @@ CREATE TYPE "Role" AS ENUM ('ADMIN', 'EDITOR', 'READER');
 -- CreateEnum
 CREATE TYPE "VerificationStatus" AS ENUM ('PENDING', 'VERIFIED');
 
+-- CreateEnum
+CREATE TYPE "DeploymentStatus" AS ENUM ('PLANNING', 'IN_DEVELOPMENT', 'TESTING', 'RELEASED', 'MAINTENANCE', 'DISCONTINUED');
+
+-- CreateEnum
+CREATE TYPE "TechnologyType" AS ENUM ('LANGUAGE', 'FRAMEWORK', 'LIBRARY', 'TOOL', 'PLATFORM', 'SERVICE');
+
 -- CreateTable
 CREATE TABLE "User" (
     "id" TEXT NOT NULL,
@@ -74,6 +80,12 @@ CREATE TABLE "Project" (
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
     "teamId" TEXT NOT NULL,
+    "applicationUrl" TEXT,
+    "version" TEXT,
+    "deploymentStatus" "DeploymentStatus" NOT NULL DEFAULT 'IN_DEVELOPMENT',
+    "repositoryUrl" TEXT,
+    "ciCdPipelineUrl" TEXT,
+    "lastScanDate" TIMESTAMP(3),
 
     CONSTRAINT "Project_pkey" PRIMARY KEY ("id")
 );
@@ -102,6 +114,56 @@ CREATE TABLE "Membership" (
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT "Membership_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "Contact" (
+    "id" TEXT NOT NULL,
+    "name" TEXT NOT NULL,
+    "email" TEXT NOT NULL,
+    "role" TEXT,
+    "userId" TEXT,
+
+    CONSTRAINT "Contact_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "ProjectContact" (
+    "projectId" TEXT NOT NULL,
+    "contactId" TEXT NOT NULL,
+    "contactType" TEXT NOT NULL,
+
+    CONSTRAINT "ProjectContact_pkey" PRIMARY KEY ("projectId","contactId","contactType")
+);
+
+-- CreateTable
+CREATE TABLE "Technology" (
+    "id" TEXT NOT NULL,
+    "name" TEXT NOT NULL,
+    "type" "TechnologyType" NOT NULL,
+
+    CONSTRAINT "Technology_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "ProjectTechnology" (
+    "projectId" TEXT NOT NULL,
+    "technologyId" TEXT NOT NULL,
+    "version" TEXT,
+    "source" TEXT NOT NULL,
+
+    CONSTRAINT "ProjectTechnology_pkey" PRIMARY KEY ("projectId","technologyId")
+);
+
+-- CreateTable
+CREATE TABLE "ProjectDependency" (
+    "id" TEXT NOT NULL,
+    "name" TEXT NOT NULL,
+    "version" TEXT NOT NULL,
+    "type" TEXT NOT NULL,
+    "projectId" TEXT NOT NULL,
+
+    CONSTRAINT "ProjectDependency_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -189,6 +251,24 @@ CREATE UNIQUE INDEX "Membership_userId_teamId_key" ON "Membership"("userId", "te
 CREATE UNIQUE INDEX "Membership_userId_projectId_key" ON "Membership"("userId", "projectId");
 
 -- CreateIndex
+CREATE UNIQUE INDEX "Contact_email_key" ON "Contact"("email");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Contact_userId_key" ON "Contact"("userId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Technology_name_key" ON "Technology"("name");
+
+-- CreateIndex
+CREATE INDEX "ProjectDependency_name_idx" ON "ProjectDependency"("name");
+
+-- CreateIndex
+CREATE INDEX "ProjectDependency_name_version_idx" ON "ProjectDependency"("name", "version");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "ProjectDependency_projectId_name_version_key" ON "ProjectDependency"("projectId", "name", "version");
+
+-- CreateIndex
 CREATE UNIQUE INDEX "AutoJoinDomain_verificationCode_key" ON "AutoJoinDomain"("verificationCode");
 
 -- CreateIndex
@@ -238,6 +318,24 @@ ALTER TABLE "Membership" ADD CONSTRAINT "Membership_teamId_fkey" FOREIGN KEY ("t
 
 -- AddForeignKey
 ALTER TABLE "Membership" ADD CONSTRAINT "Membership_projectId_fkey" FOREIGN KEY ("projectId") REFERENCES "Project"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Contact" ADD CONSTRAINT "Contact_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "ProjectContact" ADD CONSTRAINT "ProjectContact_projectId_fkey" FOREIGN KEY ("projectId") REFERENCES "Project"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "ProjectContact" ADD CONSTRAINT "ProjectContact_contactId_fkey" FOREIGN KEY ("contactId") REFERENCES "Contact"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "ProjectTechnology" ADD CONSTRAINT "ProjectTechnology_projectId_fkey" FOREIGN KEY ("projectId") REFERENCES "Project"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "ProjectTechnology" ADD CONSTRAINT "ProjectTechnology_technologyId_fkey" FOREIGN KEY ("technologyId") REFERENCES "Technology"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "ProjectDependency" ADD CONSTRAINT "ProjectDependency_projectId_fkey" FOREIGN KEY ("projectId") REFERENCES "Project"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "AutoJoinDomain" ADD CONSTRAINT "AutoJoinDomain_organizationId_fkey" FOREIGN KEY ("organizationId") REFERENCES "Organization"("id") ON DELETE CASCADE ON UPDATE CASCADE;

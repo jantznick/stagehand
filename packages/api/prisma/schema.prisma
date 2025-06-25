@@ -20,6 +20,24 @@ enum VerificationStatus {
   VERIFIED
 }
 
+enum DeploymentStatus {
+  PLANNING
+  IN_DEVELOPMENT
+  TESTING
+  RELEASED
+  MAINTENANCE
+  DISCONTINUED
+}
+
+enum TechnologyType {
+  LANGUAGE
+  FRAMEWORK
+  LIBRARY
+  TOOL
+  PLATFORM
+  SERVICE
+}
+
 model User {
   id        String    @id @default(cuid())
   email     String    @unique
@@ -35,6 +53,8 @@ model User {
   invitation  Invitation?
   passwordResetToken PasswordResetToken?
   loginTokens LoginToken[]
+  
+  contacts    Contact[]
 }
 
 model Session {
@@ -100,6 +120,26 @@ model Project {
   team   Team @relation(fields: [teamId], references: [id], onDelete: Cascade)
   
   memberships Membership[]
+
+  // --- Stagehand Fields ---
+  /// Primary URL for the deployed application
+  applicationUrl      String?
+  /// Current public version, e.g., 2.1.4
+  version             String?
+  deploymentStatus    DeploymentStatus @default(IN_DEVELOPMENT)
+  
+  /// Link to the source code repository (e.g., GitHub)
+  repositoryUrl       String?
+  /// Link to the CI/CD pipeline (e.g., Jenkins, GitHub Actions)
+  ciCdPipelineUrl     String?
+
+  /// Timestamp of the last successful scan by any integrated tool
+  lastScanDate        DateTime?
+
+  /// Points of contact for this application
+  contacts    ProjectContact[]
+  technologies        ProjectTechnology[]
+  dependencies        ProjectDependency[]
 }
 
 model Invitation {
@@ -119,8 +159,6 @@ model Membership {
   userId    String
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  // A membership can be tied to any level of the hierarchy.
-  // Only ONE of these should be set for any given membership record.
   organizationId String?
   organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
 
@@ -141,6 +179,69 @@ model Membership {
   @@unique([userId, projectId])
 }
 
+model Contact {
+  id    String  @id @default(cuid())
+  name  String
+  email String  @unique
+  /// e.g., Engineering Manager, External Consultant
+  role  String?
+  
+  userId String? @unique
+  user   User?   @relation(fields: [userId], references: [id])
+
+  applications ProjectContact[]
+}
+
+model ProjectContact {
+  projectId String
+  project   Project @relation(fields: [projectId], references: [id])
+  
+  contactId     String
+  contact       Contact @relation(fields: [contactId], references: [id])
+
+  /// e.g., 'Primary Owner', 'Technical Lead', 'Product Manager'
+  contactType   String
+
+  @@id([projectId, contactId, contactType])
+}
+
+model Technology {
+  id   String @id @default(cuid())
+  name String @unique // e.g., "React", "Snyk", "Jira", "Python"
+  type TechnologyType // To categorize the technology
+  
+  applications ProjectTechnology[]
+}
+
+model ProjectTechnology {
+  projectId String
+  project   Project @relation(fields: [projectId], references: [id])
+
+  technologyId  String
+  technology    Technology @relation(fields: [technologyId], references: [id])
+
+  /// e.g., 18.2.0 for React
+  version       String?
+  /// How was this discovered? e.g., 'USER_ENTERED' or 'Discovered by Snyk'
+  source        String
+
+  @@id([projectId, technologyId])
+}
+
+model ProjectDependency {
+  id        String  @id @default(cuid())
+  name      String  // e.g., "express"
+  version   String  // e.g., "4.17.1"
+  type      String  // e.g., "npm", "maven"
+  
+  projectId String
+  project   Project @relation(fields: [projectId], references: [id])
+
+  @@unique([projectId, name, version])
+  @@index([name]) // Index for fast lookups by dependency name
+  @@index([name, version]) // Index for fast lookups by name and version
+}
+
 model AutoJoinDomain {
   id        String @id @default(cuid())
   domain    String
@@ -148,8 +249,6 @@ model AutoJoinDomain {
   status           VerificationStatus @default(PENDING)
   verificationCode String             @unique
 
-  // A domain can be linked to either an Organization or a Company, but not both.
-  // This constraint is enforced at the application level.
   organizationId String?
   organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   
@@ -158,7 +257,6 @@ model AutoJoinDomain {
 
   createdAt DateTime @default(now())
 
-  // Ensure a domain is unique per entity.
   @@unique([domain, organizationId])
   @@unique([domain, companyId])
 }

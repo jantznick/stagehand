@@ -7,7 +7,15 @@ const prisma = new PrismaClient();
 const createProjects = (teamName, count) => {
 	const projects = [];
 	for (let i = 1; i <= count; i++) {
-		projects.push({ name: `${teamName} Project ${i}` });
+		const projectName = `${teamName} Project ${i}`;
+		projects.push({ 
+			name: projectName,
+			description: `This is the description for ${projectName}. It's a critical part of the ${teamName} initiative.`,
+			applicationUrl: `https://${teamName.toLowerCase().replace(' ', '-')}-project-${i}.stagehand.dev`,
+			version: `1.${i}.0`,
+			deploymentStatus: i % 3 === 0 ? 'RELEASED' : 'IN_DEVELOPMENT',
+			repositoryUrl: `https://github.com/stagehand-dev/${teamName.toLowerCase().replace(' ', '-')}-project-${i}`,
+		});
 	}
 	return projects;
 };
@@ -35,8 +43,8 @@ async function main() {
 	await prisma.invitation.deleteMany({});
 	await prisma.project.deleteMany({});
 	await prisma.team.deleteMany({});
-	await prisma.domain.deleteMany({});
-	await prisma.oidcConnection.deleteMany({});
+	await prisma.autoJoinDomain.deleteMany({});
+	await prisma.oIDCConfiguration.deleteMany({});
 	await prisma.company.deleteMany({});
 	await prisma.organization.deleteMany({});
 	await prisma.user.deleteMany({});
@@ -151,7 +159,13 @@ async function main() {
 	console.log('Fetching created entities for permission assignment...');
 	const allOrgs = await prisma.organization.findMany({ include: { companies: { include: { teams: { include: { projects: true } } } } } });
 	const orgMap = Object.fromEntries(allOrgs.map(o => [o.name, o]));
-	const companyMap = Object.fromEntries(allOrgs.flatMap(o => o.companies).map(c => [`${o.name}-${c.name}`, c]));
+
+	// Create a temporary array of companies that includes their parent organization's name
+	const companiesWithOrg = allOrgs.flatMap(org => 
+		org.companies.map(company => ({ ...company, orgName: org.name }))
+	);
+	const companyMap = Object.fromEntries(companiesWithOrg.map(c => [`${c.orgName}-${c.name}`, c]));
+
 	const teamMap = Object.fromEntries(allOrgs.flatMap(o => o.companies.flatMap(c => c.teams)).map(t => [`${t.name}`, t]));
 	const projectMap = Object.fromEntries(allOrgs.flatMap(o => o.companies.flatMap(c => c.teams.flatMap(t => t.projects))).map(p => [`${p.name}`, p]));
 

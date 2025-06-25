@@ -1,90 +1,37 @@
-# Campground
+# Stagehand
 
-### Ship Your SaaS, Not Your Scaffolding
+### The Developer-First Application Security Platform
 
-Campground is a production-ready, open-source boilerplate for building scalable, multi-tenant web applications. It comes with a complete, modern tech stack and pre-built features like a flexible hierarchy, role-based permissions, and user authentication, so you can focus on building what matters most: your product.
+Stagehand is an Application Security Posture Management (ASPM) tool built with the developer experience at its core. It bridges the gap between development and security by acting as both a comprehensive **Developer Catalog** and a centralized **Security Findings Hub**.
 
-This project is designed to give you a massive head start when developing a SaaS application that requires sophisticated tenancy and permission models.
-
-This project was built largely with cursor on Gemini 2.5 Pro model and mostly monitored, refactored and approved by a senior level developer. There are some definite pieces of bad code in here, however everything seems to be functioning as expected. 
+Built on a flexible multi-tenant boilerplate, Stagehand is designed to give engineering and security teams a unified view of their software assets and the security posture associated with them.
 
 ---
 
-## Core Features
+## Core Goals
 
-Campground provides a robust foundation with all the essential features needed for a modern multi-tenant application.
+The primary objective of Stagehand is to provide a single pane of glass for application security, driven by two main functions:
 
-*   **Flexible Multi-Tenant Hierarchies:**
-    *   Model complex organizational structures right out of the box: **Organizations → Companies → Teams → Projects**.
-    *   The hierarchy is fully customizable, allowing you to rename levels to fit your specific domain needs (e.g., "Schools" instead of "Companies").
-    *   The top-level "Organization" can be toggled on or off depending on your business requirements.
+1.  **A Rich Developer Catalog:**
+    *   Stagehand maintains a detailed inventory of all your applications, services, and projects.
+    *   It captures not just the name and description, but also critical metadata like repository URLs, deployment status, versioning, ownership, and the technologies used.
+    *   This provides a single source of truth for understanding your engineering landscape.
 
-*   **Role-Based Access Control (RBAC):**
-    *   A granular permission system is built-in with default roles: **Admin**, **Editor**, and **Reader**.
-    *   Permissions are hierarchical, meaning roles at a higher level (like a Company) grant access to all nested resources (like Teams and Projects within it).
-    *   A secure middleware layer on the backend enforces all permission checks for every API request.
-
-*   **User Authentication & Onboarding:**
-    *   **Secure Authentication:** Features a complete, session-based authentication system.
-    *   **Invite System:** Effortlessly onboard new users with invite links. Invitations can pre-configure a user's role and access level before they even sign up.
-    *   **Automatic Domain Join:** Automatically assign new users to the correct Organization or Company based on their email domain, with built-in DNS verification for security.
-    *   **OIDC & SSO:** Allow organizations to integrate with their own identity providers (like Okta, Azure AD) for seamless and secure single sign-on.
-
-*   **Ready-to-Deploy:**
-    *   The entire application is containerized with Docker.
-    *   Get a full development environment running locally—including the database—with a single command: `docker-compose up`.
-
-## Coming Soon Features
-
- **Email Capabilities:** Email notifications and other transaction email needs
- 
- **User Notification System:** A general user notification system
+2.  **Centralized Security Findings:**
+    *   The platform is designed to integrate with a wide array of security tools (SAST, DAST, SCA, etc.).
+    *   It will pull, normalize, and deduplicate findings from these tools, linking each vulnerability to the specific application in the catalog.
+    *   This allows teams to see all security issues related to an application in one place, prioritized and ready for action.
 
 ---
 
-## Tech Stack
+## The Vision: Future State
 
-Campground is built with a modern, reliable, and no-nonsense tech stack chosen for developer productivity and scalability.
+Stagehand aims to become a comprehensive and indispensable tool for development and security teams. Our roadmap includes:
 
-| Category      | Technology                                                                                                                              |
-|---------------|-----------------------------------------------------------------------------------------------------------------------------------------|
-| **Backend**       | **Node.js**, **Express.js**, **Prisma** (ORM for PostgreSQL)                                                                            |
-| **Frontend**      | **React**, **Vite**, **Zustand** (for state management), **Tailwind CSS** (with Headless UI & Catalyst components)                      |
-| **Database**      | **PostgreSQL**                                                                                                                          |
-| **Dev & Tooling** | **Docker** & **Docker Compose**, **NPM Workspaces** (Monorepo), **ESLint**, **Prettier**                                                    |
+*   **Broad Tool Integration:** Building a library of connectors for popular security tools like Snyk, SonarQube, Dependabot, and more.
+*   **Infrastructure & Host Tracking:** Expanding the catalog beyond just application code to include the hosts and infrastructure where applications run, allowing for the tracking of server-level vulnerabilities.
+*   **Flexible Metadata:** Implementing a custom fields feature so that organizations can track the specific metadata that matters most to their workflow.
+*   **Advanced Reporting:** Providing dashboards and reports to track security posture over time, identify trends, and measure remediation efforts.
+*   **Automated Workflows & Notifications:** Creating rules and notifications to alert teams about new, critical vulnerabilities as soon as they are discovered.
 
----
-
-## Getting Started
-
-You can get a local instance of Campground running in minutes.
-
-1.  **Clone the repository:**
-    ```bash
-    git clone https://github.com/jantznick/campground.git
-    cd campground
-    ```
-
-2.  **Install dependencies:**
-    ```bash
-    npm install
-    ```
-
-3.  **Set up environment variables:**
-    ```bash
-    cp .env.example .env
-    ```
-    *You can customize your database connection and other settings in the newly created `.env` file.*
-
-4.  **Start the application:**
-    ```bash
-    docker-compose up
-    ```
-
-This will start the backend API server, the frontend Vite development server, and the PostgreSQL database. The application will be available at `http://localhost:3000`.
-
----
-
-## Project Philosophy
-
-The goal of Campground is to handle the complex, repetitive, and critical foundation of a multi-tenant SaaS application so that individual developers and teams can build and ship their unique products faster. PRs are welcome.
+By combining a detailed developer catalog with powerful security data aggregation, Stagehand empowers teams to build more secure software, faster.

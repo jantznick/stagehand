@@ -74,10 +74,10 @@ router.post('/resend', async (req, res) => {
 
         await sendEmail({
           to: user.email,
-          subject: `You've been invited to Campground`,
+          subject: `You've been invited to Stagehand`,
           react: React.createElement(UserInvitation, {
             inviterName: req.user.name || req.user.email,
-            organizationName: 'Campground', // This could be made more specific
+            organizationName: 'Stagehand', // This could be made more specific
             inviteLink: invitationLink,
           }),
         });

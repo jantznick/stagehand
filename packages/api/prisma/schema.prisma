@@ -1,0 +1,203 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "linux-musl-arm64-openssl-1.1.x", "linux-musl-arm64-openssl-3.0.x"]
+}
+
+// Hierarchical Role Definition
+enum Role {
+  ADMIN
+  EDITOR
+  READER
+}
+
+enum VerificationStatus {
+  PENDING
+  VERIFIED
+}
+
+model User {
+  id        String    @id @default(cuid())
+  email     String    @unique
+  password  String? // Hashed password, optional for invited users
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  emailVerified              Boolean   @default(false)
+  verificationToken          String?
+  verificationTokenExpiresAt DateTime?
+
+  memberships Membership[]
+  invitation  Invitation?
+  passwordResetToken PasswordResetToken?
+  loginTokens LoginToken[]
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  sid       String   @unique
+  data      String
+  expiresAt DateTime
+}
+
+model Organization {
+  id               String    @id @default(cuid())
+  name             String
+  description      String?
+  accountType      String    @default("STANDARD") // STANDARD or ENTERPRISE
+  hierarchyDisplayNames Json?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+  defaultCompanyId String?
+
+  companies   Company[]
+  memberships Membership[]
+  autoJoinDomains  AutoJoinDomain[]
+  oidcConfiguration OIDCConfiguration?
+}
+
+model Company {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  teams      Team[]
+  memberships Membership[]
+  autoJoinDomains AutoJoinDomain[]
+}
+
+model Team {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  companyId String
+  company   Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  projects   Project[]
+  memberships Membership[]
+}
+
+model Project {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  teamId String
+  team   Team @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  
+  memberships Membership[]
+}
+
+model Invitation {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  token     String   @unique
+  expires   DateTime
+  createdAt DateTime @default(now())
+  
+  userId    String   @unique
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Membership {
+  id        String   @id @default(cuid())
+  role      Role
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // A membership can be tied to any level of the hierarchy.
+  // Only ONE of these should be set for any given membership record.
+  organizationId String?
+  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  companyId String?
+  company   Company? @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  teamId String?
+  team   Team? @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  
+  projectId String?
+  project   Project? @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@unique([userId, organizationId])
+  @@unique([userId, companyId])
+  @@unique([userId, teamId])
+  @@unique([userId, projectId])
+}
+
+model AutoJoinDomain {
+  id        String @id @default(cuid())
+  domain    String
+  role      Role
+  status           VerificationStatus @default(PENDING)
+  verificationCode String             @unique
+
+  // A domain can be linked to either an Organization or a Company, but not both.
+  // This constraint is enforced at the application level.
+  organizationId String?
+  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  
+  companyId String?
+  company   Company? @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  // Ensure a domain is unique per entity.
+  @@unique([domain, organizationId])
+  @@unique([domain, companyId])
+}
+
+model OIDCConfiguration {
+  id               String   @id @default(cuid())
+  organizationId   String   @unique
+  isEnabled        Boolean  @default(false)
+  issuer           String   @unique
+  clientId         String
+  clientSecret     String
+  authorizationUrl String
+  tokenUrl         String
+  userInfoUrl      String
+  defaultRole      Role     @default(READER)
+  buttonText       String?
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model PasswordResetToken {
+  id        String   @id @default(cuid())
+  selector  String   @unique
+  token     String
+  userId    String   @unique
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+}
+
+model LoginToken {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  usedAt    DateTime?
+} 

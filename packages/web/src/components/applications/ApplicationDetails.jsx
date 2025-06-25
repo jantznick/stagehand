@@ -1,13 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import useProjectStore from '../../stores/useProjectStore';
 import useHierarchyStore from '../../stores/useHierarchyStore';
+import ContactManager from '../contacts/ContactManager';
 
 const ApplicationDetails = ({ project }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [editableProject, setEditableProject] = useState(project);
 
-  const { updateProject, isLoading } = useProjectStore();
-  const { fetchAndSetSelectedItem } = useHierarchyStore();
+  const { updateProject, isLoading, fetchAndSetSelectedItem } = useHierarchyStore();
 
   useEffect(() => {
     setEditableProject(project);
@@ -98,15 +97,8 @@ const ApplicationDetails = ({ project }) => {
         </div>
       </div>
 
-      {/* Contacts Section (Placeholder) */}
-      <div>
-        <h3 className="text-xl font-semibold text-white mb-4 border-b border-white/10 pb-2">
-          Contacts
-        </h3>
-        <div className="text-gray-400">
-          Contact management will be implemented here.
-        </div>
-      </div>
+      {/* Contacts Section */}
+      <ContactManager project={project} />
 
       {/* Technologies Section (Placeholder) */}
       <div>

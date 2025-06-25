@@ -53,13 +53,15 @@ const mutator = (nodes, findFn, updateFn) => {
 
 const useHierarchyStore = create((set, get) => {
     const initialState = {
-    hierarchy: [],
+        hierarchy: [],
         activeOrganization: null,
-    selectedItem: null,
-    activeCompany: null,
-    accountType: 'STANDARD',
-    isLoading: false,
-    error: null,
+        selectedItem: null,
+        activeCompany: null,
+        accountType: 'STANDARD',
+        isLoading: false,
+        error: null,
+        projectMembers: [],
+        isLoadingMembers: false,
     };
 
     const defaultNames = {
@@ -246,8 +248,8 @@ const useHierarchyStore = create((set, get) => {
     updateItem: (updatedItem) => set(produce(draft => {
         mutator(draft.hierarchy,
             node => node.id === updatedItem.id,
-            (nodes, index) => {
-                nodes[index] = { ...nodes[index], ...updatedItem };
+            (nodes, i, node) => {
+                nodes[i] = { ...node, ...updatedItem };
             }
         );
 
@@ -311,6 +313,152 @@ const useHierarchyStore = create((set, get) => {
         }
         return {};
     }),
+
+    updateProject: async (id, data) => {
+        set(produce(draft => { draft.isLoading = true; }));
+        try {
+            const response = await fetch(`/api/v1/projects/${id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data),
+            });
+            if (!response.ok) {
+                const err = await response.json();
+                throw new Error(err.error || 'Failed to update project');
+            }
+            const updatedProject = await response.json();
+            set(produce(draft => {
+                draft.selectedItem = { ...draft.selectedItem, ...updatedProject };
+                draft.isLoading = false;
+            }));
+        } catch (error) {
+            set(produce(draft => {
+                draft.error = error.message;
+                draft.isLoading = false;
+            }));
+        }
+    },
+    
+    fetchProjectMembers: async (projectId) => {
+        set({ isLoadingMembers: true });
+        try {
+            const response = await fetch(`/api/v1/projects/${projectId}/members`);
+            if (!response.ok) throw new Error('Failed to fetch project members');
+            const data = await response.json();
+            set({ projectMembers: data, isLoadingMembers: false });
+        } catch (error) {
+            console.error(error);
+            set({ isLoadingMembers: false });
+        }
+    },
+
+    addContact: async (projectId, contactData) => {
+        try {
+            const response = await fetch(`/api/v1/projects/${projectId}/contacts`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(contactData),
+            });
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || 'Failed to add contact');
+            }
+            const newContact = await response.json();
+            set(produce(draft => {
+                if (draft.selectedItem?.id === projectId) {
+                    draft.selectedItem.contacts.push(newContact);
+                }
+            }));
+        } catch (error) {
+            console.error("Error adding contact:", error);
+            set(produce(draft => { draft.error = error.message; }));
+        }
+    },
+
+    updateContact: async (projectId, contactId, data) => {
+        try {
+            const response = await fetch(`/api/v1/projects/${projectId}/contacts/${contactId}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data),
+            });
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || 'Failed to update contact');
+            }
+            const updatedContact = await response.json();
+            set(produce(draft => {
+                if (draft.selectedItem?.id === projectId) {
+                    const index = draft.selectedItem.contacts.findIndex(
+                        c => c.contact.id === contactId && c.contactType === data.oldContactType
+                    );
+                    if (index !== -1) {
+                        draft.selectedItem.contacts[index] = updatedContact;
+                    }
+                }
+            }));
+            return updatedContact;
+        } catch (error) {
+            console.error("Error updating contact:", error);
+            set(produce(draft => { draft.error = error.message; }));
+            throw error; // Re-throw to be caught in the component
+        }
+    },
+
+    removeContact: async (projectId, contactId, contactType) => {
+        try {
+            const response = await fetch(`/api/v1/projects/${projectId}/contacts/${contactId}/${encodeURIComponent(contactType)}`, {
+                method: 'DELETE',
+            });
+            if (!response.ok) throw new Error('Failed to remove contact');
+            
+            set(produce(draft => {
+                if (draft.selectedItem?.id === projectId) {
+                    draft.selectedItem.contacts = draft.selectedItem.contacts.filter(
+                        c => !(c.contact.id === contactId && c.contactType === contactType)
+                    );
+                }
+            }));
+        } catch (error) {
+            console.error("Error removing contact:", error);
+            set(produce(draft => { draft.error = error.message; }));
+        }
+    },
+
+    inviteOrGrantAccess: async (projectId, email, role) => {
+        set(produce(draft => { draft.isLoading = true; }));
+        try {
+            const response = await fetch(`/api/v1/memberships`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    email,
+                    role,
+                    resourceId: projectId,
+                    resourceType: 'project',
+                }),
+            });
+             if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || 'Failed to grant access or invite user.');
+            }
+            // After success, we need to refetch the project data to get the updated contact status
+            const projectResponse = await fetch(`/api/v1/projects/${projectId}`);
+            const updatedProject = await projectResponse.json();
+            set(produce(draft => {
+                draft.selectedItem = { ...draft.selectedItem, ...updatedProject };
+                draft.isLoading = false;
+            }));
+
+        } catch (error) {
+            console.error("Error in inviteOrGrantAccess:", error);
+            set(produce(draft => {
+                draft.error = error.message;
+                draft.isLoading = false;
+            }));
+            throw error;
+        }
+    },
 
     reset: () => set(initialState),
     };

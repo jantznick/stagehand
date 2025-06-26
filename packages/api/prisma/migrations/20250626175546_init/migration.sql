@@ -147,12 +147,13 @@ CREATE TABLE "Technology" (
 
 -- CreateTable
 CREATE TABLE "ProjectTechnology" (
+    "id" TEXT NOT NULL,
     "projectId" TEXT NOT NULL,
     "technologyId" TEXT NOT NULL,
     "version" TEXT,
     "source" TEXT NOT NULL,
 
-    CONSTRAINT "ProjectTechnology_pkey" PRIMARY KEY ("projectId","technologyId")
+    CONSTRAINT "ProjectTechnology_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -162,6 +163,7 @@ CREATE TABLE "ProjectDependency" (
     "version" TEXT NOT NULL,
     "type" TEXT NOT NULL,
     "projectId" TEXT NOT NULL,
+    "technologyId" TEXT,
 
     CONSTRAINT "ProjectDependency_pkey" PRIMARY KEY ("id")
 );
@@ -257,7 +259,10 @@ CREATE UNIQUE INDEX "Contact_email_key" ON "Contact"("email");
 CREATE UNIQUE INDEX "Contact_userId_key" ON "Contact"("userId");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "Technology_name_key" ON "Technology"("name");
+CREATE UNIQUE INDEX "Technology_name_type_key" ON "Technology"("name", "type");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "ProjectTechnology_projectId_technologyId_version_key" ON "ProjectTechnology"("projectId", "technologyId", "version");
 
 -- CreateIndex
 CREATE INDEX "ProjectDependency_name_idx" ON "ProjectDependency"("name");
@@ -336,6 +341,9 @@ ALTER TABLE "ProjectTechnology" ADD CONSTRAINT "ProjectTechnology_technologyId_f
 
 -- AddForeignKey
 ALTER TABLE "ProjectDependency" ADD CONSTRAINT "ProjectDependency_projectId_fkey" FOREIGN KEY ("projectId") REFERENCES "Project"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "ProjectDependency" ADD CONSTRAINT "ProjectDependency_technologyId_fkey" FOREIGN KEY ("technologyId") REFERENCES "Technology"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "AutoJoinDomain" ADD CONSTRAINT "AutoJoinDomain_organizationId_fkey" FOREIGN KEY ("organizationId") REFERENCES "Organization"("id") ON DELETE CASCADE ON UPDATE CASCADE;

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import useHierarchyStore from '../../stores/useHierarchyStore';
 import ContactManager from '../contacts/ContactManager';
+import TechnologyManager from '../technologies/TechnologyManager';
 
 const ApplicationDetails = ({ project }) => {
   const [isEditing, setIsEditing] = useState(false);
@@ -100,15 +101,8 @@ const ApplicationDetails = ({ project }) => {
       {/* Contacts Section */}
       <ContactManager project={project} />
 
-      {/* Technologies Section (Placeholder) */}
-      <div>
-        <h3 className="text-xl font-semibold text-white mb-4 border-b border-white/10 pb-2">
-          Technologies
-        </h3>
-        <div className="text-gray-400">
-          Technology stack details will be displayed here.
-        </div>
-      </div>
+      {/* Technologies Section */}
+      <TechnologyManager project={project} />
     </div>
   );
 };

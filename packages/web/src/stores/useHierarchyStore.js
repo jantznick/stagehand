@@ -53,13 +53,13 @@ const mutator = (nodes, findFn, updateFn) => {
 
 const useHierarchyStore = create((set, get) => {
     const initialState = {
-        hierarchy: [],
+    hierarchy: [],
         activeOrganization: null,
-        selectedItem: null,
-        activeCompany: null,
-        accountType: 'STANDARD',
-        isLoading: false,
-        error: null,
+    selectedItem: null,
+    activeCompany: null,
+    accountType: 'STANDARD',
+    isLoading: false,
+    error: null,
         projectMembers: [],
         isLoadingMembers: false,
     };
@@ -461,6 +461,71 @@ const useHierarchyStore = create((set, get) => {
     },
 
     reset: () => set(initialState),
+
+    addTechnology: async (projectId, techData) => {
+        try {
+            const response = await fetch(`/api/v1/projects/${projectId}/technologies`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(techData),
+            });
+            if (!response.ok) {
+                throw new Error('Failed to add technology');
+            }
+            const newTechnology = await response.json();
+            set(state => ({
+                selectedItem: {
+                    ...state.selectedItem,
+                    technologies: [...state.selectedItem.technologies, newTechnology]
+                }
+            }));
+        } catch (error) {
+            console.error("Error adding technology:", error);
+        }
+    },
+
+    updateTechnology: async (projectId, projectTechnologyId, data) => {
+        try {
+            const response = await fetch(`/api/v1/projects/${projectId}/technologies/${projectTechnologyId}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data),
+            });
+            if (!response.ok) {
+                throw new Error('Failed to update technology');
+            }
+            const updatedTechnology = await response.json();
+            set(state => ({
+                selectedItem: {
+                    ...state.selectedItem,
+                    technologies: state.selectedItem.technologies.map(t => 
+                        t.id === projectTechnologyId ? updatedTechnology : t
+                    )
+                }
+            }));
+        } catch (error) {
+            console.error("Error updating technology:", error);
+        }
+    },
+
+    removeTechnology: async (projectId, projectTechnologyId) => {
+        try {
+            const response = await fetch(`/api/v1/projects/${projectId}/technologies/${projectTechnologyId}`, {
+                method: 'DELETE',
+            });
+            if (!response.ok) {
+                throw new Error('Failed to remove technology');
+            }
+            set(state => ({
+                selectedItem: {
+                    ...state.selectedItem,
+                    technologies: state.selectedItem.technologies.filter(t => t.id !== projectTechnologyId)
+                }
+            }));
+        } catch (error) {
+            console.error("Error removing technology:", error);
+        }
+    },
     };
 });
 

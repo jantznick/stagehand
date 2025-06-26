@@ -3,229 +3,183 @@ import bcrypt from 'bcryptjs';
 
 const prisma = new PrismaClient();
 
-// Helper function to create a specified number of projects for a team
-const createProjects = (teamName, count) => {
-	const projects = [];
-	for (let i = 1; i <= count; i++) {
-		const projectName = `${teamName} Project ${i}`;
-		projects.push({ 
-			name: projectName,
-			description: `This is the description for ${projectName}. It's a critical part of the ${teamName} initiative.`,
-			applicationUrl: `https://${teamName.toLowerCase().replace(' ', '-')}-project-${i}.stagehand.dev`,
-			version: `1.${i}.0`,
-			deploymentStatus: i % 3 === 0 ? 'RELEASED' : 'IN_DEVELOPMENT',
-			repositoryUrl: `https://github.com/stagehand-dev/${teamName.toLowerCase().replace(' ', '-')}-project-${i}`,
-		});
-	}
-	return projects;
-};
+const modelNames = [
+	'Membership', 'Invitation', 'PasswordResetToken', 'LoginToken',
+	'ProjectContact', 'ProjectTechnology',
+	'Project', 'Team', 'AutoJoinDomain', 'OIDCConfiguration',
+	'Company', 'Organization',
+	'Contact', 'Technology', 'User'
+];
 
-// Helper function to create teams and their projects
-const createTeams = (companyName, teamNames) => {
-	const teams = {};
-	for (const teamName of teamNames) {
-		teams[teamName] = {
-			name: teamName,
-			projects: {
-				create: createProjects(teamName, 3),
-			},
-		};
-	}
-	return Object.values(teams);
+// Helper to create teams with projects
+const createTeamsAndProjects = (teamNames, projectCountPerTeam) => {
+	return teamNames.map(teamName => ({
+		name: teamName,
+		projects: {
+			create: Array.from({ length: projectCountPerTeam }, (_, i) => ({
+				name: `${teamName} Project ${i + 1}`,
+				description: `This is the description for project ${i + 1} of team ${teamName}.`,
+				applicationUrl: `https://${teamName.toLowerCase().replace(/ /g, '-')}-p${i+1}.dev`,
+				repositoryUrl: `https://github.com/example-corp/${teamName.toLowerCase().replace(/ /g, '-')}-p${i+1}`
+			}))
+		}
+	}));
 };
 
 async function main() {
 	console.log('--- Start seeding ---');
 
-	// 1. Clean up existing data in the correct order
+	// 1. Clean up existing data
 	console.log('Cleaning up previous data...');
-	await prisma.membership.deleteMany({});
-	await prisma.invitation.deleteMany({});
-	await prisma.project.deleteMany({});
-	await prisma.team.deleteMany({});
-	await prisma.autoJoinDomain.deleteMany({});
-	await prisma.oIDCConfiguration.deleteMany({});
-	await prisma.company.deleteMany({});
-	await prisma.organization.deleteMany({});
-	await prisma.user.deleteMany({});
+	for (const modelName of modelNames) {
+		if (prisma[modelName]) {
+			await prisma[modelName].deleteMany({});
+		}
+	}
 	console.log('Previous data cleaned.');
 
-	// 2. Create Users
+	// 2. Create Master Technologies
+	console.log('Creating master technologies...');
+	const technologies = {
+		react: await prisma.technology.create({ data: { name: 'React', type: 'FRAMEWORK' } }),
+		nodejs: await prisma.technology.create({ data: { name: 'Node.js', type: 'LANGUAGE' } }),
+		postgres: await prisma.technology.create({ data: { name: 'PostgreSQL', type: 'SERVICE' } }),
+		docker: await prisma.technology.create({ data: { name: 'Docker', type: 'TOOL' } }),
+		vite: await prisma.technology.create({ data: { name: 'Vite', type: 'TOOL' } }),
+		prisma: await prisma.technology.create({ data: { name: 'Prisma', type: 'LIBRARY' } }),
+		kubernetes: await prisma.technology.create({ data: { name: 'Kubernetes', type: 'PLATFORM' } }),
+		python: await prisma.technology.create({ data: { name: 'Python', type: 'LANGUAGE' } }),
+		go: await prisma.technology.create({ data: { name: 'Go', type: 'LANGUAGE' } }),
+	};
+	console.log('Technologies created.');
+
+	// 3. Create Users
 	console.log('Creating users...');
-	const users = {};
-	const userEmails = [
-		'global_admin@test.com',
-		'techcorp_reader@test.com',
-		'cloud_services_admin@test.com',
-		'analytics_admin@test.com',
-		'cross_company_manager@test.com',
-		'compute_editor@test.com',
-		'storage_reader@test.com',
-		'devops_admin@test.com',
-		'solodev_admin@test.com',
-		'main_app_admin@test.com',
-		'side_project_admin@test.com',
-		'multirole_dev@test.com',
-		'pixelperfect_admin@test.com',
-		'web_ux_admin@test.com',
-		'lead_designer@test.com',
-		'external_auditor@test.com',
-		'guest_client@test.com',
-		'pending_user@test.com',
-	];
-
 	const password = await bcrypt.hash('password123', 10);
-
-	for (const email of userEmails) {
-		users[email] = await prisma.user.create({
-			data: {
-				email,
-				password: email === 'pending_user@test.com' ? null : password,
-				emailVerified: true,
-			},
-		});
-	}
+	const users = {
+		aperture_admin: await prisma.user.create({ data: { email: 'admin@aperture.dev', password, emailVerified: true } }),
+		momentum_admin: await prisma.user.create({ data: { email: 'admin@momentum.co', password, emailVerified: true } }),
+		nexus_editor: await prisma.user.create({ data: { email: 'editor@nexus-cloud.com', password, emailVerified: true } }),
+		quantum_lead: await prisma.user.create({ data: { email: 'lead.quantum@aperture.dev', password, emailVerified: true } }),
+		velocity_reader: await prisma.user.create({ data: { email: 'reader@velocity.io', password, emailVerified: true } }),
+		multi_role_dev: await prisma.user.create({ data: { email: 'dev@aperture.dev', password, emailVerified: true } }),
+	};
 	console.log('Users created.');
 
-	// 3. Create Hierarchies
-	console.log('Creating TechCorp (Enterprise) hierarchy...');
-	const techCorp = await prisma.organization.create({
+	// 4. Create Contacts
+	console.log('Creating contacts...');
+	const contacts = {
+		lead_contact: await prisma.contact.create({ data: { name: 'Casey Lead', email: users.quantum_lead.email, userId: users.quantum_lead.id } }),
+		external_pm: await prisma.contact.create({ data: { name: 'Pat Manager', email: 'pat.m@example.com' } }),
+		security_consultant: await prisma.contact.create({ data: { name: 'Sam Security', email: 'sam.sec@consultants.com' } }),
+		devops_eng: await prisma.contact.create({ data: { name: 'Dana Engineer', email: 'dana.eng@example.com' } }),
+	};
+	console.log('Contacts created.');
+
+	// 5. Create Hierarchies
+	console.log('Creating Aperture Labs (ENTERPRISE) hierarchy...');
+	const apertureOrg = await prisma.organization.create({
 		data: {
-			name: 'TechCorp',
+			name: 'Aperture Labs',
 			accountType: 'ENTERPRISE',
 			companies: {
 				create: [
 					{
-						name: 'Cloud Services',
-						teams: {
-							create: createTeams('Cloud Services', ['Compute', 'Storage', 'DevOps']),
-						},
+						name: 'Nexus Cloud Services',
+						teams: { create: createTeamsAndProjects(['Compute', 'Storage', 'Networking'], 2) }
 					},
 					{
-						name: 'Analytics Inc.',
-						teams: {
-							create: createTeams('Analytics Inc.', ['Data Platform', 'BI', 'Data Engineering']),
-						},
+						name: 'Quantum Innovations',
+						teams: { create: createTeamsAndProjects(['AI Research', 'Simulations', 'Data Analytics'], 3) }
 					},
-				],
-			},
+					{
+						name: 'Helios Robotics',
+						teams: { create: createTeamsAndProjects(['Control Systems', 'Hardware', 'Logistics'], 2) }
+					}
+				]
+			}
 		},
+		include: { companies: { include: { teams: { include: { projects: true } } } } }
 	});
-	console.log('TechCorp hierarchy created.');
 
-	console.log('Creating SoloDev (Standard) hierarchy...');
-	const soloDevOrg = await prisma.organization.create({
+	console.log('Creating Momentum Inc. (STANDARD) hierarchy...');
+	const momentumOrg = await prisma.organization.create({
 		data: {
-			name: 'SoloDev',
+			name: 'Momentum Inc.',
 			accountType: 'STANDARD',
 			companies: {
 				create: [
 					{
-						name: 'Main App',
-						teams: { create: createTeams('Main App', ['Mobile', 'Web', 'Backend']) },
+						name: 'Velocity Web Solutions',
+						teams: { create: createTeamsAndProjects(['E-Commerce', 'Marketing Sites', 'Client Portals'], 2) }
 					},
-					{
-						name: 'Side Project',
-						teams: { create: createTeams('Side Project', ['Game Dev', 'Marketing Site', 'API']) },
-					},
-				],
-			},
+				]
+			}
 		},
+		include: { companies: { include: { teams: { include: { projects: true } } } } }
 	});
-	console.log('SoloDev hierarchy created.');
+	console.log('Hierarchies created.');
 
-	console.log('Creating PixelPerfect Designs (Pro) hierarchy...');
-	const pixelPerfectOrg = await prisma.organization.create({
-		data: {
-			name: 'PixelPerfect Designs',
-			accountType: 'PRO',
-			companies: {
-				create: [
-					{
-						name: 'Web UX',
-						teams: { create: createTeams('Web UX', ['E-Commerce', 'Portfolio', 'Landing Pages']) },
-					},
-					{
-						name: 'Mobile UI',
-						teams: { create: createTeams('Mobile UI', ['iOS', 'Android', 'Design Systems']) },
-					},
-				],
-			},
-		},
+	// 6. Populate specific projects with extra data
+	const simulationsTeam = apertureOrg.companies.find(c => c.name === 'Quantum Innovations').teams.find(t => t.name === 'Simulations');
+	const projectToEnrich1 = simulationsTeam.projects[0];
+
+	const ecommerceTeam = momentumOrg.companies.find(c => c.name === 'Velocity Web Solutions').teams.find(t => t.name === 'E-Commerce');
+	const projectToEnrich2 = ecommerceTeam.projects[0];
+
+	console.log('Adding extra data to specific projects...');
+	await prisma.projectTechnology.createMany({
+		data: [
+			{ projectId: projectToEnrich1.id, technologyId: technologies.python.id, version: '3.11', source: 'user-entered' },
+			{ projectId: projectToEnrich1.id, technologyId: technologies.kubernetes.id, version: '1.27', source: 'user-entered' },
+			{ projectId: projectToEnrich1.id, technologyId: technologies.docker.id, version: '24.0', source: 'user-entered' },
+			
+			{ projectId: projectToEnrich2.id, technologyId: technologies.react.id, version: '18.2.0', source: 'user-entered' },
+			{ projectId: projectToEnrich2.id, technologyId: technologies.nodejs.id, version: '18.16.0', source: 'user-entered' },
+			{ projectId: projectToEnrich2.id, technologyId: technologies.postgres.id, version: '15.3', source: 'user-entered' },
+		]
 	});
-	console.log('PixelPerfect Designs hierarchy created.');
+	await prisma.projectContact.createMany({
+		data: [
+			{ projectId: projectToEnrich1.id, contactId: contacts.lead_contact.id, contactType: 'Technical Lead' },
+			{ projectId: projectToEnrich1.id, contactId: contacts.security_consultant.id, contactType: 'Security Consultant' },
+			{ projectId: projectToEnrich1.id, contactId: contacts.devops_eng.id, contactType: 'DevOps Engineer' },
 
-	// 4. Fetch created entities to assign memberships
-	console.log('Fetching created entities for permission assignment...');
+			{ projectId: projectToEnrich2.id, contactId: contacts.external_pm.id, contactType: 'Product Manager' },
+			{ projectId: projectToEnrich2.id, contactId: contacts.devops_eng.id, contactType: 'Deployment Contact' },
+			{ projectId: projectToEnrich2.id, contactId: contacts.lead_contact.id, contactType: 'External Advisor' },
+		]
+	});
+	console.log('Project enrichment complete.');
+
+	// 7. Assign Memberships
+	console.log('Assigning roles and permissions...');
+	// Fetch all entities for easy mapping
 	const allOrgs = await prisma.organization.findMany({ include: { companies: { include: { teams: { include: { projects: true } } } } } });
 	const orgMap = Object.fromEntries(allOrgs.map(o => [o.name, o]));
 
-	// Create a temporary array of companies that includes their parent organization's name
-	const companiesWithOrg = allOrgs.flatMap(org => 
-		org.companies.map(company => ({ ...company, orgName: org.name }))
-	);
-	const companyMap = Object.fromEntries(companiesWithOrg.map(c => [`${c.orgName}-${c.name}`, c]));
+	const companyMap = new Map();
+	allOrgs.forEach(org => org.companies.forEach(c => companyMap.set(c.name, c)));
 
-	const teamMap = Object.fromEntries(allOrgs.flatMap(o => o.companies.flatMap(c => c.teams)).map(t => [`${t.name}`, t]));
-	const projectMap = Object.fromEntries(allOrgs.flatMap(o => o.companies.flatMap(c => c.teams.flatMap(t => t.projects))).map(p => [`${p.name}`, p]));
+	const teamMap = new Map();
+	allOrgs.forEach(org => org.companies.forEach(c => c.teams.forEach(t => teamMap.set(t.name, t))));
 
-	// 5. Create Memberships (Permissions)
-	console.log('Assigning roles and permissions...');
 	await prisma.membership.createMany({
 		data: [
-			// --- TechCorp Users ---
-			{ userId: users['global_admin@test.com'].id, organizationId: orgMap['TechCorp'].id, role: 'ADMIN' },
-			{ userId: users['techcorp_reader@test.com'].id, organizationId: orgMap['TechCorp'].id, role: 'READER' },
-			{ userId: users['cloud_services_admin@test.com'].id, companyId: companyMap['TechCorp-Cloud Services'].id, role: 'ADMIN' },
-			{ userId: users['analytics_admin@test.com'].id, companyId: companyMap['TechCorp-Analytics Inc.'].id, role: 'ADMIN' },
-			{ userId: users['devops_admin@test.com'].id, teamId: teamMap['DevOps'].id, role: 'ADMIN' },
-			{ userId: users['compute_editor@test.com'].id, teamId: teamMap['Compute'].id, role: 'EDITOR' },
-			{ userId: users['storage_reader@test.com'].id, teamId: teamMap['Storage'].id, role: 'READER' },
-			{ userId: users['cross_company_manager@test.com'].id, teamId: teamMap['Compute'].id, role: 'EDITOR' },
-			{ userId: users['cross_company_manager@test.com'].id, teamId: teamMap['BI'].id, role: 'READER' },
-			{ userId: users['cross_company_manager@test.com'].id, projectId: projectMap['Data Platform Project 1'].id, role: 'ADMIN' },
+			// Aperture Labs Permissions
+			{ userId: users.aperture_admin.id, organizationId: orgMap['Aperture Labs'].id, role: 'ADMIN' },
+			{ userId: users.nexus_editor.id, companyId: companyMap.get('Nexus Cloud Services').id, role: 'EDITOR' },
+			{ userId: users.quantum_lead.id, teamId: teamMap.get('AI Research').id, role: 'ADMIN' },
+			{ userId: users.multi_role_dev.id, teamId: teamMap.get('Control Systems').id, role: 'EDITOR' },
+			{ userId: users.multi_role_dev.id, teamId: teamMap.get('Simulations').id, role: 'READER' },
 
-			// --- SoloDev Users ---
-			{ userId: users['solodev_admin@test.com'].id, organizationId: orgMap['SoloDev'].id, role: 'ADMIN' },
-			{ userId: users['main_app_admin@test.com'].id, companyId: companyMap['SoloDev-Main App'].id, role: 'ADMIN' },
-			{ userId: users['side_project_admin@test.com'].id, companyId: companyMap['SoloDev-Side Project'].id, role: 'ADMIN' },
-			{ userId: users['multirole_dev@test.com'].id, teamId: teamMap['Mobile'].id, role: 'EDITOR' },
-			{ userId: users['multirole_dev@test.com'].id, teamId: teamMap['Game Dev'].id, role: 'EDITOR' },
-			{ userId: users['multirole_dev@test.com'].id, projectId: projectMap['API Project 2'].id, role: 'READER' },
-
-			// --- PixelPerfect Users ---
-			{ userId: users['pixelperfect_admin@test.com'].id, organizationId: orgMap['PixelPerfect Designs'].id, role: 'ADMIN' },
-			{ userId: users['web_ux_admin@test.com'].id, companyId: companyMap['PixelPerfect Designs-Web UX'].id, role: 'ADMIN' },
-			{ userId: users['lead_designer@test.com'].id, teamId: teamMap['E-Commerce'].id, role: 'ADMIN' }, // Admin of team
-			{ userId: users['lead_designer@test.com'].id, companyId: companyMap['PixelPerfect Designs-Web UX'].id, role: 'READER' }, // But just a reader of the company
-			{ userId: users['lead_designer@test.com'].id, projectId: projectMap['iOS Project 1'].id, role: 'EDITOR' },
-			
-			// --- Cross-Org Users ---
-			{ userId: users['external_auditor@test.com'].id, companyId: companyMap['TechCorp-Analytics Inc.'].id, role: 'READER' },
-			{ userId: users['external_auditor@test.com'].id, companyId: companyMap['PixelPerfect Designs-Mobile UI'].id, role: 'READER' },
-			{ userId: users['guest_client@test.com'].id, projectId: projectMap['E-Commerce Project 1'].id, role: 'READER' },
-			
-			// --- Direct Project-level Roles to satisfy requirements ---
-			{ userId: users['global_admin@test.com'].id, projectId: projectMap['DevOps Project 3'].id, role: 'EDITOR' },
-			{ userId: users['solodev_admin@test.com'].id, projectId: projectMap['Marketing Site Project 2'].id, role: 'EDITOR' },
-			{ userId: users['pixelperfect_admin@test.com'].id, projectId: projectMap['Design Systems Project 1'].id, role: 'EDITOR' },
-
-			// --- Pending User ---
-			{ userId: users['pending_user@test.com'].id, teamId: teamMap['Web'].id, role: 'READER' },
-		],
+			// Momentum Inc. Permissions
+			{ userId: users.momentum_admin.id, organizationId: orgMap['Momentum Inc.'].id, role: 'ADMIN' },
+			{ userId: users.velocity_reader.id, companyId: companyMap.get('Velocity Web Solutions').id, role: 'READER' }
+		]
 	});
+	console.log('Permissions assigned.');
 
-	// 6. Create pending user invitation
-	await prisma.invitation.create({
-		data: {
-			userId: users['pending_user@test.com'].id,
-			email: 'pending_user@test.com',
-			token: 'test-token-12345',
-			expires: new Date(Date.now() + 24 * 60 * 60 * 1000), // 24 hours
-		},
-	});
-
-	console.log('Roles and permissions assigned.');
 	console.log('--- Seeding finished successfully! ---');
 }
 

@@ -10,4 +10,13 @@ export const API_ENDPOINTS = {
   [ITEM_TYPES.COMPANY]: '/api/v1/companies',
   [ITEM_TYPES.TEAM]: '/api/v1/teams',
   [ITEM_TYPES.PROJECT]: '/api/v1/projects'
-}; 
+};
+
+export const TECHNOLOGY_TYPES = [
+  'LANGUAGE',
+  'FRAMEWORK',
+  'LIBRARY',
+  'TOOL',
+  'PLATFORM',
+  'SERVICE',
+]; 

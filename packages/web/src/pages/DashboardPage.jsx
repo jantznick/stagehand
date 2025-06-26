@@ -67,7 +67,7 @@ function DashboardPage() {
                         {selectedItem.type === 'team' && <TeamDetails team={selectedItem} />}
                         {selectedItem.type !== 'project' && selectedItem.type !== 'team' && (
                             <>
-                                <h3 className="text-lg font-semibold text-white mb-3">Description</h3>
+                        <h3 className="text-lg font-semibold text-white mb-3">Description</h3>
                                 <p className="text-[var(--vanilla)]/80">{selectedItem.description || 'No description available for this item.'}</p>
                             </>
                         )}

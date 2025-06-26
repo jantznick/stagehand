@@ -1,6 +1,7 @@
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
+//  url      = "postgresql://admin:password@localhost:5432/stagehand?schema=public"
 }
 
 generator client {
@@ -207,25 +208,29 @@ model ProjectContact {
 
 model Technology {
   id   String @id @default(cuid())
-  name String @unique // e.g., "React", "Snyk", "Jira", "Python"
+  name String // e.g., "React", "Snyk", "Jira", "Python"
   type TechnologyType // To categorize the technology
   
   applications ProjectTechnology[]
+  dependencies ProjectDependency[]
+
+  @@unique([name, type])
 }
 
 model ProjectTechnology {
-  projectId String
-  project   Project @relation(fields: [projectId], references: [id])
+  id            String @id @default(cuid())
+  projectId     String
+  project       Project @relation(fields: [projectId], references: [id])
 
   technologyId  String
   technology    Technology @relation(fields: [technologyId], references: [id])
 
   /// e.g., 18.2.0 for React
   version       String?
-  /// How was this discovered? e.g., 'USER_ENTERED' or 'Discovered by Snyk'
+  /// How was this discovered? e.g., 'user-entered' or 'Discovered by Snyk'
   source        String
 
-  @@id([projectId, technologyId])
+  @@unique([projectId, technologyId, version])
 }
 
 model ProjectDependency {
@@ -236,6 +241,9 @@ model ProjectDependency {
   
   projectId String
   project   Project @relation(fields: [projectId], references: [id])
+
+  technologyId String?
+  technology   Technology? @relation(fields: [technologyId], references: [id])
 
   @@unique([projectId, name, version])
   @@index([name]) // Index for fast lookups by dependency name

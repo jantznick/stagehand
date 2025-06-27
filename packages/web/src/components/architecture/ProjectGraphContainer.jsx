@@ -6,8 +6,11 @@ import AddRelationshipForm from './AddRelationshipForm';
 import ConfirmationModal from '../ConfirmationModal';
 import CustomEdge from './CustomEdge';
 import { getLayoutedElements } from '../../lib/layout';
+import useHierarchyStore from '../../stores/useHierarchyStore';
 
-const ProjectGraphContainer = ({ projectId, companyId }) => {
+const ProjectGraphContainer = ({ projectId }) => {
+  const { activeCompany } = useHierarchyStore(state => ({ activeCompany: state.activeCompany }));
+
   const {
     initialNodes,
     initialEdges,
@@ -15,6 +18,7 @@ const ProjectGraphContainer = ({ projectId, companyId }) => {
     error,
     fetchProjectGraph,
     deleteRelationship,
+    fetchCompanyGraph,
   } = useArchitectureStore((state) => ({
     initialNodes: state.nodes,
     initialEdges: state.edges,
@@ -22,6 +26,7 @@ const ProjectGraphContainer = ({ projectId, companyId }) => {
     error: state.error,
     fetchProjectGraph: state.fetchProjectGraph,
     deleteRelationship: state.deleteRelationship,
+    fetchCompanyGraph: state.fetchCompanyGraph,
   }));
 
   const [nodes, setNodes] = useState(initialNodes);
@@ -34,8 +39,10 @@ const ProjectGraphContainer = ({ projectId, companyId }) => {
   useEffect(() => {
     if (projectId) {
       fetchProjectGraph(projectId);
+    } else if (activeCompany) {
+      fetchCompanyGraph(activeCompany.id);
     }
-  }, [projectId, fetchProjectGraph]);
+  }, [projectId, activeCompany, fetchProjectGraph, fetchCompanyGraph]);
   
   const handleDeleteClick = (event, edgeId) => {
     setSelectedEdgeId(edgeId);
@@ -71,10 +78,10 @@ const ProjectGraphContainer = ({ projectId, companyId }) => {
   const onEdgesChange = useCallback((changes) => setEdges((eds) => applyEdgeChanges(changes, eds)), []);
 
   const handleConfirmDelete = async () => {
-    if (!selectedEdgeId || !companyId) return;
+    if (!selectedEdgeId || !activeCompany?.id) return;
     setIsDeleting(true);
     try {
-      await deleteRelationship(companyId, selectedEdgeId);
+      await deleteRelationship(activeCompany.id, selectedEdgeId);
       setIsModalOpen(false);
       setSelectedEdgeId(null);
     } catch (e) {
@@ -110,10 +117,11 @@ const ProjectGraphContainer = ({ projectId, companyId }) => {
           edgeTypes={edgeTypes}
         />
         
-        <div style={{ marginTop: '24px' }}>
-          <h4 className="text-lg font-medium text-gray-300 mb-2">Add New Dependency</h4>
-          <AddRelationshipForm sourceProjectId={projectId} />
-        </div> 
+        {projectId && (
+          <div style={{ marginTop: '24px' }}>
+            <AddRelationshipForm sourceProjectId={projectId} />
+          </div> 
+        )}
         
       </div>
     </>

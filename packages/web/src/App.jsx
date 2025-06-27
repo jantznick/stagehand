@@ -44,7 +44,7 @@ const AppContent = () => {
     useEffect(() => {
         // When hierarchy data arrives and there's no active org, set the initial state.
         if (user && hierarchy.length > 0 && !activeOrganization) {
-            if (location.pathname.startsWith('/teams/') || location.pathname.startsWith('/projects/')) {
+            if (location.pathname.startsWith('/teams/') || location.pathname.startsWith('/projects/') || location.pathname.startsWith('/company/')) {
                 setActiveItemsFromUrl(location.pathname);
             } else {
                 setInitialActiveItems();
@@ -68,6 +68,10 @@ const AppContent = () => {
                     <Route path="/verify" element={<VerifyEmailPage />} />
                     <Route 
                         path="/dashboard" 
+                        element={<PrivateRoute><DashboardPage /></PrivateRoute>} 
+                    />
+                    <Route 
+                        path="/company/:companyId" 
                         element={<PrivateRoute><DashboardPage /></PrivateRoute>} 
                     />
                     <Route 

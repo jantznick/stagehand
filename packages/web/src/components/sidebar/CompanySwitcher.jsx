@@ -25,6 +25,7 @@ const CompanySwitcher = ({ isCollapsed }) => {
 
   const handleCompanySelect = (company) => {
     setActiveCompany(company);
+    navigate(`/company/${company.id}`);
     setPopoverOpen(false);
   };
 

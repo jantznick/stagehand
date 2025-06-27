@@ -4,6 +4,7 @@ import { Building, Briefcase, Users, Folder, Play } from 'lucide-react';
 import useHierarchyStore from '../stores/useHierarchyStore';
 import ApplicationDetails from '../components/applications/ApplicationDetails';
 import TeamDetails from '../components/teams/TeamDetails';
+import CompanyDetails from '../components/company/CompanyDetails';
 
 const icons = {
     organization: <Building size={28} className="text-[var(--orange-wheel)]" />,
@@ -13,7 +14,7 @@ const icons = {
 };
 
 function DashboardPage() {
-    const { teamId, projectId } = useParams();
+    const { companyId, teamId, projectId } = useParams();
     const { 
         selectedItem, 
         isLoading, 
@@ -22,13 +23,13 @@ function DashboardPage() {
     } = useHierarchyStore();
 
     useEffect(() => {
-        const id = projectId || teamId;
-        const type = projectId ? 'project' : 'team';
+        const id = projectId || teamId || companyId;
+        const type = projectId ? 'project' : teamId ? 'team' : 'company';
 
         if (id) {
             fetchAndSetSelectedItem(type, id);
         }
-    }, [teamId, projectId, fetchAndSetSelectedItem]);
+    }, [companyId, teamId, projectId, fetchAndSetSelectedItem]);
 
 
     return (
@@ -65,7 +66,8 @@ function DashboardPage() {
                     <div className="mt-8">
                         {selectedItem.type === 'project' && <ApplicationDetails project={selectedItem} />}
                         {selectedItem.type === 'team' && <TeamDetails team={selectedItem} />}
-                        {selectedItem.type !== 'project' && selectedItem.type !== 'team' && (
+                        {selectedItem.type === 'company' && <CompanyDetails />}
+                        {selectedItem.type !== 'project' && selectedItem.type !== 'team' && selectedItem.type !== 'company' && (
                             <>
                         <h3 className="text-lg font-semibold text-white mb-3">Description</h3>
                                 <p className="text-[var(--vanilla)]/80">{selectedItem.description || 'No description available for this item.'}</p>

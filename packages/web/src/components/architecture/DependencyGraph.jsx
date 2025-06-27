@@ -29,7 +29,6 @@ const FlowWithLayout = ({ nodes, edges, onNodesChange, onEdgesChange, edgeTypes 
       edgeTypes={edgeTypes}
       fitView
     >
-      <Controls />
       <Background />
     </ReactFlow>
   );

@@ -146,6 +146,29 @@ const useHierarchyStore = create((set, get) => {
         };
     }),
 
+    setActiveItemsFromUrl: (pathname) => set(state => {
+        const parts = pathname.split('/').filter(Boolean);
+        if (parts.length < 2) return {};
+
+        const type = parts[0]; // 'company', 'teams', or 'projects'
+        const id = parts[1];
+
+        // This handles a mismatch where the URL might be /team/:id but we use 'teams' internally
+        const itemType = type.endsWith('s') ? type.slice(0, -1) : type;
+
+        const result = findItemWithAncestry(state.hierarchy, (node) => node.id === id);
+
+        if (result) {
+            return {
+                activeOrganization: result.organization,
+                activeCompany: result.company || (result.organization?.companies?.[0] || null),
+                // The selected item is the specific item found at the end of the path
+                selectedItem: result[itemType] || result.company || result.organization
+            };
+        }
+        return {};
+    }),
+
     fetchHierarchy: async () => {
         set({ isLoading: true, error: null });
         try {
@@ -166,8 +189,9 @@ const useHierarchyStore = create((set, get) => {
     fetchAndSetSelectedItem: async (type, id) => {
         set({ isLoading: true, error: null, selectedItem: null });
         try {
-            // The API endpoints for single items are plural (e.g., /api/v1/teams/:id)
-            const response = await fetch(`/api/v1/${type}s/${id}`);
+            // Handle the irregular plural of "company"
+            const endpoint = type === 'company' ? 'companies' : `${type}s`;
+            const response = await fetch(`/api/v1/${endpoint}/${id}`);
             if (!response.ok) {
                 const err = await response.json();
                 throw new Error(err.error || `Failed to fetch ${type}`);
@@ -276,32 +300,6 @@ const useHierarchyStore = create((set, get) => {
         }
     })),
     
-    setActiveItemsFromUrl: (pathname) => {
-        const { hierarchy, setInitialActiveItems } = get();
-        if (!pathname || !hierarchy || hierarchy.length === 0) return;
-
-        const pathParts = pathname.split('/').filter(Boolean);
-        if (pathParts.length < 2) return;
-
-        const itemTypeSlug = pathParts[0];
-        const itemId = pathParts[1];
-        
-        if (itemTypeSlug !== 'teams' && itemTypeSlug !== 'projects') return;
-
-        const findFn = (node) => node.id === itemId;
-        const ancestry = findItemWithAncestry(hierarchy, findFn);
-        
-        if (ancestry) {
-            set({
-                activeOrganization: ancestry.organization,
-                activeCompany: ancestry.company,
-                accountType: ancestry.organization.accountType || 'STANDARD',
-            });
-        } else {
-            setInitialActiveItems();
-        }
-    },
-
     refreshActiveCompany: () => set(state => {
         const { activeCompany, activeOrganization } = state;
         if (!activeCompany || !activeOrganization) return {};

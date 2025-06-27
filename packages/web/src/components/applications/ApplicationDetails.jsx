@@ -158,8 +158,12 @@ const ApplicationDetails = ({ project }) => {
                 <option value="SERVICE">Service</option>
                 <option value="LIBRARY">Library</option>
                 <option value="FRONTEND_APP">Frontend App</option>
+				<option value="BACKEND_APP">Backend App</option>
                 <option value="MOBILE_APP">Mobile App</option>
                 <option value="CLI_TOOL">CLI Tool</option>
+				<option value="OWNED_HARDWARE">Owned Hardware</option>
+				<option value="CLOUD_HARDWARE">Cloud Hardware</option>
+				<option value="EXTERNAL_BOUGHT_SOFTWARE">External Bought Software</option>
                 <option value="OTHER">Other</option>
               </select>
             ) : (

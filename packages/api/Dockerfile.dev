@@ -8,21 +8,11 @@ RUN npm install -g npm@latest
 # Install openssl for Prisma Engine, which is needed by the api
 RUN apk add --no-cache openssl
 
-# Copy root package management files
-COPY package.json package-lock.json* ./
-
-# Copy the package.json files for each workspace to ensure npm can link them
-COPY ./packages/api/package.json ./packages/api/
-COPY ./packages/web/package.json ./packages/web/
-COPY ./packages/emails/package.json ./packages/emails/
+# Copy the entire source code first
+COPY . .
 
 # Install all dependencies for the monorepo
 RUN npm install --legacy-peer-deps --verbose
-
-# Copy the entire source code
-# In development, this will be overwritten by the volume mount in docker-compose.yml
-# but it's good practice to have a complete image.
-COPY . .
 
 # Generate the Prisma client for the API workspace
 RUN npm run prisma:generate --workspace=api

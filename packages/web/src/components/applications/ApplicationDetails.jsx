@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import useHierarchyStore from '../../stores/useHierarchyStore';
 import ContactManager from '../contacts/ContactManager';
 import TechnologyManager from '../technologies/TechnologyManager';
+import ProjectGraphContainer from '../architecture/ProjectGraphContainer';
 
 const ApplicationDetails = ({ project }) => {
   const [isEditing, setIsEditing] = useState(false);
@@ -103,6 +104,14 @@ const ApplicationDetails = ({ project }) => {
 
       {/* Technologies Section */}
       <TechnologyManager project={project} />
+
+	  {/* Dependencies Graph Section */}
+	  <div className="pt-8">
+        <ProjectGraphContainer 
+          projectId={project.id} 
+          companyId={project.team?.companyId} 
+        />
+      </div>
     </div>
   );
 };

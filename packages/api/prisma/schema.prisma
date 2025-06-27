@@ -141,6 +141,27 @@ model Project {
   contacts    ProjectContact[]
   technologies        ProjectTechnology[]
   dependencies        ProjectDependency[]
+
+  outboundDependencies ProjectRelationship[] @relation("outboundDependencies")
+  inboundDependencies  ProjectRelationship[] @relation("inboundDependencies")
+}
+
+model ProjectRelationship {
+  id          String @id @default(cuid())
+  description String?
+  // Type of relationship, e.g., 'API', 'DATABASE', 'MESSAGE_QUEUE', 'DIRECT_DEPENDENCY'
+  type        String
+
+  // The project that has the dependency (the source of the connection)
+  sourceProjectId String
+  sourceProject   Project @relation("outboundDependencies", fields: [sourceProjectId], references: [id], onDelete: Cascade)
+
+  // The project that is the dependency (the target of the connection)
+  targetProjectId String
+  targetProject   Project @relation("inboundDependencies", fields: [targetProjectId], references: [id], onDelete: Cascade)
+
+  // A relationship of a certain type between two projects must be unique
+  @@unique([sourceProjectId, targetProjectId, type])
 }
 
 model Invitation {
@@ -152,6 +173,8 @@ model Invitation {
   
   userId    String   @unique
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  usedAt    DateTime?
 }
 
 model Membership {

@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { PrismaClient } from '@prisma/client';
 import { protect } from '../middleware/authMiddleware.js';
-import { getVisibleResourceIds, hasPermission } from '../utils/permissions.js';
+import { getVisibleResourceIds, hasPermission, isMemberOfCompany } from '../utils/permissions.js';
 
 const prisma = new PrismaClient();
 const router = Router();
@@ -541,6 +541,119 @@ router.delete('/:id/technologies/:projectTechnologyId', async (req, res) => {
         }
         console.error(`Error removing technology from project ${projectId}:`, error);
         res.status(500).json({ error: 'Failed to remove technology.' });
+    }
+});
+
+// GET endpoint for company-wide project graph data
+router.get('/graph', async (req, res) => {
+    const { companyId } = req.query;
+    const userId = req.user.id;
+
+    if (!companyId) {
+        return res.status(400).json({ error: 'A company ID is required.' });
+    }
+
+    // Authorize: Check if user is part of the company
+    const isMember = await isMemberOfCompany(userId, companyId);
+    if (!isMember) {
+        return res.status(403).json({ error: 'You are not a member of this company.' });
+    }
+
+    try {
+        const projects = await prisma.project.findMany({
+            where: { team: { companyId: companyId } },
+        });
+
+        const relationships = await prisma.projectRelationship.findMany({
+            where: { sourceProject: { team: { companyId: companyId } } },
+        });
+
+        const nodes = projects.map(project => ({
+            id: project.id,
+            type: 'default',
+            data: { label: project.name },
+            position: { x: Math.random() * 400, y: Math.random() * 400 },
+        }));
+
+        const edges = relationships.map(rel => ({
+            id: rel.id,
+            source: rel.sourceProjectId,
+            target: rel.targetProjectId,
+            label: rel.type,
+            type: 'default',
+            style: { strokeWidth: 4 },
+            markerEnd: { type: 'arrowclosed', width: 25, height: 25 },
+        }));
+
+        res.json({ nodes, edges });
+    } catch (error) {
+        console.error('Failed to fetch company graph:', error);
+        res.status(500).json({ error: 'Failed to fetch company graph data.' });
+    }
+});
+
+// GET endpoint for project-specific "mini-graph"
+router.get('/:id/graph', async (req, res) => {
+    const { id: projectId } = req.params;
+    const userId = req.user.id;
+
+    try {
+        const project = await prisma.project.findUnique({
+            where: { id: projectId },
+            include: { team: true },
+        });
+
+        if (!project) {
+            return res.status(404).json({ error: 'Project not found.' });
+        }
+
+        const isMember = await isMemberOfCompany(userId, project.team.companyId);
+        if (!isMember) {
+            return res.status(403).json({ error: 'You are not authorized to view this project.' });
+        }
+
+        const relationships = await prisma.projectRelationship.findMany({
+            where: {
+                OR: [
+                    { sourceProjectId: projectId },
+                    { targetProjectId: projectId },
+                ],
+            },
+        });
+
+        const relatedProjectIds = new Set([projectId]);
+        relationships.forEach(rel => {
+            relatedProjectIds.add(rel.sourceProjectId);
+            relatedProjectIds.add(rel.targetProjectId);
+        });
+
+        const relatedProjects = await prisma.project.findMany({
+            where: { id: { in: [...relatedProjectIds] } },
+        });
+
+        const nodes = relatedProjects.map(p => ({
+            id: p.id,
+            type: 'default', // All nodes are default to have both handles
+            data: { 
+              label: p.name,
+              isPrimary: p.id === projectId // Flag for styling the main project
+            },
+            position: { x: Math.random() * 250, y: Math.random() * 250 },
+        }));
+
+        const edges = relationships.map(rel => ({
+            id: rel.id,
+            source: rel.sourceProjectId,
+            target: rel.targetProjectId,
+            label: rel.type,
+            style: { strokeWidth: 2 },
+            markerEnd: { type: 'arrowclosed', width: 25, height: 25 },
+        }));
+
+        res.json({ nodes, edges });
+    } catch (error) {
+        console.error('Failed to fetch project graph:', error);
+        res.status(500).json({ error: 'Failed to fetch project graph data.' });
     }
 });
 

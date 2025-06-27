@@ -16,6 +16,7 @@ import membershipRoutes from './routes/memberships.js';
 import invitationRoutes from './routes/invitations.js';
 import oidcRoutes from './routes/oidc.js';
 import technologyRoutes from './routes/technologies.js';
+import relationshipRoutes from './routes/relationships.js';
 
 const app = express();
 const port = process.env.PORT || 3001;
@@ -66,6 +67,7 @@ app.use('/api/v1/memberships', membershipRoutes);
 app.use('/api/v1/invitations', invitationRoutes);
 app.use('/api/v1', oidcRoutes);
 app.use('/api/v1/technologies', technologyRoutes);
+app.use('/api/v1/relationships', relationshipRoutes);
 
 app.listen(port, () => {
   console.log(`API server listening on port ${port}`);

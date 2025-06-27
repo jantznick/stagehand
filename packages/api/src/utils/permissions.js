@@ -86,4 +86,24 @@ export async function hasPermission(user, roles, resourceType, resourceId) {
     };
     
     return await parentChecks[resourceType]();
+}
+
+/**
+ * Checks if a user is a member of a specific company, respecting hierarchy.
+ * @param {string} userId - The ID of the user.
+ * @param {string} companyId - The ID of the company.
+ * @returns {Promise<boolean>} - True if the user has any role in the company, directly or implicitly.
+ */
+export async function isMemberOfCompany(userId, companyId) {
+    if (!userId || !companyId) return false;
+
+    const user = await prisma.user.findUnique({
+        where: { id: userId },
+        include: { memberships: true },
+    });
+
+    if (!user) return false;
+
+    const visibleCompanyIds = await getVisibleResourceIds(user, 'company');
+    return visibleCompanyIds.includes(companyId);
 } 

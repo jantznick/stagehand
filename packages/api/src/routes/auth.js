@@ -7,10 +7,11 @@ import passport from 'passport';
 import { dynamicOidcStrategy } from '../utils/passport.js';
 import { sendEmail } from '../utils/email.js';
 import React from 'react';
-import { ForgotPassword } from '../../../emails/emails/ForgotPassword.jsx';
-import { NewUserWelcome } from '../../../emails/emails/NewUserWelcome.jsx';
-import { AdminAutoJoinNotification } from '../../../emails/emails/AdminAutoJoinNotification.jsx';
-import { MagicLinkLogin } from '../../../emails/emails/MagicLinkLogin.jsx';
+import { getAncestors } from '../utils/hierarchy.js';
+import NewUserWelcome from '../../../emails/emails/NewUserWelcome.jsx';
+import AdminAutoJoinNotification from '../../../emails/emails/AdminAutoJoinNotification.jsx';
+import ForgotPassword from '../../../emails/emails/ForgotPassword.jsx';
+import MagicLinkLogin from '../../../emails/emails/MagicLinkLogin.jsx';
 
 const prisma = new PrismaClient();
 const router = Router();

@@ -15,8 +15,11 @@ const ApplicationDetails = ({ project }) => {
   }, [project]);
 
   const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setEditableProject(prev => ({ ...prev, [name]: value }));
+    const { name, value, type, checked } = e.target;
+    setEditableProject(prev => ({ 
+        ...prev, 
+        [name]: type === 'checkbox' ? checked : value 
+    }));
   };
 
   const handleSave = async () => {
@@ -33,6 +36,11 @@ const ApplicationDetails = ({ project }) => {
   const handleCancel = () => {
     setEditableProject(project);
     setIsEditing(false);
+  };
+
+  const formatEnum = (value) => {
+    if (!value) return 'Not set';
+    return value.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
   };
 
   return (
@@ -99,6 +107,122 @@ const ApplicationDetails = ({ project }) => {
         </div>
       </div>
 
+      {/* Operational Readiness Section */}
+      <div className="pt-6">
+        <h4 className="text-lg font-medium text-white pb-2 border-b border-white/10">Operational Readiness</h4>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6 mt-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-400">Communication Channel</label>
+            {isEditing ? (
+              <input type="text" name="communicationChannel" value={editableProject.communicationChannel || ''} onChange={handleInputChange} placeholder="e.g., #engineering-app-alerts" className="mt-1 block w-full bg-gray-800 border-gray-600 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm text-white p-2" />
+            ) : (
+              <p className="mt-1 text-white">{project.communicationChannel || 'Not set'}</p>
+            )}
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-400">Documentation URL</label>
+            {isEditing ? (
+              <input type="text" name="documentationUrl" value={editableProject.documentationUrl || ''} onChange={handleInputChange} placeholder="e.g., Confluence, Notion" className="mt-1 block w-full bg-gray-800 border-gray-600 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm text-white p-2" />
+            ) : (
+              <p className="mt-1 text-white">{project.documentationUrl || 'Not set'}</p>
+            )}
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-400">API Reference URL</label>
+            {isEditing ? (
+              <input type="text" name="apiReferenceUrl" value={editableProject.apiReferenceUrl || ''} onChange={handleInputChange} placeholder="e.g., Swagger, OpenAPI" className="mt-1 block w-full bg-gray-800 border-gray-600 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm text-white p-2" />
+            ) : (
+              <p className="mt-1 text-white">{project.apiReferenceUrl || 'Not set'}</p>
+            )}
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-400">Runbook URL</label>
+            {isEditing ? (
+              <input type="text" name="runbookUrl" value={editableProject.runbookUrl || ''} onChange={handleInputChange} placeholder="Link to on-call runbooks" className="mt-1 block w-full bg-gray-800 border-gray-600 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm text-white p-2" />
+            ) : (
+              <p className="mt-1 text-white">{project.runbookUrl || 'Not set'}</p>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Security & Compliance Section */}
+      <div className="pt-6">
+        <h4 className="text-lg font-medium text-white pb-2 border-b border-white/10">Security & Compliance</h4>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-6 mt-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-400">Application Type</label>
+            {isEditing ? (
+              <select name="projectType" value={editableProject.projectType || ''} onChange={handleInputChange} className="mt-1 block w-full bg-gray-800 border-gray-600 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm text-white p-2">
+                <option value="">Select type...</option>
+                <option value="SERVICE">Service</option>
+                <option value="LIBRARY">Library</option>
+                <option value="FRONTEND_APP">Frontend App</option>
+                <option value="MOBILE_APP">Mobile App</option>
+                <option value="CLI_TOOL">CLI Tool</option>
+                <option value="OTHER">Other</option>
+              </select>
+            ) : (
+              <p className="mt-1 text-white">{formatEnum(project.projectType)}</p>
+            )}
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-400">Data Classification</label>
+            {isEditing ? (
+              <select name="dataClassification" value={editableProject.dataClassification || ''} onChange={handleInputChange} className="mt-1 block w-full bg-gray-800 border-gray-600 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm text-white p-2">
+                <option value="">Select classification...</option>
+                <option value="PUBLIC">Public</option>
+                <option value="INTERNAL">Internal</option>
+                <option value="SENSITIVE">Sensitive</option>
+                <option value="RESTRICTED">Restricted</option>
+              </select>
+            ) : (
+              <p className="mt-1 text-white">{formatEnum(project.dataClassification)}</p>
+            )}
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-400">Application Criticality</label>
+            {isEditing ? (
+              <select name="applicationCriticality" value={editableProject.applicationCriticality || ''} onChange={handleInputChange} className="mt-1 block w-full bg-gray-800 border-gray-600 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm text-white p-2">
+                <option value="">Select criticality...</option>
+                <option value="LOW">Low</option>
+                <option value="MEDIUM">Medium</option>
+                <option value="HIGH">High</option>
+                <option value="CRITICAL">Critical</option>
+              </select>
+            ) : (
+              <p className="mt-1 text-white">{formatEnum(project.applicationCriticality)}</p>
+            )}
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-400">Last Security Review</label>
+            {isEditing ? (
+              <input type="date" name="lastSecurityReview" value={editableProject.lastSecurityReview ? new Date(editableProject.lastSecurityReview).toISOString().split('T')[0] : ''} onChange={handleInputChange} className="mt-1 block w-full bg-gray-800 border-gray-600 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm text-white p-2" />
+            ) : (
+              <p className="mt-1 text-white">{project.lastSecurityReview ? new Date(project.lastSecurityReview).toLocaleDateString() : 'Not set'}</p>
+            )}
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-400">Threat Model</label>
+            {isEditing ? (
+              <input type="text" name="threatModelUrl" value={editableProject.threatModelUrl || ''} onChange={handleInputChange} placeholder="Link to threat model" className="mt-1 block w-full bg-gray-800 border-gray-600 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm text-white p-2" />
+            ) : (
+              <p className="mt-1 text-white">{project.threatModelUrl || 'Not set'}</p>
+            )}
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-400">Externally Exposed</label>
+            {isEditing ? (
+                <div className="flex items-center h-full">
+                    <input id="isExternallyExposed" name="isExternallyExposed" type="checkbox" checked={editableProject.isExternallyExposed || false} onChange={handleInputChange} className="h-4 w-4 rounded bg-gray-700 border-gray-600 text-blue-600 focus:ring-blue-500" />
+                </div>
+            ) : (
+              <p className="mt-1 text-white">{project.isExternallyExposed ? 'Yes' : 'No'}</p>
+            )}
+          </div>
+        </div>
+      </div>
+
       {/* Contacts Section */}
       <ContactManager project={project} />
 
@@ -116,4 +240,4 @@ const ApplicationDetails = ({ project }) => {
   );
 };
 
-export default ApplicationDetails; 
+export default ApplicationDetails;

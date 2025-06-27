@@ -39,6 +39,29 @@ enum TechnologyType {
   SERVICE
 }
 
+enum ProjectType {
+  SERVICE
+  LIBRARY
+  FRONTEND_APP
+  MOBILE_APP
+  CLI_TOOL
+  OTHER
+}
+
+enum DataClassification {
+  PUBLIC
+  INTERNAL
+  SENSITIVE
+  RESTRICTED
+}
+
+enum ApplicationCriticality {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
 model User {
   id        String    @id @default(cuid())
   email     String    @unique
@@ -136,6 +159,18 @@ model Project {
 
   /// Timestamp of the last successful scan by any integrated tool
   lastScanDate        DateTime?
+
+  projectType          ProjectType?
+  dataClassification   DataClassification?
+  applicationCriticality ApplicationCriticality?
+  isExternallyExposed  Boolean?          @default(false)
+
+  communicationChannel String?     // e.g., Slack channel link
+  documentationUrl     String?     // Link to general project documentation (e.g., Confluence)
+  apiReferenceUrl      String?     // Link to API documentation (e.g., Swagger, OpenAPI)
+  runbookUrl           String?     // Link to operational runbooks for on-call
+  threatModelUrl       String?     // Link to threat model document
+  lastSecurityReview   DateTime?   // Date of last manual security review
 
   /// Points of contact for this application
   contacts    ProjectContact[]

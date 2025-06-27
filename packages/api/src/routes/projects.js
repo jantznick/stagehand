@@ -135,7 +135,13 @@ router.post('/', async (req, res) => {
 // PUT /api/v1/projects/:id - Update a project
 router.put('/:id', async (req, res) => {
     const { id } = req.params;
-    const { name, description, applicationUrl, version, deploymentStatus, repositoryUrl, ciCdPipelineUrl } = req.body;
+    const { 
+        name, description, applicationUrl, version, deploymentStatus, 
+        repositoryUrl, ciCdPipelineUrl, projectType, dataClassification, 
+        applicationCriticality, isExternallyExposed, communicationChannel, 
+        documentationUrl, apiReferenceUrl, runbookUrl, threatModelUrl, 
+        lastSecurityReview 
+    } = req.body;
 
     // Authorization: User must be an ADMIN or EDITOR of the project to update it.
     const canUpdate = await hasPermission(req.user, ['ADMIN', 'EDITOR'], 'project', id);
@@ -154,6 +160,16 @@ router.put('/:id', async (req, res) => {
                 deploymentStatus,
                 repositoryUrl,
                 ciCdPipelineUrl,
+                projectType,
+                dataClassification,
+                applicationCriticality,
+                isExternallyExposed,
+                communicationChannel,
+                documentationUrl,
+                apiReferenceUrl,
+                runbookUrl,
+                threatModelUrl,
+                lastSecurityReview: lastSecurityReview ? new Date(lastSecurityReview) : null,
             }
         });
         res.status(200).json(updatedProject);

@@ -34,6 +34,9 @@ const TechnologyManager = ({ project }) => {
 
     const handleRemoveTechnology = (projectTechnologyId) => {
         removeTechnology(project.id, projectTechnologyId);
+		setIsAdding(false);
+		setEditingGroupId(null);
+		setAddingVersionToGroupId(null);
     };
     
     // When a user clicks 'Edit' on a group, we expand it.
@@ -62,14 +65,15 @@ const TechnologyManager = ({ project }) => {
                 <h3 className="text-xl font-semibold text-white">
                     Technology Stack
                 </h3>
-                {!isAdding && !editingGroupId && (
+				{!isAdding && !editingGroupId && (
                      <button
                         onClick={handleBeginAddTechnology}
+						disabled={!isAdding && !editingGroupId}
                         className="px-3 py-1 text-sm rounded-md bg-indigo-600 hover:bg-indigo-500 text-white"
                     >
                         Add Technology
                     </button>
-                )}
+				)}
             </div>
             
             <div className="mt-4 space-y-4">

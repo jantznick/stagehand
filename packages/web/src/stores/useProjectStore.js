@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import useHierarchyStore from './useHierarchyStore';
 
 const useProjectStore = create((set) => {
     const initialState = {
@@ -72,6 +73,31 @@ const useProjectStore = create((set) => {
     },
 
     reset: () => set(initialState),
+
+    linkRepositoryToProject: async (projectId, data) => {
+        set({ loading: true, error: null });
+        try {
+            const response = await fetch(`/api/v1/projects/${projectId}/link-repo`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data),
+            });
+            if (!response.ok) {
+                const err = await response.json();
+                throw new Error(err.error || 'Failed to link repository');
+            }
+            const updatedProject = await response.json();
+            
+            // Refresh the main hierarchy store to reflect the change
+            useHierarchyStore.getState().fetchAndSetSelectedItem('project', projectId);
+
+            set({ loading: false });
+            return updatedProject;
+        } catch (error) {
+            set({ loading: false, error: error.message });
+            throw error;
+        }
+    },
     };
 });
 

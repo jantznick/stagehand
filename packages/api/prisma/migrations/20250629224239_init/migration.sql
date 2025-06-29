@@ -10,6 +10,18 @@ CREATE TYPE "DeploymentStatus" AS ENUM ('PLANNING', 'IN_DEVELOPMENT', 'TESTING',
 -- CreateEnum
 CREATE TYPE "TechnologyType" AS ENUM ('LANGUAGE', 'FRAMEWORK', 'LIBRARY', 'TOOL', 'PLATFORM', 'SERVICE');
 
+-- CreateEnum
+CREATE TYPE "ProjectType" AS ENUM ('SERVICE', 'LIBRARY', 'FRONTEND_APP', 'BACKEND_APP', 'MOBILE_APP', 'OWNED_HARDWARE', 'CLOUD_HARDWARE', 'EXTERNAL_BOUGHT_SOFTWARE', 'CLI_TOOL', 'OTHER');
+
+-- CreateEnum
+CREATE TYPE "DataClassification" AS ENUM ('PUBLIC', 'INTERNAL', 'SENSITIVE', 'RESTRICTED');
+
+-- CreateEnum
+CREATE TYPE "ApplicationCriticality" AS ENUM ('LOW', 'MEDIUM', 'HIGH', 'CRITICAL');
+
+-- CreateEnum
+CREATE TYPE "SCMProvider" AS ENUM ('GITHUB', 'BITBUCKET', 'AZURE_DEVOPS');
+
 -- CreateTable
 CREATE TABLE "User" (
     "id" TEXT NOT NULL,
@@ -86,8 +98,30 @@ CREATE TABLE "Project" (
     "repositoryUrl" TEXT,
     "ciCdPipelineUrl" TEXT,
     "lastScanDate" TIMESTAMP(3),
+    "projectType" "ProjectType",
+    "dataClassification" "DataClassification",
+    "applicationCriticality" "ApplicationCriticality",
+    "isExternallyExposed" BOOLEAN DEFAULT false,
+    "communicationChannel" TEXT,
+    "documentationUrl" TEXT,
+    "apiReferenceUrl" TEXT,
+    "runbookUrl" TEXT,
+    "threatModelUrl" TEXT,
+    "lastSecurityReview" TIMESTAMP(3),
+    "scmIntegrationId" TEXT,
 
     CONSTRAINT "Project_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "ProjectRelationship" (
+    "id" TEXT NOT NULL,
+    "description" TEXT,
+    "type" TEXT NOT NULL,
+    "sourceProjectId" TEXT NOT NULL,
+    "targetProjectId" TEXT NOT NULL,
+
+    CONSTRAINT "ProjectRelationship_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -98,6 +132,8 @@ CREATE TABLE "Invitation" (
     "expires" TIMESTAMP(3) NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "userId" TEXT NOT NULL,
+    "expiresAt" TIMESTAMP(3) NOT NULL,
+    "usedAt" TIMESTAMP(3),
 
     CONSTRAINT "Invitation_pkey" PRIMARY KEY ("id")
 );
@@ -225,11 +261,33 @@ CREATE TABLE "LoginToken" (
     CONSTRAINT "LoginToken_pkey" PRIMARY KEY ("id")
 );
 
+-- CreateTable
+CREATE TABLE "SCMIntegration" (
+    "id" TEXT NOT NULL,
+    "provider" "SCMProvider" NOT NULL,
+    "displayName" TEXT,
+    "installationId" TEXT,
+    "encryptedAccessToken" TEXT NOT NULL,
+    "encryptedRefreshToken" TEXT,
+    "createdById" TEXT NOT NULL,
+    "organizationId" TEXT,
+    "companyId" TEXT,
+    "teamId" TEXT,
+    "projectId" TEXT,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "SCMIntegration_pkey" PRIMARY KEY ("id")
+);
+
 -- CreateIndex
 CREATE UNIQUE INDEX "User_email_key" ON "User"("email");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "Session_sid_key" ON "Session"("sid");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "ProjectRelationship_sourceProjectId_targetProjectId_type_key" ON "ProjectRelationship"("sourceProjectId", "targetProjectId", "type");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "Invitation_email_key" ON "Invitation"("email");
@@ -307,6 +365,15 @@ ALTER TABLE "Team" ADD CONSTRAINT "Team_companyId_fkey" FOREIGN KEY ("companyId"
 ALTER TABLE "Project" ADD CONSTRAINT "Project_teamId_fkey" FOREIGN KEY ("teamId") REFERENCES "Team"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE "Project" ADD CONSTRAINT "Project_scmIntegrationId_fkey" FOREIGN KEY ("scmIntegrationId") REFERENCES "SCMIntegration"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "ProjectRelationship" ADD CONSTRAINT "ProjectRelationship_sourceProjectId_fkey" FOREIGN KEY ("sourceProjectId") REFERENCES "Project"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "ProjectRelationship" ADD CONSTRAINT "ProjectRelationship_targetProjectId_fkey" FOREIGN KEY ("targetProjectId") REFERENCES "Project"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
 ALTER TABLE "Invitation" ADD CONSTRAINT "Invitation_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
@@ -359,3 +426,18 @@ ALTER TABLE "PasswordResetToken" ADD CONSTRAINT "PasswordResetToken_userId_fkey"
 
 -- AddForeignKey
 ALTER TABLE "LoginToken" ADD CONSTRAINT "LoginToken_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "SCMIntegration" ADD CONSTRAINT "SCMIntegration_createdById_fkey" FOREIGN KEY ("createdById") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "SCMIntegration" ADD CONSTRAINT "SCMIntegration_organizationId_fkey" FOREIGN KEY ("organizationId") REFERENCES "Organization"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "SCMIntegration" ADD CONSTRAINT "SCMIntegration_companyId_fkey" FOREIGN KEY ("companyId") REFERENCES "Company"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "SCMIntegration" ADD CONSTRAINT "SCMIntegration_teamId_fkey" FOREIGN KEY ("teamId") REFERENCES "Team"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "SCMIntegration" ADD CONSTRAINT "SCMIntegration_projectId_fkey" FOREIGN KEY ("projectId") REFERENCES "Project"("id") ON DELETE CASCADE ON UPDATE CASCADE;

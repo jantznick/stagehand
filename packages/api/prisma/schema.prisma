@@ -66,6 +66,12 @@ enum ApplicationCriticality {
   CRITICAL
 }
 
+enum SCMProvider {
+  GITHUB
+  BITBUCKET
+  AZURE_DEVOPS
+}
+
 model User {
   id        String    @id @default(cuid())
   email     String    @unique
@@ -83,6 +89,7 @@ model User {
   loginTokens LoginToken[]
   
   contacts    Contact[]
+  scmIntegrations SCMIntegration[]
 }
 
 model Session {
@@ -106,6 +113,7 @@ model Organization {
   memberships Membership[]
   autoJoinDomains  AutoJoinDomain[]
   oidcConfiguration OIDCConfiguration?
+  integrations      SCMIntegration[]
 }
 
 model Company {
@@ -121,6 +129,7 @@ model Company {
   teams      Team[]
   memberships Membership[]
   autoJoinDomains AutoJoinDomain[]
+  integrations SCMIntegration[]
 }
 
 model Team {
@@ -135,6 +144,7 @@ model Team {
 
   projects   Project[]
   memberships Membership[]
+  integrations SCMIntegration[]
 }
 
 model Project {
@@ -183,6 +193,10 @@ model Project {
 
   outboundDependencies ProjectRelationship[] @relation("outboundDependencies")
   inboundDependencies  ProjectRelationship[] @relation("inboundDependencies")
+  integrations         SCMIntegration[] @relation("DirectProjectIntegrations")
+
+  scmIntegrationId String?
+  scmIntegration   SCMIntegration? @relation("ProjectRepositoryLink", fields: [scmIntegrationId], references: [id], onDelete: SetNull)
 }
 
 model ProjectRelationship {
@@ -368,4 +382,34 @@ model LoginToken {
   expiresAt DateTime
   createdAt DateTime @default(now())
   usedAt    DateTime?
+}
+
+model SCMIntegration {
+  id        String  @id @default(cuid())
+  provider  SCMProvider
+  displayName String?
+
+  installationId        String?
+  encryptedAccessToken  String
+  encryptedRefreshToken String?
+
+  createdById String
+  createdBy   User   @relation(fields: [createdById], references: [id], onDelete: Cascade)
+
+  organizationId String?
+  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  companyId String?
+  company   Company?      @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  teamId String?
+  team   Team?         @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  
+  projectId String?
+  project   Project?      @relation("DirectProjectIntegrations", fields: [projectId], references: [id], onDelete: Cascade)
+
+  projectLinks Project[] @relation("ProjectRepositoryLink")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 } 

@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { PrismaClient } from '@prisma/client';
 import { protect } from '../middleware/authMiddleware.js';
 import { getVisibleResourceIds, hasPermission, isMemberOfCompany } from '../utils/permissions.js';
+import { getDescendants } from '../utils/hierarchy.js';
 
 const prisma = new PrismaClient();
 const router = Router();
@@ -23,7 +24,15 @@ router.get('/:id', async (req, res) => {
         const project = await prisma.project.findUnique({
             where: { id },
             include: {
-                team: true,
+                team: {
+                    include: {
+                        company: {
+                            include: {
+                                organization: true
+                            }
+                        }
+                    }
+                },
                 contacts: {
                     include: {
                         contact: true,
@@ -670,6 +679,92 @@ router.get('/:id/graph', async (req, res) => {
     } catch (error) {
         console.error('Failed to fetch project graph:', error);
         res.status(500).json({ error: 'Failed to fetch project graph data.' });
+    }
+});
+
+/**
+ * @route GET /api/v1/projects/by-resource
+ * @desc Get a flat list of all projects within a given resource's hierarchy
+ * @access Private
+ */
+router.get('/by-resource', async (req, res) => {
+    const { resourceType, resourceId } = req.query;
+
+    if (!resourceType || !resourceId) {
+        return res.status(400).json({ error: 'resourceType and resourceId query parameters are required.' });
+    }
+
+    // First, ensure the user has permission to view the parent resource
+    const canView = await hasPermission(req.user, ['ADMIN', 'EDITOR', 'READER'], resourceType, resourceId);
+    if (!canView) {
+        return res.status(403).json({ error: `You are not authorized to view projects for this ${resourceType}.` });
+    }
+
+    try {
+        let allProjectIds = [];
+        
+        if (resourceType === 'project') {
+            allProjectIds = [resourceId];
+        } else {
+            const descendantIds = await getDescendants(resourceType, resourceId);
+            allProjectIds = descendantIds.projectIds;
+        }
+
+        const projects = await prisma.project.findMany({
+            where: {
+                id: { in: allProjectIds }
+            },
+            select: {
+                id: true,
+                name: true,
+                repositoryUrl: true,
+            },
+            orderBy: {
+                name: 'asc'
+            }
+        });
+
+        res.status(200).json(projects);
+
+    } catch (error) {
+        console.error(`Get projects for ${resourceType} error:`, error);
+        res.status(500).json({ error: 'Failed to retrieve projects.' });
+    }
+});
+
+/**
+ * @route POST /api/v1/projects/:id/link-repo
+ * @desc Link a repository to a project
+ * @access Private
+ */
+router.post('/:id/link-repo', async (req, res) => {
+    const { id } = req.params;
+    const { repositoryUrl, scmIntegrationId } = req.body;
+
+    if (!repositoryUrl || !scmIntegrationId) {
+        return res.status(400).json({ error: 'repositoryUrl and scmIntegrationId are required.' });
+    }
+    
+    // Authorization: Check if the user is an ADMIN or EDITOR of the project.
+    const canUpdate = await hasPermission(req.user, ['ADMIN', 'EDITOR'], 'project', id);
+    if (!canUpdate) {
+        return res.status(403).json({ error: 'You are not authorized to update this project.' });
+    }
+
+    try {
+        const updatedProject = await prisma.project.update({
+            where: { id },
+            data: { 
+                repositoryUrl,
+                scmIntegrationId,
+            }
+        });
+
+        res.status(200).json(updatedProject);
+
+    } catch (error) {
+        console.error('Link repo error:', error);
+        res.status(500).json({ error: 'Failed to link repository.' });
     }
 });
 

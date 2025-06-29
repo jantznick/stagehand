@@ -1,6 +1,8 @@
 import { Router } from 'express';
 import { PrismaClient } from '@prisma/client';
 import { protect } from '../middleware/authMiddleware.js';
+import { getAncestors, getDescendants } from '../utils/hierarchy.js';
+import { getVisibleResourceIds, hasPermission } from '../utils/permissions.js';
 
 const prisma = new PrismaClient();
 const router = Router();
@@ -123,6 +125,57 @@ router.get('/', async (req, res) => {
     } catch (error) {
         console.error('Get hierarchy error:', error);
         res.status(500).json({ error: 'Failed to retrieve hierarchy.' });
+    }
+});
+
+/**
+ * @route GET /api/v1/:resourceType/:resourceId/projects
+ * @desc Get a flat list of all projects within a given resource's hierarchy
+ * @access Private
+ */
+router.get('/:resourceType/:resourceId/projects', async (req, res) => {
+    const { resourceType, resourceId } = req.params;
+
+    // First, ensure the user has permission to view the parent resource
+    const canView = await hasPermission(req.user, ['ADMIN', 'EDITOR', 'READER'], resourceType, resourceId);
+    if (!canView) {
+        return res.status(403).json({ error: `You are not authorized to view this ${resourceType}.` });
+    }
+
+    try {
+        const descendantIds = await getDescendants(resourceType, resourceId);
+        
+        let allProjectIds = [];
+
+        if (resourceType === 'project') {
+            allProjectIds = [resourceId];
+        } else if (resourceType === 'team') {
+            allProjectIds = descendantIds.projectIds;
+        } else if (resourceType === 'company') {
+            allProjectIds = descendantIds.projectIds;
+        } else if (resourceType === 'organization') {
+            allProjectIds = descendantIds.projectIds;
+        }
+
+        const projects = await prisma.project.findMany({
+            where: {
+                id: { in: allProjectIds }
+            },
+            select: {
+                id: true,
+                name: true,
+                repositoryUrl: true,
+            },
+            orderBy: {
+                name: 'asc'
+            }
+        });
+
+        res.status(200).json(projects);
+
+    } catch (error) {
+        console.error(`Get projects for ${resourceType} error:`, error);
+        res.status(500).json({ error: 'Failed to retrieve projects.' });
     }
 });
 

@@ -3,6 +3,7 @@ import useHierarchyStore from '../../stores/useHierarchyStore';
 import ContactManager from '../contacts/ContactManager';
 import TechnologyManager from '../technologies/TechnologyManager';
 import ProjectGraphContainer from '../architecture/ProjectGraphContainer';
+import LinkRepositoryControl from './LinkRepositoryControl';
 
 const ApplicationDetails = ({ project }) => {
   const [isEditing, setIsEditing] = useState(false);
@@ -97,14 +98,7 @@ const ApplicationDetails = ({ project }) => {
             <p className="mt-1 text-white capitalize">{project.deploymentStatus?.toLowerCase().replace('_', ' ') || 'Not set'}</p>
           )}
         </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-400">Repository</label>
-          {isEditing ? (
-            <input type="text" name="repositoryUrl" value={editableProject.repositoryUrl || ''} onChange={handleInputChange} className="mt-1 block w-full bg-gray-800 border-gray-600 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm text-white p-2" />
-          ) : (
-            <p className="mt-1 text-white">{project.repositoryUrl || 'Not set'}</p>
-          )}
-        </div>
+        <LinkRepositoryControl project={project} isEditing={isEditing} />
       </div>
 
       {/* Operational Readiness Section */}

@@ -197,6 +197,8 @@ model Project {
 
   scmIntegrationId String?
   scmIntegration   SCMIntegration? @relation("ProjectRepositoryLink", fields: [scmIntegrationId], references: [id], onDelete: SetNull)
+
+  findings Finding[]
 }
 
 model ProjectRelationship {
@@ -228,6 +230,7 @@ model Invitation {
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   expiresAt DateTime
   usedAt    DateTime?
+  updatedAt DateTime @updatedAt
 }
 
 model Membership {
@@ -412,4 +415,63 @@ model SCMIntegration {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+enum VulnerabilitySource {
+  GITHUB
+  SNYK
+  QUALYS
+  INTERNAL
+  MANUAL
+}
+
+enum FindingStatus {
+  NEW
+  TRIAGED
+  IN_PROGRESS
+  RESOLVED
+  IGNORED
+}
+
+model Vulnerability {
+  id              String    @id @default(cuid())
+  // Canonical ID from the source, e.g., 'CVE-2023-1234' or 'GHSA-...'
+  vulnerabilityId String
+  source          VulnerabilitySource
+
+  title           String
+  description     String    @db.Text
+  severity        String    // e.g., 'CRITICAL', 'HIGH', 'MEDIUM', 'LOW'
+  cvssScore       Float?
+  remediation     String?   @db.Text
+  references      Json?     // List of URLs to advisories
+
+  findings Finding[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([vulnerabilityId, source])
+}
+
+model Finding {
+  id              String        @id @default(cuid())
+  status          FindingStatus @default(NEW)
+  
+  projectId       String
+  project         Project       @relation(fields: [projectId], references: [id], onDelete:Cascade)
+
+  vulnerabilityId String
+  source          VulnerabilitySource // To satisfy the compound key of Vulnerability
+  vulnerability   Vulnerability @relation(fields: [vulnerabilityId, source], references: [vulnerabilityId, source])
+
+  // Source-specific details, e.g., { "dependencyName": "lodash", "filePath": "package-lock.json" }
+  metadata        Json?
+
+  firstSeenAt DateTime  @default(now())
+  lastSeenAt  DateTime  @updatedAt
+  resolvedAt  DateTime?
+
+  @@unique([projectId, vulnerabilityId, source])
+  @@index([projectId])
 } 

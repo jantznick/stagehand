@@ -4,6 +4,7 @@ import jwt from 'jsonwebtoken';
 import { protect } from '../middleware/authMiddleware.js';
 import { hasPermission } from '../utils/permissions.js';
 import { encrypt, decrypt } from '../utils/crypto.js';
+import { syncGitHubFindings } from '../utils/findings.js';
 
 const prisma = new PrismaClient();
 const router = Router();
@@ -244,6 +245,56 @@ router.delete('/:integrationId', async (req, res) => {
         console.error('Delete integration error:', error);
         res.status(500).json({ error: 'Failed to delete integration.' });
     }
+});
+
+/**
+ * @route POST /api/v1/integrations/:integrationId/sync
+ * @desc Trigger a sync for a specific SCM integration to fetch findings
+ * @access Private
+ */
+router.post('/:integrationId/sync', async (req, res) => {
+  const { integrationId } = req.params;
+  const { projectIds } = req.body; // Expect an array of project IDs to sync
+
+  if (!projectIds || !Array.isArray(projectIds) || projectIds.length === 0) {
+    return res.status(400).json({ error: 'An array of projectIds is required.' });
+  }
+
+  try {
+    const integration = await prisma.sCMIntegration.findUnique({
+      where: { id: integrationId },
+    });
+
+    if (!integration) {
+      return res.status(404).json({ error: 'Integration not found.' });
+    }
+
+    // A simple permission check: Can the user view the integration's parent resource?
+    const resourceType = integration.organizationId ? 'organization' : integration.companyId ? 'company' : 'team';
+    const resourceId = integration.organizationId || integration.companyId || integration.teamId;
+    
+    if (resourceId) {
+        const canView = await hasPermission(req.user, ['ADMIN', 'EDITOR', 'READER'], resourceType, resourceId);
+        if (!canView) {
+            return res.status(403).json({ error: 'You are not authorized to sync this integration.' });
+        }
+    } else {
+        // Handle direct project integrations if necessary, though the primary model is hierarchy-based
+        return res.status(403).json({ error: 'Sync is not supported for this integration type yet.' });
+    }
+
+    // Do not await this call. This allows us to send an immediate response to the client.
+    // The sync will run in the background.
+    syncGitHubFindings(integrationId, projectIds).catch(error => {
+      console.error(`[Background Sync Error] Failed to sync integration ${integrationId}:`, error);
+    });
+
+    res.status(202).json({ message: 'Sync process initiated successfully.' });
+
+  } catch (error) {
+    console.error(`Error syncing integration ${integrationId}:`, error);
+    res.status(500).json({ error: 'An error occurred during the sync process.' });
+  }
 });
 
 // Helper to consolidate deletion permission logic

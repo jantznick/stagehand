@@ -3,6 +3,7 @@ import { PrismaClient } from '@prisma/client';
 import { protect } from '../middleware/authMiddleware.js';
 import { getVisibleResourceIds, hasPermission, isMemberOfCompany } from '../utils/permissions.js';
 import { getDescendants } from '../utils/hierarchy.js';
+import { decrypt } from '../utils/crypto.js';
 
 const prisma = new PrismaClient();
 const router = Router();
@@ -765,6 +766,85 @@ router.post('/:id/link-repo', async (req, res) => {
     } catch (error) {
         console.error('Link repo error:', error);
         res.status(500).json({ error: 'Failed to link repository.' });
+    }
+});
+
+/**
+ * @route GET /api/v1/projects/:id/repo-stats
+ * @desc Get repository statistics from the linked SCM provider
+ * @access Private
+ */
+router.get('/:id/repo-stats', async (req, res) => {
+    const { id: projectId } = req.params;
+
+    // Authorization check
+    const canView = await hasPermission(req.user, ['ADMIN', 'EDITOR', 'READER'], 'project', projectId);
+    if (!canView) {
+        return res.status(403).json({ error: 'You are not authorized to view this project.' });
+    }
+
+    try {
+        const project = await prisma.project.findUnique({
+            where: { id: projectId },
+            select: { repositoryUrl: true, scmIntegrationId: true }
+        });
+
+        if (!project || !project.scmIntegrationId || !project.repositoryUrl) {
+            return res.status(404).json({ error: 'Project is not linked to a repository via an SCM integration.' });
+        }
+
+        const integration = await prisma.sCMIntegration.findUnique({
+            where: { id: project.scmIntegrationId }
+        });
+
+        if (!integration) {
+            // This case indicates orphaned data, but we handle it gracefully.
+            return res.status(404).json({ error: 'Associated SCM integration not found.' });
+        }
+
+        const accessToken = decrypt(integration.encryptedAccessToken);
+
+        // Extract owner/repo from URL, e.g., "https://github.com/owner/repo"
+        const urlParts = new URL(project.repositoryUrl);
+        const pathParts = urlParts.pathname.split('/').filter(p => p);
+        if (urlParts.hostname !== 'github.com' || pathParts.length < 2) {
+            return res.status(400).json({ error: 'Invalid or non-GitHub repository URL format.' });
+        }
+        const owner = pathParts[0];
+        const repo = pathParts[1].replace('.git', '');
+
+
+        // Fetch repo details from GitHub API
+        const repoDetailsResponse = await fetch(`https://api.github.com/repos/${owner}/${repo}`, {
+            headers: {
+                'Authorization': `token ${accessToken}`,
+                'Accept': 'application/vnd.github.v3+json',
+            },
+        });
+
+        if (!repoDetailsResponse.ok) {
+            const errorData = await repoDetailsResponse.json();
+            console.error('GitHub Repo Stats Fetch Error:', errorData);
+            return res.status(repoDetailsResponse.status).json({ error: 'Failed to fetch repository details from GitHub.', details: errorData.message });
+        }
+
+        const repoData = await repoDetailsResponse.json();
+
+        // Extract and return the stats we care about
+        const stats = {
+            stars: repoData.stargazers_count,
+            forks: repoData.forks_count,
+            openIssues: repoData.open_issues_count,
+            pushedAt: repoData.pushed_at,
+            license: repoData.license?.name,
+            visibility: repoData.visibility,
+        };
+
+        res.status(200).json(stats);
+
+    } catch (error) {
+        console.error(`Get repo stats error for project ${projectId}:`, error);
+        res.status(500).json({ error: 'Failed to retrieve repository statistics.' });
     }
 });
 

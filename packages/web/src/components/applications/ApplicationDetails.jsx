@@ -1,19 +1,25 @@
 import React, { useState, useEffect } from 'react';
 import useHierarchyStore from '../../stores/useHierarchyStore';
+import useProjectStore from '../../stores/useProjectStore';
 import ContactManager from '../contacts/ContactManager';
 import TechnologyManager from '../technologies/TechnologyManager';
 import ProjectGraphContainer from '../architecture/ProjectGraphContainer';
 import LinkRepositoryControl from './LinkRepositoryControl';
+import RepoStats from './RepoStats';
 
 const ApplicationDetails = ({ project }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [editableProject, setEditableProject] = useState(project);
 
-  const { updateProject, isLoading, fetchAndSetSelectedItem } = useHierarchyStore();
+  const { updateProject: updateHierarchyProject, isLoading, fetchAndSetSelectedItem } = useHierarchyStore();
+  const { fetchRepoStats, repoStats, isStatsLoading, statsError } = useProjectStore();
 
   useEffect(() => {
     setEditableProject(project);
-  }, [project]);
+    if (project?.scmIntegrationId && project?.repositoryUrl) {
+        fetchRepoStats(project.id);
+    }
+  }, [project, fetchRepoStats]);
 
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -25,7 +31,7 @@ const ApplicationDetails = ({ project }) => {
 
   const handleSave = async () => {
     try {
-      await updateProject(project.id, editableProject);
+      await updateHierarchyProject(project.id, editableProject);
       await fetchAndSetSelectedItem('project', project.id); // Refresh data
       setIsEditing(false);
     } catch (error) {
@@ -100,6 +106,11 @@ const ApplicationDetails = ({ project }) => {
         </div>
         <LinkRepositoryControl project={project} isEditing={isEditing} />
       </div>
+
+      {/* Repository Stats Section */}
+      {isStatsLoading && <div className="text-gray-400">Loading repository stats...</div>}
+      {statsError && <div className="text-red-400">Error: {statsError}</div>}
+      {repoStats && !isEditing && <RepoStats stats={repoStats} repositoryUrl={project.repositoryUrl} />}
 
       {/* Operational Readiness Section */}
       <div className="pt-6">

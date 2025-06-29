@@ -5,6 +5,9 @@ const useProjectStore = create((set) => {
     const initialState = {
     isLoading: false,
     error: null,
+    repoStats: null,
+    isStatsLoading: false,
+    statsError: null,
     };
 
     return {
@@ -74,8 +77,30 @@ const useProjectStore = create((set) => {
 
     reset: () => set(initialState),
 
+    fetchRepoStats: async (projectId) => {
+        set({ isStatsLoading: true, statsError: null });
+        try {
+            const response = await fetch(`/api/v1/projects/${projectId}/repo-stats`);
+            
+            if (response.status === 404) {
+                // This is an expected case, not an error. Project just isn't linked.
+                set({ repoStats: null, isStatsLoading: false });
+                return;
+            }
+
+            if (!response.ok) {
+                const err = await response.json();
+                throw new Error(err.error || 'Failed to fetch repository stats');
+            }
+            const stats = await response.json();
+            set({ repoStats: stats, isStatsLoading: false });
+        } catch (error) {
+            set({ statsError: error.message, isStatsLoading: false });
+        }
+    },
+
     linkRepositoryToProject: async (projectId, data) => {
-        set({ loading: true, error: null });
+        set({ isLoading: true, error: null });
         try {
             const response = await fetch(`/api/v1/projects/${projectId}/link-repo`, {
                 method: 'POST',
@@ -91,10 +116,10 @@ const useProjectStore = create((set) => {
             // Refresh the main hierarchy store to reflect the change
             useHierarchyStore.getState().fetchAndSetSelectedItem('project', projectId);
 
-            set({ loading: false });
+            set({ isLoading: false });
             return updatedProject;
         } catch (error) {
-            set({ loading: false, error: error.message });
+            set({ isLoading: false, error: error.message });
             throw error;
         }
     },

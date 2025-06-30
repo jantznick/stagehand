@@ -1,0 +1,24 @@
+{
+  "id": "api/technologies",
+  "title": "API Reference: Technologies",
+  "description": "This document provides a detailed breakdown of the technology-related API endpoints.",
+  "source": "@site/docs/api/technologies.md",
+  "sourceDirName": "api",
+  "slug": "/api/technologies",
+  "permalink": "/api/technologies",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/your-org/stagehand/tree/main/packages/docs/docs/api/technologies.md",
+  "tags": [],
+  "version": "current",
+  "frontMatter": {},
+  "sidebar": "docsSidebar",
+  "previous": {
+    "title": "API Reference: Relationships",
+    "permalink": "/api/relationships"
+  },
+  "next": {
+    "title": "Frontend Documentation: Lib Utilities",
+    "permalink": "/frontend/lib"
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "id": "frontend/stores/useCompanyStore",
+  "title": "Store: useCompanyStore",
+  "description": "File:* packages/web/src/stores/useCompanyStore.js",
+  "source": "@site/docs/frontend/stores/useCompanyStore.md",
+  "sourceDirName": "frontend/stores",
+  "slug": "/frontend/stores/useCompanyStore",
+  "permalink": "/frontend/stores/useCompanyStore",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/your-org/stagehand/tree/main/packages/docs/docs/frontend/stores/useCompanyStore.md",
+  "tags": [],
+  "version": "current",
+  "frontMatter": {},
+  "sidebar": "docsSidebar",
+  "previous": {
+    "title": "Store: useArchitectureStore",
+    "permalink": "/frontend/stores/useArchitectureStore"
+  },
+  "next": {
+    "title": "Store: useDomainStore",
+    "permalink": "/frontend/stores/useDomainStore"
+  }
+}

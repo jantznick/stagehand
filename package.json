@@ -7,7 +7,10 @@
   ],
   "scripts": {
     "dev": "npm run dev --workspaces --if-present",
+    "dev:docs": "npm run start --workspace=packages/docs",
     "build": "npm run build --workspaces",
+    "build:docs": "npm run build --workspace=packages/docs",
+    "serve:docs": "npm run serve --workspace=packages/docs",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "format": "prettier --write .",

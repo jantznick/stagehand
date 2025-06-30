@@ -1,0 +1,24 @@
+{
+  "id": "api/projects",
+  "title": "API Reference: Projects (Applications)",
+  "description": "This document provides a detailed breakdown of the project-related API endpoints. \"Projects\" are the core entities in the Stagehand developer catalog and are often referred to as \"Applications\" in the UI and business logic.",
+  "source": "@site/docs/api/projects.md",
+  "sourceDirName": "api",
+  "slug": "/api/projects",
+  "permalink": "/api/projects",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/your-org/stagehand/tree/main/packages/docs/docs/api/projects.md",
+  "tags": [],
+  "version": "current",
+  "frontMatter": {},
+  "sidebar": "docsSidebar",
+  "previous": {
+    "title": "API Reference: Teams",
+    "permalink": "/api/teams"
+  },
+  "next": {
+    "title": "API Reference: Memberships",
+    "permalink": "/api/memberships"
+  }
+}

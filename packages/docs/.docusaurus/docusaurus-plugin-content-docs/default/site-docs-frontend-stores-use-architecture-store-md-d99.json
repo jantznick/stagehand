@@ -1,0 +1,24 @@
+{
+  "id": "frontend/stores/useArchitectureStore",
+  "title": "Store: useArchitectureStore",
+  "description": "File:* packages/web/src/stores/useArchitectureStore.js",
+  "source": "@site/docs/frontend/stores/useArchitectureStore.md",
+  "sourceDirName": "frontend/stores",
+  "slug": "/frontend/stores/useArchitectureStore",
+  "permalink": "/frontend/stores/useArchitectureStore",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/your-org/stagehand/tree/main/packages/docs/docs/frontend/stores/useArchitectureStore.md",
+  "tags": [],
+  "version": "current",
+  "frontMatter": {},
+  "sidebar": "docsSidebar",
+  "previous": {
+    "title": "Store: useAuthStore",
+    "permalink": "/frontend/stores/useAuthStore"
+  },
+  "next": {
+    "title": "Store: useCompanyStore",
+    "permalink": "/frontend/stores/useCompanyStore"
+  }
+}

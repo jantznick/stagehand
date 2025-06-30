@@ -1,0 +1,24 @@
+{
+  "id": "frontend/components/applications",
+  "title": "Frontend Documentation: Application Components",
+  "description": "This document provides a breakdown of the components used for displaying the details of a single application (referred to as a \"Project\" in the backend and hierarchy).",
+  "source": "@site/docs/frontend/components/applications.md",
+  "sourceDirName": "frontend/components",
+  "slug": "/frontend/components/applications",
+  "permalink": "/frontend/components/applications",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/your-org/stagehand/tree/main/packages/docs/docs/frontend/components/applications.md",
+  "tags": [],
+  "version": "current",
+  "frontMatter": {},
+  "sidebar": "docsSidebar",
+  "previous": {
+    "title": "Frontend Documentation: Pages",
+    "permalink": "/frontend/pages"
+  },
+  "next": {
+    "title": "Frontend Documentation: Architecture Components",
+    "permalink": "/frontend/components/architecture"
+  }
+}

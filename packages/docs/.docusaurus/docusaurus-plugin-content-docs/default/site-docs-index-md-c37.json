@@ -1,0 +1,19 @@
+{
+  "id": "index",
+  "title": "Stagehand Developer Documentation",
+  "description": "Welcome to the comprehensive developer documentation for the Stagehand platform. This documentation covers everything from API references to architectural decisions, frontend components, and integration guides.",
+  "source": "@site/docs/index.md",
+  "sourceDirName": ".",
+  "slug": "/",
+  "permalink": "/",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/your-org/stagehand/tree/main/packages/docs/docs/index.md",
+  "tags": [],
+  "version": "current",
+  "sidebarPosition": 1,
+  "frontMatter": {
+    "sidebar_position": 1,
+    "slug": "/"
+  }
+}

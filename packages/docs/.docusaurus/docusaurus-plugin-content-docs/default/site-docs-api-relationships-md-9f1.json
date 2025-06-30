@@ -1,0 +1,24 @@
+{
+  "id": "api/relationships",
+  "title": "API Reference: Relationships",
+  "description": "This document provides a detailed breakdown of the project relationship-related API endpoints.",
+  "source": "@site/docs/api/relationships.md",
+  "sourceDirName": "api",
+  "slug": "/api/relationships",
+  "permalink": "/api/relationships",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/your-org/stagehand/tree/main/packages/docs/docs/api/relationships.md",
+  "tags": [],
+  "version": "current",
+  "frontMatter": {},
+  "sidebar": "docsSidebar",
+  "previous": {
+    "title": "API Reference: Hierarchy",
+    "permalink": "/api/hierarchy"
+  },
+  "next": {
+    "title": "API Reference: Technologies",
+    "permalink": "/api/technologies"
+  }
+}

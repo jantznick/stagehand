@@ -1,0 +1,24 @@
+{
+  "id": "frontend/stores/useFindingStore",
+  "title": "Store: useFindingStore",
+  "description": "File:* packages/web/src/stores/useFindingStore.js",
+  "source": "@site/docs/frontend/stores/useFindingStore.md",
+  "sourceDirName": "frontend/stores",
+  "slug": "/frontend/stores/useFindingStore",
+  "permalink": "/frontend/stores/useFindingStore",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/your-org/stagehand/tree/main/packages/docs/docs/frontend/stores/useFindingStore.md",
+  "tags": [],
+  "version": "current",
+  "frontMatter": {},
+  "sidebar": "docsSidebar",
+  "previous": {
+    "title": "Store: useDomainStore",
+    "permalink": "/frontend/stores/useDomainStore"
+  },
+  "next": {
+    "title": "Store: useHierarchyStore",
+    "permalink": "/frontend/stores/useHierarchyStore"
+  }
+}

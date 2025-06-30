@@ -1,0 +1,16 @@
+FROM node:20-alpine
+
+WORKDIR /app
+
+# Upgrade npm to the latest stable version to fix bugs in the default version
+RUN npm install -g npm@latest
+
+# Copy the entire source code first, which includes all package.json files
+COPY . .
+
+# Install all dependencies for the monorepo based on the full source code
+RUN npm install --legacy-peer-deps
+
+EXPOSE 3002
+
+CMD ["npm", "run", "start", "--workspace=packages/docs"] 

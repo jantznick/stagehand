@@ -1,0 +1,24 @@
+{
+  "id": "api/findings",
+  "title": "API Reference: Findings",
+  "description": "This document provides a detailed breakdown of the security finding-related API endpoints.",
+  "source": "@site/docs/api/findings.md",
+  "sourceDirName": "api",
+  "slug": "/api/findings",
+  "permalink": "/api/findings",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/your-org/stagehand/tree/main/packages/docs/docs/api/findings.md",
+  "tags": [],
+  "version": "current",
+  "frontMatter": {},
+  "sidebar": "docsSidebar",
+  "previous": {
+    "title": "API Reference: Security Tools",
+    "permalink": "/api/security-tools"
+  },
+  "next": {
+    "title": "API Reference: Hierarchy",
+    "permalink": "/api/hierarchy"
+  }
+}

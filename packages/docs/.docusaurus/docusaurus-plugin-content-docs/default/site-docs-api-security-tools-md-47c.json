@@ -1,0 +1,24 @@
+{
+  "id": "api/security-tools",
+  "title": "API Reference: Security Tools",
+  "description": "This document provides a detailed breakdown of the security tool integration-related API endpoints.",
+  "source": "@site/docs/api/security-tools.md",
+  "sourceDirName": "api",
+  "slug": "/api/security-tools",
+  "permalink": "/api/security-tools",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/your-org/stagehand/tree/main/packages/docs/docs/api/security-tools.md",
+  "tags": [],
+  "version": "current",
+  "frontMatter": {},
+  "sidebar": "docsSidebar",
+  "previous": {
+    "title": "API Reference: SCM Integrations",
+    "permalink": "/api/integrations"
+  },
+  "next": {
+    "title": "API Reference: Findings",
+    "permalink": "/api/findings"
+  }
+}

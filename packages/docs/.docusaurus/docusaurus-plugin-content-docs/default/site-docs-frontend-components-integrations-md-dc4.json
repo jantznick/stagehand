@@ -1,0 +1,24 @@
+{
+  "id": "frontend/components/integrations",
+  "title": "Frontend Documentation: Integration Components",
+  "description": "This document provides a breakdown of the components used for managing integrations with external tools like GitHub (SCM) and Snyk (Security Tools).",
+  "source": "@site/docs/frontend/components/integrations.md",
+  "sourceDirName": "frontend/components",
+  "slug": "/frontend/components/integrations",
+  "permalink": "/frontend/components/integrations",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/your-org/stagehand/tree/main/packages/docs/docs/frontend/components/integrations.md",
+  "tags": [],
+  "version": "current",
+  "frontMatter": {},
+  "sidebar": "docsSidebar",
+  "previous": {
+    "title": "Frontend Documentation: Findings Components",
+    "permalink": "/frontend/components/findings"
+  },
+  "next": {
+    "title": "Frontend Documentation: Settings Components",
+    "permalink": "/frontend/components/settings"
+  }
+}

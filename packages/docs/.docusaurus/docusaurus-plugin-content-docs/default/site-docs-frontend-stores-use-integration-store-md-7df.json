@@ -1,0 +1,24 @@
+{
+  "id": "frontend/stores/useIntegrationStore",
+  "title": "Store: useIntegrationStore",
+  "description": "File:* packages/web/src/stores/useIntegrationStore.js",
+  "source": "@site/docs/frontend/stores/useIntegrationStore.md",
+  "sourceDirName": "frontend/stores",
+  "slug": "/frontend/stores/useIntegrationStore",
+  "permalink": "/frontend/stores/useIntegrationStore",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/your-org/stagehand/tree/main/packages/docs/docs/frontend/stores/useIntegrationStore.md",
+  "tags": [],
+  "version": "current",
+  "frontMatter": {},
+  "sidebar": "docsSidebar",
+  "previous": {
+    "title": "Store: useHierarchyStore",
+    "permalink": "/frontend/stores/useHierarchyStore"
+  },
+  "next": {
+    "title": "Store: useMembershipStore",
+    "permalink": "/frontend/stores/useMembershipStore"
+  }
+}

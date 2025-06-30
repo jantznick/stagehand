@@ -1,0 +1,234 @@
+<!doctype html>
+<html lang="en" dir="ltr" class="docs-wrapper plugin-docs plugin-id-default docs-version-current docs-doc-page docs-doc-id-api/auth" data-has-hydrated="false">
+<head>
+<meta charset="UTF-8">
+<meta name="generator" content="Docusaurus v3.8.1">
+<title data-rh="true">API Reference: Authentication | Stagehand Developer Documentation</title><meta data-rh="true" name="viewport" content="width=device-width,initial-scale=1"><meta data-rh="true" name="twitter:card" content="summary_large_image"><meta data-rh="true" property="og:image" content="https://docs.yourdomain.com/img/stagehand-social-card.jpg"><meta data-rh="true" name="twitter:image" content="https://docs.yourdomain.com/img/stagehand-social-card.jpg"><meta data-rh="true" property="og:url" content="https://docs.yourdomain.com/api/auth"><meta data-rh="true" property="og:locale" content="en"><meta data-rh="true" name="docusaurus_locale" content="en"><meta data-rh="true" name="docsearch:language" content="en"><meta data-rh="true" name="docusaurus_version" content="current"><meta data-rh="true" name="docusaurus_tag" content="docs-default-current"><meta data-rh="true" name="docsearch:version" content="current"><meta data-rh="true" name="docsearch:docusaurus_tag" content="docs-default-current"><meta data-rh="true" property="og:title" content="API Reference: Authentication | Stagehand Developer Documentation"><meta data-rh="true" name="description" content="This document provides a detailed breakdown of the authentication-related API endpoints."><meta data-rh="true" property="og:description" content="This document provides a detailed breakdown of the authentication-related API endpoints."><link data-rh="true" rel="icon" href="/img/favicon.ico"><link data-rh="true" rel="canonical" href="https://docs.yourdomain.com/api/auth"><link data-rh="true" rel="alternate" href="https://docs.yourdomain.com/api/auth" hreflang="en"><link data-rh="true" rel="alternate" href="https://docs.yourdomain.com/api/auth" hreflang="x-default"><script data-rh="true" type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"API Reference: Authentication","item":"https://docs.yourdomain.com/api/auth"}]}</script><link rel="stylesheet" href="/assets/css/styles.9c6f4f58.css">
+<script src="/assets/js/runtime~main.4c8069ed.js" defer="defer"></script>
+<script src="/assets/js/main.83f0f7cb.js" defer="defer"></script>
+</head>
+<body class="navigation-with-keyboard">
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;"><defs>
+<symbol id="theme-svg-external-link" viewBox="0 0 24 24"><path fill="currentColor" d="M21 13v10h-21v-19h12v2h-10v15h17v-8h2zm3-12h-10.988l4.035 4-6.977 7.07 2.828 2.828 6.977-7.07 4.125 4.172v-11z"/></symbol>
+</defs></svg>
+<script>!function(){var t="light";var e=function(){try{return new URLSearchParams(window.location.search).get("docusaurus-theme")}catch(t){}}()||function(){try{return window.localStorage.getItem("theme")}catch(t){}}();document.documentElement.setAttribute("data-theme",e||t),document.documentElement.setAttribute("data-theme-choice",e||t)}(),function(){try{const c=new URLSearchParams(window.location.search).entries();for(var[t,e]of c)if(t.startsWith("docusaurus-data-")){var a=t.replace("docusaurus-data-","data-");document.documentElement.setAttribute(a,e)}}catch(t){}}()</script><div id="__docusaurus"><div role="region" aria-label="Skip to main content"><a class="skipToContent_G6ar" href="#__docusaurus_skipToContent_fallback">Skip to main content</a></div><nav aria-label="Main" class="theme-layout-navbar navbar navbar--fixed-top"><div class="navbar__inner"><div class="theme-layout-navbar-left navbar__items"><button aria-label="Toggle navigation bar" aria-expanded="false" class="navbar__toggle clean-btn" type="button"><svg width="30" height="30" viewBox="0 0 30 30" aria-hidden="true"><path stroke="currentColor" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2" d="M4 7h22M4 15h22M4 23h22"></path></svg></button><a class="navbar__brand" href="/"><div class="navbar__logo"><img src="/img/logo.svg" alt="Stagehand Logo" class="themedComponent_DHUr themedComponent--light_DIHH"><img src="/img/logo.svg" alt="Stagehand Logo" class="themedComponent_DHUr themedComponent--dark_Bv2M"></div><b class="navbar__title text--truncate">Stagehand Docs</b></a><a aria-current="page" class="navbar__item navbar__link navbar__link--active" href="/api-reference">Documentation</a></div><div class="theme-layout-navbar-right navbar__items navbar__items--right"><a href="https://github.com/your-org/stagehand" target="_blank" rel="noopener noreferrer" class="navbar__item navbar__link">GitHub<svg width="13.5" height="13.5" aria-hidden="true" class="iconExternalLink_awgD"><use href="#theme-svg-external-link"></use></svg></a><div class="toggle_OLSw colorModeToggle_Hg9V"><button class="clean-btn toggleButton_wYmb toggleButtonDisabled_vaDU" type="button" disabled="" title="system mode" aria-label="Switch between dark and light mode (currently system mode)"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" class="toggleIcon_KEbZ lightToggleIcon_Sxwe"><path fill="currentColor" d="M12,9c1.65,0,3,1.35,3,3s-1.35,3-3,3s-3-1.35-3-3S10.35,9,12,9 M12,7c-2.76,0-5,2.24-5,5s2.24,5,5,5s5-2.24,5-5 S14.76,7,12,7L12,7z M2,13l2,0c0.55,0,1-0.45,1-1s-0.45-1-1-1l-2,0c-0.55,0-1,0.45-1,1S1.45,13,2,13z M20,13l2,0c0.55,0,1-0.45,1-1 s-0.45-1-1-1l-2,0c-0.55,0-1,0.45-1,1S19.45,13,20,13z M11,2v2c0,0.55,0.45,1,1,1s1-0.45,1-1V2c0-0.55-0.45-1-1-1S11,1.45,11,2z M11,20v2c0,0.55,0.45,1,1,1s1-0.45,1-1v-2c0-0.55-0.45-1-1-1C11.45,19,11,19.45,11,20z M5.99,4.58c-0.39-0.39-1.03-0.39-1.41,0 c-0.39,0.39-0.39,1.03,0,1.41l1.06,1.06c0.39,0.39,1.03,0.39,1.41,0s0.39-1.03,0-1.41L5.99,4.58z M18.36,16.95 c-0.39-0.39-1.03-0.39-1.41,0c-0.39,0.39-0.39,1.03,0,1.41l1.06,1.06c0.39,0.39,1.03,0.39,1.41,0c0.39-0.39,0.39-1.03,0-1.41 L18.36,16.95z M19.42,5.99c0.39-0.39,0.39-1.03,0-1.41c-0.39-0.39-1.03-0.39-1.41,0l-1.06,1.06c-0.39,0.39-0.39,1.03,0,1.41 s1.03,0.39,1.41,0L19.42,5.99z M7.05,18.36c0.39-0.39,0.39-1.03,0-1.41c-0.39-0.39-1.03-0.39-1.41,0l-1.06,1.06 c-0.39,0.39-0.39,1.03,0,1.41s1.03,0.39,1.41,0L7.05,18.36z"></path></svg><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" class="toggleIcon_KEbZ darkToggleIcon_Yem1"><path fill="currentColor" d="M9.37,5.51C9.19,6.15,9.1,6.82,9.1,7.5c0,4.08,3.32,7.4,7.4,7.4c0.68,0,1.35-0.09,1.99-0.27C17.45,17.19,14.93,19,12,19 c-3.86,0-7-3.14-7-7C5,9.07,6.81,6.55,9.37,5.51z M12,3c-4.97,0-9,4.03-9,9s4.03,9,9,9s9-4.03,9-9c0-0.46-0.04-0.92-0.1-1.36 c-0.98,1.37-2.58,2.26-4.4,2.26c-2.98,0-5.4-2.42-5.4-5.4c0-1.81,0.89-3.42,2.26-4.4C12.92,3.04,12.46,3,12,3L12,3z"></path></svg><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" class="toggleIcon_KEbZ systemToggleIcon_txm5"><path fill="currentColor" d="m12 21c4.971 0 9-4.029 9-9s-4.029-9-9-9-9 4.029-9 9 4.029 9 9 9zm4.95-13.95c1.313 1.313 2.05 3.093 2.05 4.95s-0.738 3.637-2.05 4.95c-1.313 1.313-3.093 2.05-4.95 2.05v-14c1.857 0 3.637 0.737 4.95 2.05z"></path></svg></button></div><div class="navbarSearchContainer_bmvg"></div></div></div><div role="presentation" class="navbar-sidebar__backdrop"></div></nav><div id="__docusaurus_skipToContent_fallback" class="theme-layout-main main-wrapper mainWrapper_UyTV"><div class="docsWrapper_XLvK"><button aria-label="Scroll back to top" class="clean-btn theme-back-to-top-button backToTopButton_z1FD" type="button"></button><div class="docRoot_HciC"><aside class="theme-doc-sidebar-container docSidebarContainer_e5ai"><div class="sidebarViewport_N8x0"><div class="sidebar_vJCc"><nav aria-label="Docs sidebar" class="menu thin-scrollbar menu_qiME"><ul class="theme-doc-sidebar-menu menu__list"><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-1 menu__list-item"><a class="menu__link" href="/api-reference">API Reference</a></li><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item menu__list-item--collapsed"><div class="menu__list-item-collapsible"><a class="menu__link menu__link--sublist menu__link--sublist-caret" role="button" aria-expanded="false" href="/backend-architecture">Architecture</a></div></li><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item"><div class="menu__list-item-collapsible"><a class="menu__link menu__link--sublist menu__link--sublist-caret menu__link--active" role="button" aria-expanded="true" href="/api/auth">API Documentation</a></div><ul class="menu__list"><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-2 menu__list-item"><div class="menu__list-item-collapsible"><a class="menu__link menu__link--sublist menu__link--sublist-caret menu__link--active" role="button" aria-expanded="true" tabindex="0" href="/api/auth">Core &amp; Authentication</a></div><ul class="menu__list"><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-3 menu__list-item"><a class="menu__link menu__link--active" aria-current="page" tabindex="0" href="/api/auth">API Reference: Authentication</a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-3 menu__list-item"><a class="menu__link" tabindex="0" href="/api/oidc">API Reference: OIDC Configuration</a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-3 menu__list-item"><a class="menu__link" tabindex="0" href="/api/organizations">API Reference: Organizations</a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-3 menu__list-item"><a class="menu__link" tabindex="0" href="/api/company">API Reference: Companies</a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-3 menu__list-item"><a class="menu__link" tabindex="0" href="/api/teams">API Reference: Teams</a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-3 menu__list-item"><a class="menu__link" tabindex="0" href="/api/projects">API Reference: Projects (Applications)</a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-3 menu__list-item"><a class="menu__link" tabindex="0" href="/api/memberships">API Reference: Memberships</a></li></ul></li><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-2 menu__list-item menu__list-item--collapsed"><div class="menu__list-item-collapsible"><a class="menu__link menu__link--sublist menu__link--sublist-caret" role="button" aria-expanded="false" tabindex="0" href="/api/invitations">Supporting Resources</a></div></li></ul></li><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item menu__list-item--collapsed"><div class="menu__list-item-collapsible"><a class="menu__link menu__link--sublist menu__link--sublist-caret" role="button" aria-expanded="false" href="/frontend/lib">Frontend Documentation</a></div></li></ul></nav></div></div></aside><main class="docMainContainer_namt"><div class="container padding-top--md padding-bottom--lg"><div class="row"><div class="col docItemCol_YAwJ"><div class="docItemContainer_Rv5Z"><article><nav class="theme-doc-breadcrumbs breadcrumbsContainer_zCmv" aria-label="Breadcrumbs"><ul class="breadcrumbs"><li class="breadcrumbs__item"><a aria-label="Home page" class="breadcrumbs__link" href="/"><svg viewBox="0 0 24 24" class="breadcrumbHomeIcon_JFrk"><path d="M10 19v-5h4v5c0 .55.45 1 1 1h3c.55 0 1-.45 1-1v-7h1.7c.46 0 .68-.57.33-.87L12.67 3.6c-.38-.34-.96-.34-1.34 0l-8.36 7.53c-.34.3-.13.87.33.87H5v7c0 .55.45 1 1 1h3c.55 0 1-.45 1-1z" fill="currentColor"></path></svg></a></li><li class="breadcrumbs__item"><span class="breadcrumbs__link">API Documentation</span></li><li class="breadcrumbs__item"><span class="breadcrumbs__link">Core &amp; Authentication</span></li><li class="breadcrumbs__item breadcrumbs__item--active"><span class="breadcrumbs__link">API Reference: Authentication</span></li></ul></nav><div class="tocCollapsible_O_Qc theme-doc-toc-mobile tocMobile_tjDr"><button type="button" class="clean-btn tocCollapsibleButton_htYj">On this page</button></div><div class="theme-doc-markdown markdown"><header><h1>API Reference: Authentication</h1></header>
+<p>This document provides a detailed breakdown of the authentication-related API endpoints.</p>
+<p><strong>File:</strong> <code>packages/api/src/routes/auth.js</code>
+<strong>Base Path:</strong> <code>/api/v1/auth</code></p>
+<hr>
+<h2 class="anchor anchorWithStickyNavbar_fF9Z" id="overview">Overview<a href="#overview" class="hash-link" aria-label="Direct link to Overview" title="Direct link to Overview">​</a></h2>
+<p>Handles all user authentication, registration, session management, and password recovery. It supports both traditional password-based login and passwordless &quot;magic link&quot; authentication. It also contains the handlers for OIDC-based single sign-on.</p>
+<h2 class="anchor anchorWithStickyNavbar_fF9Z" id="helper-functions">Helper Functions<a href="#helper-functions" class="hash-link" aria-label="Direct link to Helper Functions" title="Direct link to Helper Functions">​</a></h2>
+<p>Internal functions used by the routes in this file.</p>
+<ul>
+<li><code>generateVerificationToken()</code>: Creates a 6-digit numeric token that is valid for 15 minutes. This is used for verifying a user&#x27;s email address upon registration.</li>
+<li><code>sanitizeUser(user)</code>: Removes sensitive fields (<code>password</code>, <code>verificationToken</code>, etc.) from the user object before sending it back in a response. This ensures no secret data is accidentally exposed to the client.</li>
+<li><code>sendMagicLink(user)</code>: Generates a secure, single-use login token, saves its SHA256 hash to the <code>LoginToken</code> table in the database, and emails a magic login link to the user.</li>
+</ul>
+<hr>
+<h2 class="anchor anchorWithStickyNavbar_fF9Z" id="endpoints">Endpoints<a href="#endpoints" class="hash-link" aria-label="Direct link to Endpoints" title="Direct link to Endpoints">​</a></h2>
+<h3 class="anchor anchorWithStickyNavbar_fF9Z" id="post-register"><code>POST /register</code><a href="#post-register" class="hash-link" aria-label="Direct link to post-register" title="Direct link to post-register">​</a></h3>
+<p>Registers a new user. This endpoint supports two primary modes: standard registration with a password, and passwordless registration using a magic link.</p>
+<ul>
+<li>
+<p><strong>Body (<code>application/json</code>):</strong></p>
+<ul>
+<li><code>email</code> (string, required): The user&#x27;s email address.</li>
+<li><code>password</code> (string): The user&#x27;s password (min. 8 characters). Required if <code>useMagicLink</code> is <code>false</code> or omitted.</li>
+<li><code>useMagicLink</code> (boolean): If <code>true</code>, the user is created without a password, and a magic login link is emailed to them instead of a verification code.</li>
+</ul>
+</li>
+<li>
+<p><strong>Success Response (<code>201</code>):</strong></p>
+<ul>
+<li>If <code>useMagicLink</code> is true: <code>{ &quot;message&quot;: &quot;A magic link has been sent to your email.&quot; }</code></li>
+<li>Otherwise: The sanitized user object.</li>
+</ul>
+</li>
+<li>
+<p><strong>Behavior:</strong></p>
+<ol>
+<li>Checks if a user with the given email already exists (returns <code>409 Conflict</code> if so).</li>
+<li><strong>Auto-Join Logic:</strong> It inspects the email&#x27;s domain (<code>@example.com</code>) and checks it against the <code>AutoJoinDomain</code> table. If a matching, verified domain is found, the new user is automatically added to the corresponding Organization or Company with a pre-configured role. Admins of that entity are notified via email.</li>
+<li><strong>Standard Logic:</strong> If no auto-join rule exists, it creates a new <code>Organization</code> and a default <code>Company</code> for the user, making them the <code>ADMIN</code> of that new organization.</li>
+<li>If <code>useMagicLink</code> is true, it calls <code>sendMagicLink()</code> and returns.</li>
+<li>If using a password, it hashes the password, creates a verification code, and emails a welcome message. It then logs the user in immediately via Passport.js.</li>
+</ol>
+</li>
+</ul>
+<hr>
+<h3 class="anchor anchorWithStickyNavbar_fF9Z" id="post-login"><code>POST /login</code><a href="#post-login" class="hash-link" aria-label="Direct link to post-login" title="Direct link to post-login">​</a></h3>
+<p>Authenticates a user with their email and password.</p>
+<ul>
+<li>
+<p><strong>Body (<code>application/json</code>):</strong></p>
+<ul>
+<li><code>email</code> (string, required): The user&#x27;s email.</li>
+<li><code>password</code> (string, required): The user&#x27;s password.</li>
+</ul>
+</li>
+<li>
+<p><strong>Success Response (<code>200</code>):</strong> The sanitized user object.</p>
+</li>
+<li>
+<p><strong>Error Response (<code>401</code>):</strong> <code>{ &quot;error&quot;: &quot;Invalid credentials.&quot; }</code></p>
+</li>
+<li>
+<p><strong>Behavior:</strong></p>
+<ol>
+<li>Finds the user by email.</li>
+<li>Verifies the password using <code>bcrypt.compare()</code>.</li>
+<li><strong>Email Verification Check:</strong> If the user&#x27;s email has not been verified (<code>emailVerified</code> is false), it generates and sends a <em>new</em> verification code. It still logs them in, but the frontend should interpret the <code>emailVerified: false</code> flag in the response to prompt the user for the code.</li>
+<li>On successful login, it creates a session for the user via <code>req.login()</code> (handled by Passport.js).</li>
+</ol>
+</li>
+</ul>
+<hr>
+<h3 class="anchor anchorWithStickyNavbar_fF9Z" id="post-loginmagic"><code>POST /login/magic</code><a href="#post-loginmagic" class="hash-link" aria-label="Direct link to post-loginmagic" title="Direct link to post-loginmagic">​</a></h3>
+<p>Initiates a passwordless login by sending a magic link to a user&#x27;s email. This is the first step of the magic link flow.</p>
+<ul>
+<li>
+<p><strong>Body (<code>application/json</code>):</strong></p>
+<ul>
+<li><code>email</code> (string, required): The email of the user to log in.</li>
+</ul>
+</li>
+<li>
+<p><strong>Success Response (<code>200</code>):</strong> <code>{ &quot;message&quot;: &quot;If a user with that email exists, a magic link has been sent.&quot; }</code></p>
+</li>
+<li>
+<p><strong>Behavior:</strong></p>
+<ol>
+<li>Finds the user by email.</li>
+<li>If the user exists, it calls <code>sendMagicLink()</code> to email them a login link.</li>
+<li>It always returns a generic success message to prevent user enumeration (i.e., maliciously checking if an email is registered with the service).</li>
+</ol>
+</li>
+</ul>
+<hr>
+<h3 class="anchor anchorWithStickyNavbar_fF9Z" id="post-loginverify"><code>POST /login/verify</code><a href="#post-loginverify" class="hash-link" aria-label="Direct link to post-loginverify" title="Direct link to post-loginverify">​</a></h3>
+<p>Verifies a magic link token to log a user in. This is the second step of the magic link flow.</p>
+<ul>
+<li>
+<p><strong>Body (<code>application/json</code>):</strong></p>
+<ul>
+<li><code>token</code> (string, required): The single-use token from the magic link URL.</li>
+</ul>
+</li>
+<li>
+<p><strong>Success Response (<code>200</code>):</strong> The sanitized user object.</p>
+</li>
+<li>
+<p><strong>Error Response (<code>400</code>):</strong> <code>{ &quot;error&quot;: &quot;Invalid or expired token.&quot; }</code></p>
+</li>
+<li>
+<p><strong>Behavior:</strong></p>
+<ol>
+<li>Hashes the provided token and looks for the hash in the <code>LoginToken</code> table.</li>
+<li>Ensures the token exists and has not expired.</li>
+<li>If valid, it logs the user in, deletes the used token, and returns the user object.</li>
+</ol>
+</li>
+</ul>
+<hr>
+<h3 class="anchor anchorWithStickyNavbar_fF9Z" id="post-verify-email"><code>POST /verify-email</code><a href="#post-verify-email" class="hash-link" aria-label="Direct link to post-verify-email" title="Direct link to post-verify-email">​</a></h3>
+<p>Verifies a user&#x27;s email address using the 6-digit code sent upon registration.</p>
+<ul>
+<li>
+<p><strong>Body (<code>application/json</code>):</strong></p>
+<ul>
+<li><code>userId</code> (string, required): The ID of the user to verify.</li>
+<li><code>token</code> (string, required): The 6-digit verification token.</li>
+</ul>
+</li>
+<li>
+<p><strong>Success Response (<code>200</code>):</strong> The sanitized user object.</p>
+</li>
+<li>
+<p><strong>Error Response (<code>400</code>):</strong> <code>{ &quot;error&quot;: &quot;Invalid or expired verification code.&quot; }</code></p>
+</li>
+<li>
+<p><strong>Behavior:</strong></p>
+<ol>
+<li>Finds the user by <code>userId</code>.</li>
+<li>Checks that the provided token matches the <code>verificationToken</code> on the user record and has not expired.</li>
+<li>If valid, it sets <code>emailVerified</code> to <code>true</code>, clears the token fields from the user record, and returns the updated user object.</li>
+</ol>
+</li>
+</ul>
+<hr>
+<h3 class="anchor anchorWithStickyNavbar_fF9Z" id="post-forgot-password"><code>POST /forgot-password</code><a href="#post-forgot-password" class="hash-link" aria-label="Direct link to post-forgot-password" title="Direct link to post-forgot-password">​</a></h3>
+<p>Initiates the password reset process.</p>
+<ul>
+<li>
+<p><strong>Body (<code>application/json</code>):</strong></p>
+<ul>
+<li><code>email</code> (string, required): The user&#x27;s email address.</li>
+</ul>
+</li>
+<li>
+<p><strong>Success Response (<code>200</code>):</strong> <code>{ &quot;message&quot;: &quot;If a user with that email exists, a password reset link has been sent.&quot; }</code></p>
+</li>
+<li>
+<p><strong>Behavior:</strong></p>
+<ol>
+<li>Finds the user by email.</li>
+<li>If the user exists, it generates a unique password reset token (a UUID), saves it and an expiry date to the user record, and emails a reset link.</li>
+<li>Always returns a generic success message to prevent user enumeration.</li>
+</ol>
+</li>
+</ul>
+<hr>
+<h3 class="anchor anchorWithStickyNavbar_fF9Z" id="post-reset-password"><code>POST /reset-password</code><a href="#post-reset-password" class="hash-link" aria-label="Direct link to post-reset-password" title="Direct link to post-reset-password">​</a></h3>
+<p>Sets a new password for a user using a reset token.</p>
+<ul>
+<li>
+<p><strong>Body (<code>application/json</code>):</strong></p>
+<ul>
+<li><code>token</code> (string, required): The password reset token from the email link.</li>
+<li><code>password</code> (string, required): The new password (min. 8 characters).</li>
+</ul>
+</li>
+<li>
+<p><strong>Success Response (<code>200</code>):</strong> <code>{ &quot;message&quot;: &quot;Password has been reset successfully.&quot; }</code></p>
+</li>
+<li>
+<p><strong>Behavior:</strong></p>
+<ol>
+<li>Finds the user by the <code>passwordResetToken</code>.</li>
+<li>Ensures the token has not expired.</li>
+<li>If valid, it hashes the new password, updates the user record, clears the reset token fields, and returns a success message.</li>
+</ol>
+</li>
+</ul>
+<hr>
+<h3 class="anchor anchorWithStickyNavbar_fF9Z" id="post-logout"><code>POST /logout</code><a href="#post-logout" class="hash-link" aria-label="Direct link to post-logout" title="Direct link to post-logout">​</a></h3>
+<p>Logs the user out by destroying their session.</p>
+<ul>
+<li><strong>Success Response (<code>200</code>):</strong> <code>{ &quot;message&quot;: &quot;Logged out successfully.&quot; }</code></li>
+<li><strong>Behavior:</strong>
+<ol>
+<li>Calls <code>req.logout()</code> to clear the login session from Passport.js.</li>
+<li>Calls <code>req.session.destroy()</code> to remove the session record from the database.</li>
+</ol>
+</li>
+</ul>
+<hr>
+<h3 class="anchor anchorWithStickyNavbar_fF9Z" id="get-session"><code>GET /session</code><a href="#get-session" class="hash-link" aria-label="Direct link to get-session" title="Direct link to get-session">​</a></h3>
+<p>Retrieves the current user&#x27;s session information. This is a protected route used by the frontend to check if a user is currently logged in.</p>
+<ul>
+<li><strong>Middleware:</strong> <code>protect</code> (ensures user is authenticated).</li>
+<li><strong>Success Response (<code>200</code>):</strong> The sanitized <code>req.user</code> object, or <code>null</code> if no user is logged in.</li>
+</ul>
+<hr>
+<h3 class="anchor anchorWithStickyNavbar_fF9Z" id="oidc-routes">OIDC Routes<a href="#oidc-routes" class="hash-link" aria-label="Direct link to OIDC Routes" title="Direct link to OIDC Routes">​</a></h3>
+<p>These routes are used for Single Sign-On (SSO) integrations with external identity providers (IdPs) like Okta or Auth0.</p>
+<ul>
+<li><code>GET /oidc/login</code>: The entry point to initiate an OIDC login flow (SP-initiated).</li>
+<li><code>POST /oidc/login</code>: The entry point for an IdP-initiated flow where the IdP posts an assertion to Stagehand.</li>
+<li><code>GET /oidc/callback</code>: The callback (or redirect) URL that the OIDC provider sends the user to after they authenticate.</li>
+<li><code>POST /oidc/callback</code>: A callback URL for some OIDC providers that use a POST request instead of a GET.</li>
+</ul>
+<p>These routes all use the <code>dynamicOidcStrategy</code> middleware from <code>src/utils/passport.js</code> to dynamically configure the OIDC provider based on the user&#x27;s organization. After successful authentication with the external provider, it logs the user into a Stagehand session.</p></div><footer class="theme-doc-footer docusaurus-mt-lg"><div class="row margin-top--sm theme-doc-footer-edit-meta-row"><div class="col"><a href="https://github.com/your-org/stagehand/tree/main/packages/docs/docs/api/auth.md" target="_blank" rel="noopener noreferrer" class="theme-edit-this-page"><svg fill="currentColor" height="20" width="20" viewBox="0 0 40 40" class="iconEdit_UohW" aria-hidden="true"><g><path d="m34.5 11.7l-3 3.1-6.3-6.3 3.1-3q0.5-0.5 1.2-0.5t1.1 0.5l3.9 3.9q0.5 0.4 0.5 1.1t-0.5 1.2z m-29.5 17.1l18.4-18.5 6.3 6.3-18.4 18.4h-6.3v-6.2z"></path></g></svg>Edit this page</a></div><div class="col lastUpdated_g62E"></div></div></footer></article><nav class="docusaurus-mt-lg pagination-nav" aria-label="Docs pages"><a class="pagination-nav__link pagination-nav__link--prev" href="/frontend-architecture"><div class="pagination-nav__sublabel">Previous</div><div class="pagination-nav__label">Frontend Architecture &amp; Conventions</div></a><a class="pagination-nav__link pagination-nav__link--next" href="/api/oidc"><div class="pagination-nav__sublabel">Next</div><div class="pagination-nav__label">API Reference: OIDC Configuration</div></a></nav></div></div><div class="col col--3"><div class="tableOfContents_TN1Q thin-scrollbar theme-doc-toc-desktop"><ul class="table-of-contents table-of-contents__left-border"><li><a href="#overview" class="table-of-contents__link toc-highlight">Overview</a></li><li><a href="#helper-functions" class="table-of-contents__link toc-highlight">Helper Functions</a></li><li><a href="#endpoints" class="table-of-contents__link toc-highlight">Endpoints</a><ul><li><a href="#post-register" class="table-of-contents__link toc-highlight"><code>POST /register</code></a></li><li><a href="#post-login" class="table-of-contents__link toc-highlight"><code>POST /login</code></a></li><li><a href="#post-loginmagic" class="table-of-contents__link toc-highlight"><code>POST /login/magic</code></a></li><li><a href="#post-loginverify" class="table-of-contents__link toc-highlight"><code>POST /login/verify</code></a></li><li><a href="#post-verify-email" class="table-of-contents__link toc-highlight"><code>POST /verify-email</code></a></li><li><a href="#post-forgot-password" class="table-of-contents__link toc-highlight"><code>POST /forgot-password</code></a></li><li><a href="#post-reset-password" class="table-of-contents__link toc-highlight"><code>POST /reset-password</code></a></li><li><a href="#post-logout" class="table-of-contents__link toc-highlight"><code>POST /logout</code></a></li><li><a href="#get-session" class="table-of-contents__link toc-highlight"><code>GET /session</code></a></li><li><a href="#oidc-routes" class="table-of-contents__link toc-highlight">OIDC Routes</a></li></ul></li></ul></div></div></div></div></main></div></div></div><footer class="theme-layout-footer footer footer--dark"><div class="container container-fluid"><div class="row footer__links"><div class="theme-layout-footer-column col footer__col"><div class="footer__title">Documentation</div><ul class="footer__items clean-list"><li class="footer__item"><a class="footer__link-item" href="/api-reference">API Reference</a></li><li class="footer__item"><a class="footer__link-item" href="/backend-architecture">Backend Architecture</a></li><li class="footer__item"><a class="footer__link-item" href="/frontend-architecture">Frontend Architecture</a></li></ul></div><div class="theme-layout-footer-column col footer__col"><div class="footer__title">API Docs</div><ul class="footer__items clean-list"><li class="footer__item"><a class="footer__link-item" href="/api/auth">Authentication</a></li><li class="footer__item"><a class="footer__link-item" href="/api/organizations">Organizations</a></li><li class="footer__item"><a class="footer__link-item" href="/api/projects">Projects</a></li></ul></div><div class="theme-layout-footer-column col footer__col"><div class="footer__title">More</div><ul class="footer__items clean-list"><li class="footer__item"><a href="https://github.com/your-org/stagehand" target="_blank" rel="noopener noreferrer" class="footer__link-item">GitHub<svg width="13.5" height="13.5" aria-hidden="true" class="iconExternalLink_awgD"><use href="#theme-svg-external-link"></use></svg></a></li></ul></div></div><div class="footer__bottom text--center"><div class="footer__copyright">Copyright © 2025 Stagehand. Built with Docusaurus.</div></div></div></footer></div>
+</body>
+</html>

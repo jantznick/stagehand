@@ -1,0 +1,24 @@
+{
+  "id": "api/integrations",
+  "title": "API Reference: SCM Integrations",
+  "description": "This document provides a detailed breakdown of the Source Code Management (SCM) integration API endpoints.",
+  "source": "@site/docs/api/integrations.md",
+  "sourceDirName": "api",
+  "slug": "/api/integrations",
+  "permalink": "/api/integrations",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/your-org/stagehand/tree/main/packages/docs/docs/api/integrations.md",
+  "tags": [],
+  "version": "current",
+  "frontMatter": {},
+  "sidebar": "docsSidebar",
+  "previous": {
+    "title": "API Reference: Invitations",
+    "permalink": "/api/invitations"
+  },
+  "next": {
+    "title": "API Reference: Security Tools",
+    "permalink": "/api/security-tools"
+  }
+}

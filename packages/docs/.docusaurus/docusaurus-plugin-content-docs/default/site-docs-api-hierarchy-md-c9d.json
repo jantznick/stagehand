@@ -1,0 +1,24 @@
+{
+  "id": "api/hierarchy",
+  "title": "API Reference: Hierarchy",
+  "description": "This document provides a detailed breakdown of the hierarchy-related API endpoints.",
+  "source": "@site/docs/api/hierarchy.md",
+  "sourceDirName": "api",
+  "slug": "/api/hierarchy",
+  "permalink": "/api/hierarchy",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/your-org/stagehand/tree/main/packages/docs/docs/api/hierarchy.md",
+  "tags": [],
+  "version": "current",
+  "frontMatter": {},
+  "sidebar": "docsSidebar",
+  "previous": {
+    "title": "API Reference: Findings",
+    "permalink": "/api/findings"
+  },
+  "next": {
+    "title": "API Reference: Relationships",
+    "permalink": "/api/relationships"
+  }
+}

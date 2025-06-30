@@ -1,0 +1,24 @@
+{
+  "id": "frontend/stores/useMembershipStore",
+  "title": "Store: useMembershipStore",
+  "description": "File:* packages/web/src/stores/useMembershipStore.js",
+  "source": "@site/docs/frontend/stores/useMembershipStore.md",
+  "sourceDirName": "frontend/stores",
+  "slug": "/frontend/stores/useMembershipStore",
+  "permalink": "/frontend/stores/useMembershipStore",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/your-org/stagehand/tree/main/packages/docs/docs/frontend/stores/useMembershipStore.md",
+  "tags": [],
+  "version": "current",
+  "frontMatter": {},
+  "sidebar": "docsSidebar",
+  "previous": {
+    "title": "Store: useIntegrationStore",
+    "permalink": "/frontend/stores/useIntegrationStore"
+  },
+  "next": {
+    "title": "Store: useOIDCStore",
+    "permalink": "/frontend/stores/useOIDCStore"
+  }
+}

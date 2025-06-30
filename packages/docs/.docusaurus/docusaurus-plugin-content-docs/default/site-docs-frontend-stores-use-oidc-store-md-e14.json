@@ -1,0 +1,24 @@
+{
+  "id": "frontend/stores/useOIDCStore",
+  "title": "Store: useOIDCStore",
+  "description": "File:* packages/web/src/stores/useOIDCStore.js",
+  "source": "@site/docs/frontend/stores/useOIDCStore.md",
+  "sourceDirName": "frontend/stores",
+  "slug": "/frontend/stores/useOIDCStore",
+  "permalink": "/frontend/stores/useOIDCStore",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/your-org/stagehand/tree/main/packages/docs/docs/frontend/stores/useOIDCStore.md",
+  "tags": [],
+  "version": "current",
+  "frontMatter": {},
+  "sidebar": "docsSidebar",
+  "previous": {
+    "title": "Store: useMembershipStore",
+    "permalink": "/frontend/stores/useMembershipStore"
+  },
+  "next": {
+    "title": "Store: useOrganizationStore",
+    "permalink": "/frontend/stores/useOrganizationStore"
+  }
+}

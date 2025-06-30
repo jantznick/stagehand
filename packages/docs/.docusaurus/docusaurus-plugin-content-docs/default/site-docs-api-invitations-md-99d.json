@@ -1,0 +1,24 @@
+{
+  "id": "api/invitations",
+  "title": "API Reference: Invitations",
+  "description": "This document provides a detailed breakdown of the invitation-related API endpoints.",
+  "source": "@site/docs/api/invitations.md",
+  "sourceDirName": "api",
+  "slug": "/api/invitations",
+  "permalink": "/api/invitations",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/your-org/stagehand/tree/main/packages/docs/docs/api/invitations.md",
+  "tags": [],
+  "version": "current",
+  "frontMatter": {},
+  "sidebar": "docsSidebar",
+  "previous": {
+    "title": "API Reference: Memberships",
+    "permalink": "/api/memberships"
+  },
+  "next": {
+    "title": "API Reference: SCM Integrations",
+    "permalink": "/api/integrations"
+  }
+}

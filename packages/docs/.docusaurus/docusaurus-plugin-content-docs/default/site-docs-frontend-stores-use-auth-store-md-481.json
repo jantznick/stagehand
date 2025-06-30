@@ -1,0 +1,24 @@
+{
+  "id": "frontend/stores/useAuthStore",
+  "title": "Store: useAuthStore",
+  "description": "File:* packages/web/src/stores/useAuthStore.js",
+  "source": "@site/docs/frontend/stores/useAuthStore.md",
+  "sourceDirName": "frontend/stores",
+  "slug": "/frontend/stores/useAuthStore",
+  "permalink": "/frontend/stores/useAuthStore",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/your-org/stagehand/tree/main/packages/docs/docs/frontend/stores/useAuthStore.md",
+  "tags": [],
+  "version": "current",
+  "frontMatter": {},
+  "sidebar": "docsSidebar",
+  "previous": {
+    "title": "Frontend Documentation: Sidebar Components",
+    "permalink": "/frontend/components/sidebar"
+  },
+  "next": {
+    "title": "Store: useArchitectureStore",
+    "permalink": "/frontend/stores/useArchitectureStore"
+  }
+}

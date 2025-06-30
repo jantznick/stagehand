@@ -1,0 +1,24 @@
+{
+  "id": "api/teams",
+  "title": "API Reference: Teams",
+  "description": "This document provides a detailed breakdown of the team-related API endpoints.",
+  "source": "@site/docs/api/teams.md",
+  "sourceDirName": "api",
+  "slug": "/api/teams",
+  "permalink": "/api/teams",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/your-org/stagehand/tree/main/packages/docs/docs/api/teams.md",
+  "tags": [],
+  "version": "current",
+  "frontMatter": {},
+  "sidebar": "docsSidebar",
+  "previous": {
+    "title": "API Reference: Companies",
+    "permalink": "/api/company"
+  },
+  "next": {
+    "title": "API Reference: Projects (Applications)",
+    "permalink": "/api/projects"
+  }
+}

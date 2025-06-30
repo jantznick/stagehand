@@ -1,0 +1,24 @@
+{
+  "id": "frontend/pages",
+  "title": "Frontend Documentation: Pages",
+  "description": "This document provides an in-depth breakdown of the main \"page\" components, detailing their display function and the specific state they consume.",
+  "source": "@site/docs/frontend/pages.md",
+  "sourceDirName": "frontend",
+  "slug": "/frontend/pages",
+  "permalink": "/frontend/pages",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/your-org/stagehand/tree/main/packages/docs/docs/frontend/pages.md",
+  "tags": [],
+  "version": "current",
+  "frontMatter": {},
+  "sidebar": "docsSidebar",
+  "previous": {
+    "title": "Frontend Documentation: Custom Hooks",
+    "permalink": "/frontend/hooks"
+  },
+  "next": {
+    "title": "Frontend Documentation: Application Components",
+    "permalink": "/frontend/components/applications"
+  }
+}

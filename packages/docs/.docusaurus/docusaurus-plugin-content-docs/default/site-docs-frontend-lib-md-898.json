@@ -1,0 +1,24 @@
+{
+  "id": "frontend/lib",
+  "title": "Frontend Documentation: Lib Utilities",
+  "description": "This document provides a breakdown of the shared utility functions and constants defined in the lib directory.",
+  "source": "@site/docs/frontend/lib.md",
+  "sourceDirName": "frontend",
+  "slug": "/frontend/lib",
+  "permalink": "/frontend/lib",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/your-org/stagehand/tree/main/packages/docs/docs/frontend/lib.md",
+  "tags": [],
+  "version": "current",
+  "frontMatter": {},
+  "sidebar": "docsSidebar",
+  "previous": {
+    "title": "API Reference: Technologies",
+    "permalink": "/api/technologies"
+  },
+  "next": {
+    "title": "Frontend Documentation: Custom Hooks",
+    "permalink": "/frontend/hooks"
+  }
+}

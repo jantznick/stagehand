@@ -1,0 +1,24 @@
+{
+  "id": "frontend/hooks",
+  "title": "Frontend Documentation: Custom Hooks",
+  "description": "This document provides a breakdown of the custom React hooks used throughout the application.",
+  "source": "@site/docs/frontend/hooks.md",
+  "sourceDirName": "frontend",
+  "slug": "/frontend/hooks",
+  "permalink": "/frontend/hooks",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/your-org/stagehand/tree/main/packages/docs/docs/frontend/hooks.md",
+  "tags": [],
+  "version": "current",
+  "frontMatter": {},
+  "sidebar": "docsSidebar",
+  "previous": {
+    "title": "Frontend Documentation: Lib Utilities",
+    "permalink": "/frontend/lib"
+  },
+  "next": {
+    "title": "Frontend Documentation: Pages",
+    "permalink": "/frontend/pages"
+  }
+}

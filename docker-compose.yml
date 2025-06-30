@@ -51,5 +51,20 @@ services:
     depends_on:
       - api
 
+  docs:
+    build:
+      context: .
+      dockerfile: packages/docs/Dockerfile.dev
+    working_dir: /app
+    command: npm run start --workspace=packages/docs
+    container_name: stagehand-docs
+    ports:
+      - "3002:3002"
+    volumes:
+      - .:/app
+      - /app/node_modules
+    depends_on:
+      - api
+
 volumes:
   stagehand-db-data: 

@@ -1,0 +1,1200 @@
+{
+  "docusaurus-plugin-content-docs": {
+    "default": {
+      "loadedVersions": [
+        {
+          "versionName": "current",
+          "label": "Next",
+          "banner": null,
+          "badge": false,
+          "noIndex": false,
+          "className": "docs-version-current",
+          "path": "/",
+          "tagsPath": "/tags",
+          "editUrl": "https://github.com/your-org/stagehand/tree/main/packages/docs/docs",
+          "editUrlLocalized": "https://github.com/your-org/stagehand/tree/main/packages/docs/i18n/en/docusaurus-plugin-content-docs/current",
+          "isLast": true,
+          "routePriority": -1,
+          "sidebarFilePath": "/app/packages/docs/sidebars.js",
+          "contentPath": "/app/packages/docs/docs",
+          "contentPathLocalized": "/app/packages/docs/i18n/en/docusaurus-plugin-content-docs/current",
+          "docs": [
+            {
+              "id": "api-reference",
+              "title": "API Reference",
+              "description": "This document serves as a high-level table of contents for the Stagehand backend API. The API is organized by resource, with each major resource having its own detailed documentation file.",
+              "source": "@site/docs/api-reference.md",
+              "sourceDirName": ".",
+              "slug": "/api-reference",
+              "permalink": "/api-reference",
+              "draft": false,
+              "unlisted": false,
+              "editUrl": "https://github.com/your-org/stagehand/tree/main/packages/docs/docs/api-reference.md",
+              "tags": [],
+              "version": "current",
+              "frontMatter": {},
+              "sidebar": "docsSidebar",
+              "next": {
+                "title": "Backend Architecture & Conventions",
+                "permalink": "/backend-architecture"
+              }
+            },
+            {
+              "id": "api/auth",
+              "title": "API Reference: Authentication",
+              "description": "This document provides a detailed breakdown of the authentication-related API endpoints.",
+              "source": "@site/docs/api/auth.md",
+              "sourceDirName": "api",
+              "slug": "/api/auth",
+              "permalink": "/api/auth",
+              "draft": false,
+              "unlisted": false,
+              "editUrl": "https://github.com/your-org/stagehand/tree/main/packages/docs/docs/api/auth.md",
+              "tags": [],
+              "version": "current",
+              "frontMatter": {},
+              "sidebar": "docsSidebar",
+              "previous": {
+                "title": "Frontend Architecture & Conventions",
+                "permalink": "/frontend-architecture"
+              },
+              "next": {
+                "title": "API Reference: OIDC Configuration",
+                "permalink": "/api/oidc"
+              }
+            },
+            {
+              "id": "api/company",
+              "title": "API Reference: Companies",
+              "description": "This document provides a detailed breakdown of the company-related API endpoints.",
+              "source": "@site/docs/api/company.md",
+              "sourceDirName": "api",
+              "slug": "/api/company",
+              "permalink": "/api/company",
+              "draft": false,
+              "unlisted": false,
+              "editUrl": "https://github.com/your-org/stagehand/tree/main/packages/docs/docs/api/company.md",
+              "tags": [],
+              "version": "current",
+              "frontMatter": {},
+              "sidebar": "docsSidebar",
+              "previous": {
+                "title": "API Reference: Organizations",
+                "permalink": "/api/organizations"
+              },
+              "next": {
+                "title": "API Reference: Teams",
+                "permalink": "/api/teams"
+              }
+            },
+            {
+              "id": "api/findings",
+              "title": "API Reference: Findings",
+              "description": "This document provides a detailed breakdown of the security finding-related API endpoints.",
+              "source": "@site/docs/api/findings.md",
+              "sourceDirName": "api",
+              "slug": "/api/findings",
+              "permalink": "/api/findings",
+              "draft": false,
+              "unlisted": false,
+              "editUrl": "https://github.com/your-org/stagehand/tree/main/packages/docs/docs/api/findings.md",
+              "tags": [],
+              "version": "current",
+              "frontMatter": {},
+              "sidebar": "docsSidebar",
+              "previous": {
+                "title": "API Reference: Security Tools",
+                "permalink": "/api/security-tools"
+              },
+              "next": {
+                "title": "API Reference: Hierarchy",
+                "permalink": "/api/hierarchy"
+              }
+            },
+            {
+              "id": "api/hierarchy",
+              "title": "API Reference: Hierarchy",
+              "description": "This document provides a detailed breakdown of the hierarchy-related API endpoints.",
+              "source": "@site/docs/api/hierarchy.md",
+              "sourceDirName": "api",
+              "slug": "/api/hierarchy",
+              "permalink": "/api/hierarchy",
+              "draft": false,
+              "unlisted": false,
+              "editUrl": "https://github.com/your-org/stagehand/tree/main/packages/docs/docs/api/hierarchy.md",
+              "tags": [],
+              "version": "current",
+              "frontMatter": {},
+              "sidebar": "docsSidebar",
+              "previous": {
+                "title": "API Reference: Findings",
+                "permalink": "/api/findings"
+              },
+              "next": {
+                "title": "API Reference: Relationships",
+                "permalink": "/api/relationships"
+              }
+            },
+            {
+              "id": "api/integrations",
+              "title": "API Reference: SCM Integrations",
+              "description": "This document provides a detailed breakdown of the Source Code Management (SCM) integration API endpoints.",
+              "source": "@site/docs/api/integrations.md",
+              "sourceDirName": "api",
+              "slug": "/api/integrations",
+              "permalink": "/api/integrations",
+              "draft": false,
+              "unlisted": false,
+              "editUrl": "https://github.com/your-org/stagehand/tree/main/packages/docs/docs/api/integrations.md",
+              "tags": [],
+              "version": "current",
+              "frontMatter": {},
+              "sidebar": "docsSidebar",
+              "previous": {
+                "title": "API Reference: Invitations",
+                "permalink": "/api/invitations"
+              },
+              "next": {
+                "title": "API Reference: Security Tools",
+                "permalink": "/api/security-tools"
+              }
+            },
+            {
+              "id": "api/invitations",
+              "title": "API Reference: Invitations",
+              "description": "This document provides a detailed breakdown of the invitation-related API endpoints.",
+              "source": "@site/docs/api/invitations.md",
+              "sourceDirName": "api",
+              "slug": "/api/invitations",
+              "permalink": "/api/invitations",
+              "draft": false,
+              "unlisted": false,
+              "editUrl": "https://github.com/your-org/stagehand/tree/main/packages/docs/docs/api/invitations.md",
+              "tags": [],
+              "version": "current",
+              "frontMatter": {},
+              "sidebar": "docsSidebar",
+              "previous": {
+                "title": "API Reference: Memberships",
+                "permalink": "/api/memberships"
+              },
+              "next": {
+                "title": "API Reference: SCM Integrations",
+                "permalink": "/api/integrations"
+              }
+            },
+            {
+              "id": "api/memberships",
+              "title": "API Reference: Memberships",
+              "description": "This document provides a detailed breakdown of the membership-related API endpoints.",
+              "source": "@site/docs/api/memberships.md",
+              "sourceDirName": "api",
+              "slug": "/api/memberships",
+              "permalink": "/api/memberships",
+              "draft": false,
+              "unlisted": false,
+              "editUrl": "https://github.com/your-org/stagehand/tree/main/packages/docs/docs/api/memberships.md",
+              "tags": [],
+              "version": "current",
+              "frontMatter": {},
+              "sidebar": "docsSidebar",
+              "previous": {
+                "title": "API Reference: Projects (Applications)",
+                "permalink": "/api/projects"
+              },
+              "next": {
+                "title": "API Reference: Invitations",
+                "permalink": "/api/invitations"
+              }
+            },
+            {
+              "id": "api/oidc",
+              "title": "API Reference: OIDC Configuration",
+              "description": "This document provides a detailed breakdown of the OIDC configuration-related API endpoints.",
+              "source": "@site/docs/api/oidc.md",
+              "sourceDirName": "api",
+              "slug": "/api/oidc",
+              "permalink": "/api/oidc",
+              "draft": false,
+              "unlisted": false,
+              "editUrl": "https://github.com/your-org/stagehand/tree/main/packages/docs/docs/api/oidc.md",
+              "tags": [],
+              "version": "current",
+              "frontMatter": {},
+              "sidebar": "docsSidebar",
+              "previous": {
+                "title": "API Reference: Authentication",
+                "permalink": "/api/auth"
+              },
+              "next": {
+                "title": "API Reference: Organizations",
+                "permalink": "/api/organizations"
+              }
+            },
+            {
+              "id": "api/organizations",
+              "title": "API Reference: Organizations",
+              "description": "This document provides a detailed breakdown of the organization-related API endpoints.",
+              "source": "@site/docs/api/organizations.md",
+              "sourceDirName": "api",
+              "slug": "/api/organizations",
+              "permalink": "/api/organizations",
+              "draft": false,
+              "unlisted": false,
+              "editUrl": "https://github.com/your-org/stagehand/tree/main/packages/docs/docs/api/organizations.md",
+              "tags": [],
+              "version": "current",
+              "frontMatter": {},
+              "sidebar": "docsSidebar",
+              "previous": {
+                "title": "API Reference: OIDC Configuration",
+                "permalink": "/api/oidc"
+              },
+              "next": {
+                "title": "API Reference: Companies",
+                "permalink": "/api/company"
+              }
+            },
+            {
+              "id": "api/projects",
+              "title": "API Reference: Projects (Applications)",
+              "description": "This document provides a detailed breakdown of the project-related API endpoints. \"Projects\" are the core entities in the Stagehand developer catalog and are often referred to as \"Applications\" in the UI and business logic.",
+              "source": "@site/docs/api/projects.md",
+              "sourceDirName": "api",
+              "slug": "/api/projects",
+              "permalink": "/api/projects",
+              "draft": false,
+              "unlisted": false,
+              "editUrl": "https://github.com/your-org/stagehand/tree/main/packages/docs/docs/api/projects.md",
+              "tags": [],
+              "version": "current",
+              "frontMatter": {},
+              "sidebar": "docsSidebar",
+              "previous": {
+                "title": "API Reference: Teams",
+                "permalink": "/api/teams"
+              },
+              "next": {
+                "title": "API Reference: Memberships",
+                "permalink": "/api/memberships"
+              }
+            },
+            {
+              "id": "api/relationships",
+              "title": "API Reference: Relationships",
+              "description": "This document provides a detailed breakdown of the project relationship-related API endpoints.",
+              "source": "@site/docs/api/relationships.md",
+              "sourceDirName": "api",
+              "slug": "/api/relationships",
+              "permalink": "/api/relationships",
+              "draft": false,
+              "unlisted": false,
+              "editUrl": "https://github.com/your-org/stagehand/tree/main/packages/docs/docs/api/relationships.md",
+              "tags": [],
+              "version": "current",
+              "frontMatter": {},
+              "sidebar": "docsSidebar",
+              "previous": {
+                "title": "API Reference: Hierarchy",
+                "permalink": "/api/hierarchy"
+              },
+              "next": {
+                "title": "API Reference: Technologies",
+                "permalink": "/api/technologies"
+              }
+            },
+            {
+              "id": "api/security-tools",
+              "title": "API Reference: Security Tools",
+              "description": "This document provides a detailed breakdown of the security tool integration-related API endpoints.",
+              "source": "@site/docs/api/security-tools.md",
+              "sourceDirName": "api",
+              "slug": "/api/security-tools",
+              "permalink": "/api/security-tools",
+              "draft": false,
+              "unlisted": false,
+              "editUrl": "https://github.com/your-org/stagehand/tree/main/packages/docs/docs/api/security-tools.md",
+              "tags": [],
+              "version": "current",
+              "frontMatter": {},
+              "sidebar": "docsSidebar",
+              "previous": {
+                "title": "API Reference: SCM Integrations",
+                "permalink": "/api/integrations"
+              },
+              "next": {
+                "title": "API Reference: Findings",
+                "permalink": "/api/findings"
+              }
+            },
+            {
+              "id": "api/teams",
+              "title": "API Reference: Teams",
+              "description": "This document provides a detailed breakdown of the team-related API endpoints.",
+              "source": "@site/docs/api/teams.md",
+              "sourceDirName": "api",
+              "slug": "/api/teams",
+              "permalink": "/api/teams",
+              "draft": false,
+              "unlisted": false,
+              "editUrl": "https://github.com/your-org/stagehand/tree/main/packages/docs/docs/api/teams.md",
+              "tags": [],
+              "version": "current",
+              "frontMatter": {},
+              "sidebar": "docsSidebar",
+              "previous": {
+                "title": "API Reference: Companies",
+                "permalink": "/api/company"
+              },
+              "next": {
+                "title": "API Reference: Projects (Applications)",
+                "permalink": "/api/projects"
+              }
+            },
+            {
+              "id": "api/technologies",
+              "title": "API Reference: Technologies",
+              "description": "This document provides a detailed breakdown of the technology-related API endpoints.",
+              "source": "@site/docs/api/technologies.md",
+              "sourceDirName": "api",
+              "slug": "/api/technologies",
+              "permalink": "/api/technologies",
+              "draft": false,
+              "unlisted": false,
+              "editUrl": "https://github.com/your-org/stagehand/tree/main/packages/docs/docs/api/technologies.md",
+              "tags": [],
+              "version": "current",
+              "frontMatter": {},
+              "sidebar": "docsSidebar",
+              "previous": {
+                "title": "API Reference: Relationships",
+                "permalink": "/api/relationships"
+              },
+              "next": {
+                "title": "Frontend Documentation: Lib Utilities",
+                "permalink": "/frontend/lib"
+              }
+            },
+            {
+              "id": "backend-architecture",
+              "title": "Backend Architecture & Conventions",
+              "description": "This document provides a detailed guide to the structure, conventions, and patterns used in the packages/api service. It is intended for developers working on the backend to ensure consistency and maintainability.",
+              "source": "@site/docs/backend-architecture.md",
+              "sourceDirName": ".",
+              "slug": "/backend-architecture",
+              "permalink": "/backend-architecture",
+              "draft": false,
+              "unlisted": false,
+              "editUrl": "https://github.com/your-org/stagehand/tree/main/packages/docs/docs/backend-architecture.md",
+              "tags": [],
+              "version": "current",
+              "frontMatter": {},
+              "sidebar": "docsSidebar",
+              "previous": {
+                "title": "API Reference",
+                "permalink": "/api-reference"
+              },
+              "next": {
+                "title": "Frontend Architecture & Conventions",
+                "permalink": "/frontend-architecture"
+              }
+            },
+            {
+              "id": "frontend-architecture",
+              "title": "Frontend Architecture & Conventions",
+              "description": "This document provides a detailed guide to the structure, conventions, and patterns used in the packages/web service. It is intended for developers working on the frontend to ensure consistency and maintainability.",
+              "source": "@site/docs/frontend-architecture.md",
+              "sourceDirName": ".",
+              "slug": "/frontend-architecture",
+              "permalink": "/frontend-architecture",
+              "draft": false,
+              "unlisted": false,
+              "editUrl": "https://github.com/your-org/stagehand/tree/main/packages/docs/docs/frontend-architecture.md",
+              "tags": [],
+              "version": "current",
+              "frontMatter": {},
+              "sidebar": "docsSidebar",
+              "previous": {
+                "title": "Backend Architecture & Conventions",
+                "permalink": "/backend-architecture"
+              },
+              "next": {
+                "title": "API Reference: Authentication",
+                "permalink": "/api/auth"
+              }
+            },
+            {
+              "id": "frontend/components/applications",
+              "title": "Frontend Documentation: Application Components",
+              "description": "This document provides a breakdown of the components used for displaying the details of a single application (referred to as a \"Project\" in the backend and hierarchy).",
+              "source": "@site/docs/frontend/components/applications.md",
+              "sourceDirName": "frontend/components",
+              "slug": "/frontend/components/applications",
+              "permalink": "/frontend/components/applications",
+              "draft": false,
+              "unlisted": false,
+              "editUrl": "https://github.com/your-org/stagehand/tree/main/packages/docs/docs/frontend/components/applications.md",
+              "tags": [],
+              "version": "current",
+              "frontMatter": {},
+              "sidebar": "docsSidebar",
+              "previous": {
+                "title": "Frontend Documentation: Pages",
+                "permalink": "/frontend/pages"
+              },
+              "next": {
+                "title": "Frontend Documentation: Architecture Components",
+                "permalink": "/frontend/components/architecture"
+              }
+            },
+            {
+              "id": "frontend/components/architecture",
+              "title": "Frontend Documentation: Architecture Components",
+              "description": "This document provides a breakdown of the components used for rendering the project dependency graph.",
+              "source": "@site/docs/frontend/components/architecture.md",
+              "sourceDirName": "frontend/components",
+              "slug": "/frontend/components/architecture",
+              "permalink": "/frontend/components/architecture",
+              "draft": false,
+              "unlisted": false,
+              "editUrl": "https://github.com/your-org/stagehand/tree/main/packages/docs/docs/frontend/components/architecture.md",
+              "tags": [],
+              "version": "current",
+              "frontMatter": {},
+              "sidebar": "docsSidebar",
+              "previous": {
+                "title": "Frontend Documentation: Application Components",
+                "permalink": "/frontend/components/applications"
+              },
+              "next": {
+                "title": "Frontend Documentation: Findings Components",
+                "permalink": "/frontend/components/findings"
+              }
+            },
+            {
+              "id": "frontend/components/findings",
+              "title": "Frontend Documentation: Findings Components",
+              "description": "This document provides a breakdown of the components used for displaying security findings.",
+              "source": "@site/docs/frontend/components/findings.md",
+              "sourceDirName": "frontend/components",
+              "slug": "/frontend/components/findings",
+              "permalink": "/frontend/components/findings",
+              "draft": false,
+              "unlisted": false,
+              "editUrl": "https://github.com/your-org/stagehand/tree/main/packages/docs/docs/frontend/components/findings.md",
+              "tags": [],
+              "version": "current",
+              "frontMatter": {},
+              "sidebar": "docsSidebar",
+              "previous": {
+                "title": "Frontend Documentation: Architecture Components",
+                "permalink": "/frontend/components/architecture"
+              },
+              "next": {
+                "title": "Frontend Documentation: Integration Components",
+                "permalink": "/frontend/components/integrations"
+              }
+            },
+            {
+              "id": "frontend/components/integrations",
+              "title": "Frontend Documentation: Integration Components",
+              "description": "This document provides a breakdown of the components used for managing integrations with external tools like GitHub (SCM) and Snyk (Security Tools).",
+              "source": "@site/docs/frontend/components/integrations.md",
+              "sourceDirName": "frontend/components",
+              "slug": "/frontend/components/integrations",
+              "permalink": "/frontend/components/integrations",
+              "draft": false,
+              "unlisted": false,
+              "editUrl": "https://github.com/your-org/stagehand/tree/main/packages/docs/docs/frontend/components/integrations.md",
+              "tags": [],
+              "version": "current",
+              "frontMatter": {},
+              "sidebar": "docsSidebar",
+              "previous": {
+                "title": "Frontend Documentation: Findings Components",
+                "permalink": "/frontend/components/findings"
+              },
+              "next": {
+                "title": "Frontend Documentation: Settings Components",
+                "permalink": "/frontend/components/settings"
+              }
+            },
+            {
+              "id": "frontend/components/settings",
+              "title": "Frontend Documentation: Settings Components",
+              "description": "This document provides a breakdown of the components used within the SettingsPage.",
+              "source": "@site/docs/frontend/components/settings.md",
+              "sourceDirName": "frontend/components",
+              "slug": "/frontend/components/settings",
+              "permalink": "/frontend/components/settings",
+              "draft": false,
+              "unlisted": false,
+              "editUrl": "https://github.com/your-org/stagehand/tree/main/packages/docs/docs/frontend/components/settings.md",
+              "tags": [],
+              "version": "current",
+              "frontMatter": {},
+              "sidebar": "docsSidebar",
+              "previous": {
+                "title": "Frontend Documentation: Integration Components",
+                "permalink": "/frontend/components/integrations"
+              },
+              "next": {
+                "title": "Frontend Documentation: Sidebar Components",
+                "permalink": "/frontend/components/sidebar"
+              }
+            },
+            {
+              "id": "frontend/components/sidebar",
+              "title": "Frontend Documentation: Sidebar Components",
+              "description": "This document provides a breakdown of the components that make up the main navigation sidebar.",
+              "source": "@site/docs/frontend/components/sidebar.md",
+              "sourceDirName": "frontend/components",
+              "slug": "/frontend/components/sidebar",
+              "permalink": "/frontend/components/sidebar",
+              "draft": false,
+              "unlisted": false,
+              "editUrl": "https://github.com/your-org/stagehand/tree/main/packages/docs/docs/frontend/components/sidebar.md",
+              "tags": [],
+              "version": "current",
+              "frontMatter": {},
+              "sidebar": "docsSidebar",
+              "previous": {
+                "title": "Frontend Documentation: Settings Components",
+                "permalink": "/frontend/components/settings"
+              },
+              "next": {
+                "title": "Store: useAuthStore",
+                "permalink": "/frontend/stores/useAuthStore"
+              }
+            },
+            {
+              "id": "frontend/hooks",
+              "title": "Frontend Documentation: Custom Hooks",
+              "description": "This document provides a breakdown of the custom React hooks used throughout the application.",
+              "source": "@site/docs/frontend/hooks.md",
+              "sourceDirName": "frontend",
+              "slug": "/frontend/hooks",
+              "permalink": "/frontend/hooks",
+              "draft": false,
+              "unlisted": false,
+              "editUrl": "https://github.com/your-org/stagehand/tree/main/packages/docs/docs/frontend/hooks.md",
+              "tags": [],
+              "version": "current",
+              "frontMatter": {},
+              "sidebar": "docsSidebar",
+              "previous": {
+                "title": "Frontend Documentation: Lib Utilities",
+                "permalink": "/frontend/lib"
+              },
+              "next": {
+                "title": "Frontend Documentation: Pages",
+                "permalink": "/frontend/pages"
+              }
+            },
+            {
+              "id": "frontend/lib",
+              "title": "Frontend Documentation: Lib Utilities",
+              "description": "This document provides a breakdown of the shared utility functions and constants defined in the lib directory.",
+              "source": "@site/docs/frontend/lib.md",
+              "sourceDirName": "frontend",
+              "slug": "/frontend/lib",
+              "permalink": "/frontend/lib",
+              "draft": false,
+              "unlisted": false,
+              "editUrl": "https://github.com/your-org/stagehand/tree/main/packages/docs/docs/frontend/lib.md",
+              "tags": [],
+              "version": "current",
+              "frontMatter": {},
+              "sidebar": "docsSidebar",
+              "previous": {
+                "title": "API Reference: Technologies",
+                "permalink": "/api/technologies"
+              },
+              "next": {
+                "title": "Frontend Documentation: Custom Hooks",
+                "permalink": "/frontend/hooks"
+              }
+            },
+            {
+              "id": "frontend/pages",
+              "title": "Frontend Documentation: Pages",
+              "description": "This document provides an in-depth breakdown of the main \"page\" components, detailing their display function and the specific state they consume.",
+              "source": "@site/docs/frontend/pages.md",
+              "sourceDirName": "frontend",
+              "slug": "/frontend/pages",
+              "permalink": "/frontend/pages",
+              "draft": false,
+              "unlisted": false,
+              "editUrl": "https://github.com/your-org/stagehand/tree/main/packages/docs/docs/frontend/pages.md",
+              "tags": [],
+              "version": "current",
+              "frontMatter": {},
+              "sidebar": "docsSidebar",
+              "previous": {
+                "title": "Frontend Documentation: Custom Hooks",
+                "permalink": "/frontend/hooks"
+              },
+              "next": {
+                "title": "Frontend Documentation: Application Components",
+                "permalink": "/frontend/components/applications"
+              }
+            },
+            {
+              "id": "frontend/stores/useArchitectureStore",
+              "title": "Store: useArchitectureStore",
+              "description": "File:* packages/web/src/stores/useArchitectureStore.js",
+              "source": "@site/docs/frontend/stores/useArchitectureStore.md",
+              "sourceDirName": "frontend/stores",
+              "slug": "/frontend/stores/useArchitectureStore",
+              "permalink": "/frontend/stores/useArchitectureStore",
+              "draft": false,
+              "unlisted": false,
+              "editUrl": "https://github.com/your-org/stagehand/tree/main/packages/docs/docs/frontend/stores/useArchitectureStore.md",
+              "tags": [],
+              "version": "current",
+              "frontMatter": {},
+              "sidebar": "docsSidebar",
+              "previous": {
+                "title": "Store: useAuthStore",
+                "permalink": "/frontend/stores/useAuthStore"
+              },
+              "next": {
+                "title": "Store: useCompanyStore",
+                "permalink": "/frontend/stores/useCompanyStore"
+              }
+            },
+            {
+              "id": "frontend/stores/useAuthStore",
+              "title": "Store: useAuthStore",
+              "description": "File:* packages/web/src/stores/useAuthStore.js",
+              "source": "@site/docs/frontend/stores/useAuthStore.md",
+              "sourceDirName": "frontend/stores",
+              "slug": "/frontend/stores/useAuthStore",
+              "permalink": "/frontend/stores/useAuthStore",
+              "draft": false,
+              "unlisted": false,
+              "editUrl": "https://github.com/your-org/stagehand/tree/main/packages/docs/docs/frontend/stores/useAuthStore.md",
+              "tags": [],
+              "version": "current",
+              "frontMatter": {},
+              "sidebar": "docsSidebar",
+              "previous": {
+                "title": "Frontend Documentation: Sidebar Components",
+                "permalink": "/frontend/components/sidebar"
+              },
+              "next": {
+                "title": "Store: useArchitectureStore",
+                "permalink": "/frontend/stores/useArchitectureStore"
+              }
+            },
+            {
+              "id": "frontend/stores/useCompanyStore",
+              "title": "Store: useCompanyStore",
+              "description": "File:* packages/web/src/stores/useCompanyStore.js",
+              "source": "@site/docs/frontend/stores/useCompanyStore.md",
+              "sourceDirName": "frontend/stores",
+              "slug": "/frontend/stores/useCompanyStore",
+              "permalink": "/frontend/stores/useCompanyStore",
+              "draft": false,
+              "unlisted": false,
+              "editUrl": "https://github.com/your-org/stagehand/tree/main/packages/docs/docs/frontend/stores/useCompanyStore.md",
+              "tags": [],
+              "version": "current",
+              "frontMatter": {},
+              "sidebar": "docsSidebar",
+              "previous": {
+                "title": "Store: useArchitectureStore",
+                "permalink": "/frontend/stores/useArchitectureStore"
+              },
+              "next": {
+                "title": "Store: useDomainStore",
+                "permalink": "/frontend/stores/useDomainStore"
+              }
+            },
+            {
+              "id": "frontend/stores/useDomainStore",
+              "title": "Store: useDomainStore",
+              "description": "File:* packages/web/src/stores/useDomainStore.js",
+              "source": "@site/docs/frontend/stores/useDomainStore.md",
+              "sourceDirName": "frontend/stores",
+              "slug": "/frontend/stores/useDomainStore",
+              "permalink": "/frontend/stores/useDomainStore",
+              "draft": false,
+              "unlisted": false,
+              "editUrl": "https://github.com/your-org/stagehand/tree/main/packages/docs/docs/frontend/stores/useDomainStore.md",
+              "tags": [],
+              "version": "current",
+              "frontMatter": {},
+              "sidebar": "docsSidebar",
+              "previous": {
+                "title": "Store: useCompanyStore",
+                "permalink": "/frontend/stores/useCompanyStore"
+              },
+              "next": {
+                "title": "Store: useFindingStore",
+                "permalink": "/frontend/stores/useFindingStore"
+              }
+            },
+            {
+              "id": "frontend/stores/useFindingStore",
+              "title": "Store: useFindingStore",
+              "description": "File:* packages/web/src/stores/useFindingStore.js",
+              "source": "@site/docs/frontend/stores/useFindingStore.md",
+              "sourceDirName": "frontend/stores",
+              "slug": "/frontend/stores/useFindingStore",
+              "permalink": "/frontend/stores/useFindingStore",
+              "draft": false,
+              "unlisted": false,
+              "editUrl": "https://github.com/your-org/stagehand/tree/main/packages/docs/docs/frontend/stores/useFindingStore.md",
+              "tags": [],
+              "version": "current",
+              "frontMatter": {},
+              "sidebar": "docsSidebar",
+              "previous": {
+                "title": "Store: useDomainStore",
+                "permalink": "/frontend/stores/useDomainStore"
+              },
+              "next": {
+                "title": "Store: useHierarchyStore",
+                "permalink": "/frontend/stores/useHierarchyStore"
+              }
+            },
+            {
+              "id": "frontend/stores/useHierarchyStore",
+              "title": "Store: useHierarchyStore",
+              "description": "File:* packages/web/src/stores/useHierarchyStore.js",
+              "source": "@site/docs/frontend/stores/useHierarchyStore.md",
+              "sourceDirName": "frontend/stores",
+              "slug": "/frontend/stores/useHierarchyStore",
+              "permalink": "/frontend/stores/useHierarchyStore",
+              "draft": false,
+              "unlisted": false,
+              "editUrl": "https://github.com/your-org/stagehand/tree/main/packages/docs/docs/frontend/stores/useHierarchyStore.md",
+              "tags": [],
+              "version": "current",
+              "frontMatter": {},
+              "sidebar": "docsSidebar",
+              "previous": {
+                "title": "Store: useFindingStore",
+                "permalink": "/frontend/stores/useFindingStore"
+              },
+              "next": {
+                "title": "Store: useIntegrationStore",
+                "permalink": "/frontend/stores/useIntegrationStore"
+              }
+            },
+            {
+              "id": "frontend/stores/useIntegrationStore",
+              "title": "Store: useIntegrationStore",
+              "description": "File:* packages/web/src/stores/useIntegrationStore.js",
+              "source": "@site/docs/frontend/stores/useIntegrationStore.md",
+              "sourceDirName": "frontend/stores",
+              "slug": "/frontend/stores/useIntegrationStore",
+              "permalink": "/frontend/stores/useIntegrationStore",
+              "draft": false,
+              "unlisted": false,
+              "editUrl": "https://github.com/your-org/stagehand/tree/main/packages/docs/docs/frontend/stores/useIntegrationStore.md",
+              "tags": [],
+              "version": "current",
+              "frontMatter": {},
+              "sidebar": "docsSidebar",
+              "previous": {
+                "title": "Store: useHierarchyStore",
+                "permalink": "/frontend/stores/useHierarchyStore"
+              },
+              "next": {
+                "title": "Store: useMembershipStore",
+                "permalink": "/frontend/stores/useMembershipStore"
+              }
+            },
+            {
+              "id": "frontend/stores/useMembershipStore",
+              "title": "Store: useMembershipStore",
+              "description": "File:* packages/web/src/stores/useMembershipStore.js",
+              "source": "@site/docs/frontend/stores/useMembershipStore.md",
+              "sourceDirName": "frontend/stores",
+              "slug": "/frontend/stores/useMembershipStore",
+              "permalink": "/frontend/stores/useMembershipStore",
+              "draft": false,
+              "unlisted": false,
+              "editUrl": "https://github.com/your-org/stagehand/tree/main/packages/docs/docs/frontend/stores/useMembershipStore.md",
+              "tags": [],
+              "version": "current",
+              "frontMatter": {},
+              "sidebar": "docsSidebar",
+              "previous": {
+                "title": "Store: useIntegrationStore",
+                "permalink": "/frontend/stores/useIntegrationStore"
+              },
+              "next": {
+                "title": "Store: useOIDCStore",
+                "permalink": "/frontend/stores/useOIDCStore"
+              }
+            },
+            {
+              "id": "frontend/stores/useOIDCStore",
+              "title": "Store: useOIDCStore",
+              "description": "File:* packages/web/src/stores/useOIDCStore.js",
+              "source": "@site/docs/frontend/stores/useOIDCStore.md",
+              "sourceDirName": "frontend/stores",
+              "slug": "/frontend/stores/useOIDCStore",
+              "permalink": "/frontend/stores/useOIDCStore",
+              "draft": false,
+              "unlisted": false,
+              "editUrl": "https://github.com/your-org/stagehand/tree/main/packages/docs/docs/frontend/stores/useOIDCStore.md",
+              "tags": [],
+              "version": "current",
+              "frontMatter": {},
+              "sidebar": "docsSidebar",
+              "previous": {
+                "title": "Store: useMembershipStore",
+                "permalink": "/frontend/stores/useMembershipStore"
+              },
+              "next": {
+                "title": "Store: useOrganizationStore",
+                "permalink": "/frontend/stores/useOrganizationStore"
+              }
+            },
+            {
+              "id": "frontend/stores/useOrganizationStore",
+              "title": "Store: useOrganizationStore",
+              "description": "File:* packages/web/src/stores/useOrganizationStore.js",
+              "source": "@site/docs/frontend/stores/useOrganizationStore.md",
+              "sourceDirName": "frontend/stores",
+              "slug": "/frontend/stores/useOrganizationStore",
+              "permalink": "/frontend/stores/useOrganizationStore",
+              "draft": false,
+              "unlisted": false,
+              "editUrl": "https://github.com/your-org/stagehand/tree/main/packages/docs/docs/frontend/stores/useOrganizationStore.md",
+              "tags": [],
+              "version": "current",
+              "frontMatter": {},
+              "sidebar": "docsSidebar",
+              "previous": {
+                "title": "Store: useOIDCStore",
+                "permalink": "/frontend/stores/useOIDCStore"
+              },
+              "next": {
+                "title": "Store: useProjectStore",
+                "permalink": "/frontend/stores/useProjectStore"
+              }
+            },
+            {
+              "id": "frontend/stores/useProjectStore",
+              "title": "Store: useProjectStore",
+              "description": "File:* packages/web/src/stores/useProjectStore.js",
+              "source": "@site/docs/frontend/stores/useProjectStore.md",
+              "sourceDirName": "frontend/stores",
+              "slug": "/frontend/stores/useProjectStore",
+              "permalink": "/frontend/stores/useProjectStore",
+              "draft": false,
+              "unlisted": false,
+              "editUrl": "https://github.com/your-org/stagehand/tree/main/packages/docs/docs/frontend/stores/useProjectStore.md",
+              "tags": [],
+              "version": "current",
+              "frontMatter": {},
+              "sidebar": "docsSidebar",
+              "previous": {
+                "title": "Store: useOrganizationStore",
+                "permalink": "/frontend/stores/useOrganizationStore"
+              },
+              "next": {
+                "title": "Store: useTeamStore",
+                "permalink": "/frontend/stores/useTeamStore"
+              }
+            },
+            {
+              "id": "frontend/stores/useTeamStore",
+              "title": "Store: useTeamStore",
+              "description": "File:* packages/web/src/stores/useTeamStore.js",
+              "source": "@site/docs/frontend/stores/useTeamStore.md",
+              "sourceDirName": "frontend/stores",
+              "slug": "/frontend/stores/useTeamStore",
+              "permalink": "/frontend/stores/useTeamStore",
+              "draft": false,
+              "unlisted": false,
+              "editUrl": "https://github.com/your-org/stagehand/tree/main/packages/docs/docs/frontend/stores/useTeamStore.md",
+              "tags": [],
+              "version": "current",
+              "frontMatter": {},
+              "sidebar": "docsSidebar",
+              "previous": {
+                "title": "Store: useProjectStore",
+                "permalink": "/frontend/stores/useProjectStore"
+              },
+              "next": {
+                "title": "Store: useUIStore",
+                "permalink": "/frontend/stores/useUIStore"
+              }
+            },
+            {
+              "id": "frontend/stores/useUIStore",
+              "title": "Store: useUIStore",
+              "description": "File:* packages/web/src/stores/useUIStore.js",
+              "source": "@site/docs/frontend/stores/useUIStore.md",
+              "sourceDirName": "frontend/stores",
+              "slug": "/frontend/stores/useUIStore",
+              "permalink": "/frontend/stores/useUIStore",
+              "draft": false,
+              "unlisted": false,
+              "editUrl": "https://github.com/your-org/stagehand/tree/main/packages/docs/docs/frontend/stores/useUIStore.md",
+              "tags": [],
+              "version": "current",
+              "frontMatter": {},
+              "sidebar": "docsSidebar",
+              "previous": {
+                "title": "Store: useTeamStore",
+                "permalink": "/frontend/stores/useTeamStore"
+              }
+            },
+            {
+              "id": "index",
+              "title": "Stagehand Developer Documentation",
+              "description": "Welcome to the comprehensive developer documentation for the Stagehand platform. This documentation covers everything from API references to architectural decisions, frontend components, and integration guides.",
+              "source": "@site/docs/index.md",
+              "sourceDirName": ".",
+              "slug": "/",
+              "permalink": "/",
+              "draft": false,
+              "unlisted": false,
+              "editUrl": "https://github.com/your-org/stagehand/tree/main/packages/docs/docs/index.md",
+              "tags": [],
+              "version": "current",
+              "sidebarPosition": 1,
+              "frontMatter": {
+                "sidebar_position": 1,
+                "slug": "/"
+              }
+            }
+          ],
+          "drafts": [],
+          "sidebars": {
+            "docsSidebar": [
+              {
+                "type": "doc",
+                "id": "api-reference",
+                "label": "API Reference",
+                "translatable": true
+              },
+              {
+                "type": "category",
+                "label": "Architecture",
+                "items": [
+                  {
+                    "type": "doc",
+                    "id": "backend-architecture"
+                  },
+                  {
+                    "type": "doc",
+                    "id": "frontend-architecture"
+                  }
+                ],
+                "collapsed": true,
+                "collapsible": true
+              },
+              {
+                "type": "category",
+                "label": "API Documentation",
+                "items": [
+                  {
+                    "type": "category",
+                    "label": "Core & Authentication",
+                    "items": [
+                      {
+                        "type": "doc",
+                        "id": "api/auth"
+                      },
+                      {
+                        "type": "doc",
+                        "id": "api/oidc"
+                      },
+                      {
+                        "type": "doc",
+                        "id": "api/organizations"
+                      },
+                      {
+                        "type": "doc",
+                        "id": "api/company"
+                      },
+                      {
+                        "type": "doc",
+                        "id": "api/teams"
+                      },
+                      {
+                        "type": "doc",
+                        "id": "api/projects"
+                      },
+                      {
+                        "type": "doc",
+                        "id": "api/memberships"
+                      }
+                    ],
+                    "collapsed": true,
+                    "collapsible": true
+                  },
+                  {
+                    "type": "category",
+                    "label": "Supporting Resources",
+                    "items": [
+                      {
+                        "type": "doc",
+                        "id": "api/invitations"
+                      },
+                      {
+                        "type": "doc",
+                        "id": "api/integrations"
+                      },
+                      {
+                        "type": "doc",
+                        "id": "api/security-tools"
+                      },
+                      {
+                        "type": "doc",
+                        "id": "api/findings"
+                      },
+                      {
+                        "type": "doc",
+                        "id": "api/hierarchy"
+                      },
+                      {
+                        "type": "doc",
+                        "id": "api/relationships"
+                      },
+                      {
+                        "type": "doc",
+                        "id": "api/technologies"
+                      }
+                    ],
+                    "collapsed": true,
+                    "collapsible": true
+                  }
+                ],
+                "collapsed": true,
+                "collapsible": true
+              },
+              {
+                "type": "category",
+                "label": "Frontend Documentation",
+                "items": [
+                  {
+                    "type": "doc",
+                    "id": "frontend/lib"
+                  },
+                  {
+                    "type": "doc",
+                    "id": "frontend/hooks"
+                  },
+                  {
+                    "type": "doc",
+                    "id": "frontend/pages"
+                  },
+                  {
+                    "type": "category",
+                    "label": "Components",
+                    "items": [
+                      {
+                        "type": "doc",
+                        "id": "frontend/components/applications"
+                      },
+                      {
+                        "type": "doc",
+                        "id": "frontend/components/architecture"
+                      },
+                      {
+                        "type": "doc",
+                        "id": "frontend/components/findings"
+                      },
+                      {
+                        "type": "doc",
+                        "id": "frontend/components/integrations"
+                      },
+                      {
+                        "type": "doc",
+                        "id": "frontend/components/settings"
+                      },
+                      {
+                        "type": "doc",
+                        "id": "frontend/components/sidebar"
+                      }
+                    ],
+                    "collapsed": true,
+                    "collapsible": true
+                  },
+                  {
+                    "type": "category",
+                    "label": "Stores",
+                    "items": [
+                      {
+                        "type": "doc",
+                        "id": "frontend/stores/useAuthStore"
+                      },
+                      {
+                        "type": "doc",
+                        "id": "frontend/stores/useArchitectureStore"
+                      },
+                      {
+                        "type": "doc",
+                        "id": "frontend/stores/useCompanyStore"
+                      },
+                      {
+                        "type": "doc",
+                        "id": "frontend/stores/useDomainStore"
+                      },
+                      {
+                        "type": "doc",
+                        "id": "frontend/stores/useFindingStore"
+                      },
+                      {
+                        "type": "doc",
+                        "id": "frontend/stores/useHierarchyStore"
+                      },
+                      {
+                        "type": "doc",
+                        "id": "frontend/stores/useIntegrationStore"
+                      },
+                      {
+                        "type": "doc",
+                        "id": "frontend/stores/useMembershipStore"
+                      },
+                      {
+                        "type": "doc",
+                        "id": "frontend/stores/useOIDCStore"
+                      },
+                      {
+                        "type": "doc",
+                        "id": "frontend/stores/useOrganizationStore"
+                      },
+                      {
+                        "type": "doc",
+                        "id": "frontend/stores/useProjectStore"
+                      },
+                      {
+                        "type": "doc",
+                        "id": "frontend/stores/useTeamStore"
+                      },
+                      {
+                        "type": "doc",
+                        "id": "frontend/stores/useUIStore"
+                      }
+                    ],
+                    "collapsed": true,
+                    "collapsible": true
+                  }
+                ],
+                "collapsed": true,
+                "collapsible": true
+              }
+            ]
+          }
+        }
+      ]
+    }
+  },
+  "docusaurus-plugin-content-pages": {
+    "default": null
+  },
+  "docusaurus-plugin-debug": {},
+  "docusaurus-theme-classic": {},
+  "docusaurus-bootstrap-plugin": {},
+  "docusaurus-mdx-fallback-plugin": {}
+}

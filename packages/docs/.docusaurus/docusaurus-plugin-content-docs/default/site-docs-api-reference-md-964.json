@@ -1,0 +1,20 @@
+{
+  "id": "api-reference",
+  "title": "API Reference",
+  "description": "This document serves as a high-level table of contents for the Stagehand backend API. The API is organized by resource, with each major resource having its own detailed documentation file.",
+  "source": "@site/docs/api-reference.md",
+  "sourceDirName": ".",
+  "slug": "/api-reference",
+  "permalink": "/api-reference",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/your-org/stagehand/tree/main/packages/docs/docs/api-reference.md",
+  "tags": [],
+  "version": "current",
+  "frontMatter": {},
+  "sidebar": "docsSidebar",
+  "next": {
+    "title": "Backend Architecture & Conventions",
+    "permalink": "/backend-architecture"
+  }
+}

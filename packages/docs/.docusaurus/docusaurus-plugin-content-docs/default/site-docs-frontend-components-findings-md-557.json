@@ -1,0 +1,24 @@
+{
+  "id": "frontend/components/findings",
+  "title": "Frontend Documentation: Findings Components",
+  "description": "This document provides a breakdown of the components used for displaying security findings.",
+  "source": "@site/docs/frontend/components/findings.md",
+  "sourceDirName": "frontend/components",
+  "slug": "/frontend/components/findings",
+  "permalink": "/frontend/components/findings",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/your-org/stagehand/tree/main/packages/docs/docs/frontend/components/findings.md",
+  "tags": [],
+  "version": "current",
+  "frontMatter": {},
+  "sidebar": "docsSidebar",
+  "previous": {
+    "title": "Frontend Documentation: Architecture Components",
+    "permalink": "/frontend/components/architecture"
+  },
+  "next": {
+    "title": "Frontend Documentation: Integration Components",
+    "permalink": "/frontend/components/integrations"
+  }
+}

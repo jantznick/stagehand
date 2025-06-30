@@ -1,0 +1,24 @@
+{
+  "id": "frontend/components/architecture",
+  "title": "Frontend Documentation: Architecture Components",
+  "description": "This document provides a breakdown of the components used for rendering the project dependency graph.",
+  "source": "@site/docs/frontend/components/architecture.md",
+  "sourceDirName": "frontend/components",
+  "slug": "/frontend/components/architecture",
+  "permalink": "/frontend/components/architecture",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/your-org/stagehand/tree/main/packages/docs/docs/frontend/components/architecture.md",
+  "tags": [],
+  "version": "current",
+  "frontMatter": {},
+  "sidebar": "docsSidebar",
+  "previous": {
+    "title": "Frontend Documentation: Application Components",
+    "permalink": "/frontend/components/applications"
+  },
+  "next": {
+    "title": "Frontend Documentation: Findings Components",
+    "permalink": "/frontend/components/findings"
+  }
+}

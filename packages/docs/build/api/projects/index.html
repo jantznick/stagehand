@@ -1,0 +1,196 @@
+<!doctype html>
+<html lang="en" dir="ltr" class="docs-wrapper plugin-docs plugin-id-default docs-version-current docs-doc-page docs-doc-id-api/projects" data-has-hydrated="false">
+<head>
+<meta charset="UTF-8">
+<meta name="generator" content="Docusaurus v3.8.1">
+<title data-rh="true">API Reference: Projects (Applications) | Stagehand Developer Documentation</title><meta data-rh="true" name="viewport" content="width=device-width,initial-scale=1"><meta data-rh="true" name="twitter:card" content="summary_large_image"><meta data-rh="true" property="og:image" content="https://docs.yourdomain.com/img/stagehand-social-card.jpg"><meta data-rh="true" name="twitter:image" content="https://docs.yourdomain.com/img/stagehand-social-card.jpg"><meta data-rh="true" property="og:url" content="https://docs.yourdomain.com/api/projects"><meta data-rh="true" property="og:locale" content="en"><meta data-rh="true" name="docusaurus_locale" content="en"><meta data-rh="true" name="docsearch:language" content="en"><meta data-rh="true" name="docusaurus_version" content="current"><meta data-rh="true" name="docusaurus_tag" content="docs-default-current"><meta data-rh="true" name="docsearch:version" content="current"><meta data-rh="true" name="docsearch:docusaurus_tag" content="docs-default-current"><meta data-rh="true" property="og:title" content="API Reference: Projects (Applications) | Stagehand Developer Documentation"><meta data-rh="true" name="description" content="This document provides a detailed breakdown of the project-related API endpoints. &quot;Projects&quot; are the core entities in the Stagehand developer catalog and are often referred to as &quot;Applications&quot; in the UI and business logic."><meta data-rh="true" property="og:description" content="This document provides a detailed breakdown of the project-related API endpoints. &quot;Projects&quot; are the core entities in the Stagehand developer catalog and are often referred to as &quot;Applications&quot; in the UI and business logic."><link data-rh="true" rel="icon" href="/img/favicon.ico"><link data-rh="true" rel="canonical" href="https://docs.yourdomain.com/api/projects"><link data-rh="true" rel="alternate" href="https://docs.yourdomain.com/api/projects" hreflang="en"><link data-rh="true" rel="alternate" href="https://docs.yourdomain.com/api/projects" hreflang="x-default"><script data-rh="true" type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"API Reference: Projects (Applications)","item":"https://docs.yourdomain.com/api/projects"}]}</script><link rel="stylesheet" href="/assets/css/styles.9c6f4f58.css">
+<script src="/assets/js/runtime~main.4c8069ed.js" defer="defer"></script>
+<script src="/assets/js/main.83f0f7cb.js" defer="defer"></script>
+</head>
+<body class="navigation-with-keyboard">
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;"><defs>
+<symbol id="theme-svg-external-link" viewBox="0 0 24 24"><path fill="currentColor" d="M21 13v10h-21v-19h12v2h-10v15h17v-8h2zm3-12h-10.988l4.035 4-6.977 7.07 2.828 2.828 6.977-7.07 4.125 4.172v-11z"/></symbol>
+</defs></svg>
+<script>!function(){var t="light";var e=function(){try{return new URLSearchParams(window.location.search).get("docusaurus-theme")}catch(t){}}()||function(){try{return window.localStorage.getItem("theme")}catch(t){}}();document.documentElement.setAttribute("data-theme",e||t),document.documentElement.setAttribute("data-theme-choice",e||t)}(),function(){try{const c=new URLSearchParams(window.location.search).entries();for(var[t,e]of c)if(t.startsWith("docusaurus-data-")){var a=t.replace("docusaurus-data-","data-");document.documentElement.setAttribute(a,e)}}catch(t){}}()</script><div id="__docusaurus"><div role="region" aria-label="Skip to main content"><a class="skipToContent_G6ar" href="#__docusaurus_skipToContent_fallback">Skip to main content</a></div><nav aria-label="Main" class="theme-layout-navbar navbar navbar--fixed-top"><div class="navbar__inner"><div class="theme-layout-navbar-left navbar__items"><button aria-label="Toggle navigation bar" aria-expanded="false" class="navbar__toggle clean-btn" type="button"><svg width="30" height="30" viewBox="0 0 30 30" aria-hidden="true"><path stroke="currentColor" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2" d="M4 7h22M4 15h22M4 23h22"></path></svg></button><a class="navbar__brand" href="/"><div class="navbar__logo"><img src="/img/logo.svg" alt="Stagehand Logo" class="themedComponent_DHUr themedComponent--light_DIHH"><img src="/img/logo.svg" alt="Stagehand Logo" class="themedComponent_DHUr themedComponent--dark_Bv2M"></div><b class="navbar__title text--truncate">Stagehand Docs</b></a><a aria-current="page" class="navbar__item navbar__link navbar__link--active" href="/api-reference">Documentation</a></div><div class="theme-layout-navbar-right navbar__items navbar__items--right"><a href="https://github.com/your-org/stagehand" target="_blank" rel="noopener noreferrer" class="navbar__item navbar__link">GitHub<svg width="13.5" height="13.5" aria-hidden="true" class="iconExternalLink_awgD"><use href="#theme-svg-external-link"></use></svg></a><div class="toggle_OLSw colorModeToggle_Hg9V"><button class="clean-btn toggleButton_wYmb toggleButtonDisabled_vaDU" type="button" disabled="" title="system mode" aria-label="Switch between dark and light mode (currently system mode)"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" class="toggleIcon_KEbZ lightToggleIcon_Sxwe"><path fill="currentColor" d="M12,9c1.65,0,3,1.35,3,3s-1.35,3-3,3s-3-1.35-3-3S10.35,9,12,9 M12,7c-2.76,0-5,2.24-5,5s2.24,5,5,5s5-2.24,5-5 S14.76,7,12,7L12,7z M2,13l2,0c0.55,0,1-0.45,1-1s-0.45-1-1-1l-2,0c-0.55,0-1,0.45-1,1S1.45,13,2,13z M20,13l2,0c0.55,0,1-0.45,1-1 s-0.45-1-1-1l-2,0c-0.55,0-1,0.45-1,1S19.45,13,20,13z M11,2v2c0,0.55,0.45,1,1,1s1-0.45,1-1V2c0-0.55-0.45-1-1-1S11,1.45,11,2z M11,20v2c0,0.55,0.45,1,1,1s1-0.45,1-1v-2c0-0.55-0.45-1-1-1C11.45,19,11,19.45,11,20z M5.99,4.58c-0.39-0.39-1.03-0.39-1.41,0 c-0.39,0.39-0.39,1.03,0,1.41l1.06,1.06c0.39,0.39,1.03,0.39,1.41,0s0.39-1.03,0-1.41L5.99,4.58z M18.36,16.95 c-0.39-0.39-1.03-0.39-1.41,0c-0.39,0.39-0.39,1.03,0,1.41l1.06,1.06c0.39,0.39,1.03,0.39,1.41,0c0.39-0.39,0.39-1.03,0-1.41 L18.36,16.95z M19.42,5.99c0.39-0.39,0.39-1.03,0-1.41c-0.39-0.39-1.03-0.39-1.41,0l-1.06,1.06c-0.39,0.39-0.39,1.03,0,1.41 s1.03,0.39,1.41,0L19.42,5.99z M7.05,18.36c0.39-0.39,0.39-1.03,0-1.41c-0.39-0.39-1.03-0.39-1.41,0l-1.06,1.06 c-0.39,0.39-0.39,1.03,0,1.41s1.03,0.39,1.41,0L7.05,18.36z"></path></svg><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" class="toggleIcon_KEbZ darkToggleIcon_Yem1"><path fill="currentColor" d="M9.37,5.51C9.19,6.15,9.1,6.82,9.1,7.5c0,4.08,3.32,7.4,7.4,7.4c0.68,0,1.35-0.09,1.99-0.27C17.45,17.19,14.93,19,12,19 c-3.86,0-7-3.14-7-7C5,9.07,6.81,6.55,9.37,5.51z M12,3c-4.97,0-9,4.03-9,9s4.03,9,9,9s9-4.03,9-9c0-0.46-0.04-0.92-0.1-1.36 c-0.98,1.37-2.58,2.26-4.4,2.26c-2.98,0-5.4-2.42-5.4-5.4c0-1.81,0.89-3.42,2.26-4.4C12.92,3.04,12.46,3,12,3L12,3z"></path></svg><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" class="toggleIcon_KEbZ systemToggleIcon_txm5"><path fill="currentColor" d="m12 21c4.971 0 9-4.029 9-9s-4.029-9-9-9-9 4.029-9 9 4.029 9 9 9zm4.95-13.95c1.313 1.313 2.05 3.093 2.05 4.95s-0.738 3.637-2.05 4.95c-1.313 1.313-3.093 2.05-4.95 2.05v-14c1.857 0 3.637 0.737 4.95 2.05z"></path></svg></button></div><div class="navbarSearchContainer_bmvg"></div></div></div><div role="presentation" class="navbar-sidebar__backdrop"></div></nav><div id="__docusaurus_skipToContent_fallback" class="theme-layout-main main-wrapper mainWrapper_UyTV"><div class="docsWrapper_XLvK"><button aria-label="Scroll back to top" class="clean-btn theme-back-to-top-button backToTopButton_z1FD" type="button"></button><div class="docRoot_HciC"><aside class="theme-doc-sidebar-container docSidebarContainer_e5ai"><div class="sidebarViewport_N8x0"><div class="sidebar_vJCc"><nav aria-label="Docs sidebar" class="menu thin-scrollbar menu_qiME"><ul class="theme-doc-sidebar-menu menu__list"><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-1 menu__list-item"><a class="menu__link" href="/api-reference">API Reference</a></li><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item menu__list-item--collapsed"><div class="menu__list-item-collapsible"><a class="menu__link menu__link--sublist menu__link--sublist-caret" role="button" aria-expanded="false" href="/backend-architecture">Architecture</a></div></li><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item"><div class="menu__list-item-collapsible"><a class="menu__link menu__link--sublist menu__link--sublist-caret menu__link--active" role="button" aria-expanded="true" href="/api/auth">API Documentation</a></div><ul class="menu__list"><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-2 menu__list-item"><div class="menu__list-item-collapsible"><a class="menu__link menu__link--sublist menu__link--sublist-caret menu__link--active" role="button" aria-expanded="true" tabindex="0" href="/api/auth">Core &amp; Authentication</a></div><ul class="menu__list"><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-3 menu__list-item"><a class="menu__link" tabindex="0" href="/api/auth">API Reference: Authentication</a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-3 menu__list-item"><a class="menu__link" tabindex="0" href="/api/oidc">API Reference: OIDC Configuration</a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-3 menu__list-item"><a class="menu__link" tabindex="0" href="/api/organizations">API Reference: Organizations</a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-3 menu__list-item"><a class="menu__link" tabindex="0" href="/api/company">API Reference: Companies</a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-3 menu__list-item"><a class="menu__link" tabindex="0" href="/api/teams">API Reference: Teams</a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-3 menu__list-item"><a class="menu__link menu__link--active" aria-current="page" tabindex="0" href="/api/projects">API Reference: Projects (Applications)</a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-3 menu__list-item"><a class="menu__link" tabindex="0" href="/api/memberships">API Reference: Memberships</a></li></ul></li><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-2 menu__list-item menu__list-item--collapsed"><div class="menu__list-item-collapsible"><a class="menu__link menu__link--sublist menu__link--sublist-caret" role="button" aria-expanded="false" tabindex="0" href="/api/invitations">Supporting Resources</a></div></li></ul></li><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item menu__list-item--collapsed"><div class="menu__list-item-collapsible"><a class="menu__link menu__link--sublist menu__link--sublist-caret" role="button" aria-expanded="false" href="/frontend/lib">Frontend Documentation</a></div></li></ul></nav></div></div></aside><main class="docMainContainer_namt"><div class="container padding-top--md padding-bottom--lg"><div class="row"><div class="col docItemCol_YAwJ"><div class="docItemContainer_Rv5Z"><article><nav class="theme-doc-breadcrumbs breadcrumbsContainer_zCmv" aria-label="Breadcrumbs"><ul class="breadcrumbs"><li class="breadcrumbs__item"><a aria-label="Home page" class="breadcrumbs__link" href="/"><svg viewBox="0 0 24 24" class="breadcrumbHomeIcon_JFrk"><path d="M10 19v-5h4v5c0 .55.45 1 1 1h3c.55 0 1-.45 1-1v-7h1.7c.46 0 .68-.57.33-.87L12.67 3.6c-.38-.34-.96-.34-1.34 0l-8.36 7.53c-.34.3-.13.87.33.87H5v7c0 .55.45 1 1 1h3c.55 0 1-.45 1-1z" fill="currentColor"></path></svg></a></li><li class="breadcrumbs__item"><span class="breadcrumbs__link">API Documentation</span></li><li class="breadcrumbs__item"><span class="breadcrumbs__link">Core &amp; Authentication</span></li><li class="breadcrumbs__item breadcrumbs__item--active"><span class="breadcrumbs__link">API Reference: Projects (Applications)</span></li></ul></nav><div class="tocCollapsible_O_Qc theme-doc-toc-mobile tocMobile_tjDr"><button type="button" class="clean-btn tocCollapsibleButton_htYj">On this page</button></div><div class="theme-doc-markdown markdown"><header><h1>API Reference: Projects (Applications)</h1></header>
+<p>This document provides a detailed breakdown of the project-related API endpoints. &quot;Projects&quot; are the core entities in the Stagehand developer catalog and are often referred to as &quot;Applications&quot; in the UI and business logic.</p>
+<p><strong>File:</strong> <code>packages/api/src/routes/projects.js</code>
+<strong>Base Path:</strong> <code>/api/v1/projects</code></p>
+<hr>
+<h2 class="anchor anchorWithStickyNavbar_fF9Z" id="overview">Overview<a href="#overview" class="hash-link" aria-label="Direct link to Overview" title="Direct link to Overview">​</a></h2>
+<p>Manages projects, which represent the actual software applications, services, or libraries that are being tracked. This is the most detailed and feature-rich part of the API, containing numerous endpoints for managing a project&#x27;s rich metadata.</p>
+<p><strong>Middleware:</strong> All routes in this file are protected by the <code>protect</code> middleware.</p>
+<hr>
+<h2 class="anchor anchorWithStickyNavbar_fF9Z" id="endpoints-core">Endpoints (Core)<a href="#endpoints-core" class="hash-link" aria-label="Direct link to Endpoints (Core)" title="Direct link to Endpoints (Core)">​</a></h2>
+<h3 class="anchor anchorWithStickyNavbar_fF9Z" id="get-"><code>GET /</code><a href="#get-" class="hash-link" aria-label="Direct link to get-" title="Direct link to get-">​</a></h3>
+<p>Retrieves a list of all projects the current user has access to.</p>
+<ul>
+<li><strong>Permissions:</strong> Implicitly handled by <code>getVisibleResourceIds</code>.</li>
+<li><strong>Success Response (<code>200</code>):</strong> An array of project objects.</li>
+<li><strong>Behavior:</strong> Uses the <code>getVisibleResourceIds</code> helper to find and return all projects the user has visibility on.</li>
+</ul>
+<hr>
+<h3 class="anchor anchorWithStickyNavbar_fF9Z" id="get-id"><code>GET /:id</code><a href="#get-id" class="hash-link" aria-label="Direct link to get-id" title="Direct link to get-id">​</a></h3>
+<p>Retrieves a single project by its ID with extensive, enriched details.</p>
+<ul>
+<li>
+<p><strong>Permissions:</strong> Requires <code>READER</code>, <code>EDITOR</code>, or <code>ADMIN</code> role on the project.</p>
+</li>
+<li>
+<p><strong>Success Response (<code>200</code>):</strong> A single, detailed project object.</p>
+</li>
+<li>
+<p><strong>Behavior:</strong></p>
+<ul>
+<li>Fetches the project and includes its full hierarchy (<code>team</code>, <code>company</code>, <code>organization</code>), <code>technologies</code>, and <code>dependencies</code>.</li>
+<li><strong>Contact Enrichment:</strong> It also fetches the project&#x27;s <code>contacts</code> and then cross-references them with the <code>User</code> and <code>Membership</code> tables. This allows the response to include details on whether a contact is also a registered Stagehand user and what their specific role is on this project, providing a complete picture of project ownership.</li>
+</ul>
+</li>
+</ul>
+<hr>
+<h3 class="anchor anchorWithStickyNavbar_fF9Z" id="post-"><code>POST /</code><a href="#post-" class="hash-link" aria-label="Direct link to post-" title="Direct link to post-">​</a></h3>
+<p>Creates a new project within a team.</p>
+<ul>
+<li><strong>Permissions:</strong> Requires <code>ADMIN</code> or <code>EDITOR</code> role on the parent <code>teamId</code>.</li>
+<li><strong>Body (<code>application/json</code>):</strong>
+<ul>
+<li><code>name</code> (string, required): The name of the new project.</li>
+<li><code>description</code> (string, optional): A description for the project.</li>
+<li><code>teamId</code> (string, required): The ID of the team this project will belong to.</li>
+</ul>
+</li>
+<li><strong>Success Response (<code>201</code>):</strong> The newly created project object.</li>
+<li><strong>Behavior:</strong> Creates the project and makes the creator an <code>ADMIN</code> of the new project via an automatic <code>Membership</code> record.</li>
+</ul>
+<hr>
+<h3 class="anchor anchorWithStickyNavbar_fF9Z" id="put-id"><code>PUT /:id</code><a href="#put-id" class="hash-link" aria-label="Direct link to put-id" title="Direct link to put-id">​</a></h3>
+<p>Updates the core metadata for a project.</p>
+<ul>
+<li><strong>Permissions:</strong> Requires <code>ADMIN</code> or <code>EDITOR</code> role on the project.</li>
+<li><strong>Body (<code>application/json</code>):</strong> Contains numerous optional fields for project metadata, including:<!-- -->
+<ul>
+<li><code>name</code>, <code>description</code>, <code>applicationUrl</code>, <code>repositoryUrl</code>, <code>ciCdPipelineUrl</code>, <code>deploymentStatus</code>, <code>version</code>, and more.</li>
+</ul>
+</li>
+<li><strong>Success Response (<code>200</code>):</strong> The updated project object.</li>
+</ul>
+<hr>
+<h3 class="anchor anchorWithStickyNavbar_fF9Z" id="delete-id"><code>DELETE /:id</code><a href="#delete-id" class="hash-link" aria-label="Direct link to delete-id" title="Direct link to delete-id">​</a></h3>
+<p>Deletes a project.</p>
+<ul>
+<li><strong>Permissions:</strong> Requires <code>ADMIN</code> role on the project.</li>
+<li><strong>Success Response (<code>204</code>):</strong> No content.</li>
+<li><strong>Behavior:</strong> Deletes the project record and its associated relations.</li>
+</ul>
+<hr>
+<h2 class="anchor anchorWithStickyNavbar_fF9Z" id="endpoints-contact-management">Endpoints (Contact Management)<a href="#endpoints-contact-management" class="hash-link" aria-label="Direct link to Endpoints (Contact Management)" title="Direct link to Endpoints (Contact Management)">​</a></h2>
+<h3 class="anchor anchorWithStickyNavbar_fF9Z" id="get-idmembers"><code>GET /:id/members</code><a href="#get-idmembers" class="hash-link" aria-label="Direct link to get-idmembers" title="Direct link to get-idmembers">​</a></h3>
+<p>Retrieves a list of all users in the parent organization who could potentially be added as contacts to the project. This is used to populate dropdowns in the UI.</p>
+<ul>
+<li><strong>Permissions:</strong> Requires <code>READER</code>, <code>EDITOR</code>, or <code>ADMIN</code> role on the project.</li>
+<li><strong>Success Response (<code>200</code>):</strong> An array of user objects.</li>
+<li><strong>Behavior:</strong> Fetches all users in the project&#x27;s parent organization and filters out any who are already contacts on the project to prevent duplicates.</li>
+</ul>
+<hr>
+<h3 class="anchor anchorWithStickyNavbar_fF9Z" id="post-idcontacts"><code>POST /:id/contacts</code><a href="#post-idcontacts" class="hash-link" aria-label="Direct link to post-idcontacts" title="Direct link to post-idcontacts">​</a></h3>
+<p>Adds a contact to a project.</p>
+<ul>
+<li><strong>Permissions:</strong> Requires <code>ADMIN</code> or <code>EDITOR</code> role on the project.</li>
+<li><strong>Body (<code>application/json</code>):</strong>
+<ul>
+<li><code>contactId</code> (string, required): The ID of the generic <code>Contact</code> record to add.</li>
+<li><code>contactType</code> (string, required): The role of this contact on the project (e.g., &#x27;Technical Lead&#x27;, &#x27;Product Manager&#x27;).</li>
+</ul>
+</li>
+<li><strong>Success Response (<code>201</code>):</strong> The new <code>ProjectContact</code> link object.</li>
+<li><strong>Behavior:</strong> Creates a <code>ProjectContact</code> record to link the generic <code>Contact</code> to the <code>Project</code>.</li>
+</ul>
+<hr>
+<h3 class="anchor anchorWithStickyNavbar_fF9Z" id="put-idcontactscontactid"><code>PUT /:id/contacts/:contactId</code><a href="#put-idcontactscontactid" class="hash-link" aria-label="Direct link to put-idcontactscontactid" title="Direct link to put-idcontactscontactid">​</a></h3>
+<p>Updates a contact&#x27;s role on a project.</p>
+<ul>
+<li><strong>Permissions:</strong> Requires <code>ADMIN</code> or <code>EDITOR</code> role on the project.</li>
+<li><strong>Body (<code>application/json</code>):</strong>
+<ul>
+<li><code>contactType</code> (string, required): The new role for the contact.</li>
+</ul>
+</li>
+<li><strong>Success Response (<code>200</code>):</strong> The updated <code>ProjectContact</code> object.</li>
+<li><strong>Behavior:</strong> Updates the <code>contactType</code> field on the <code>ProjectContact</code> junction record.</li>
+</ul>
+<hr>
+<h3 class="anchor anchorWithStickyNavbar_fF9Z" id="delete-idcontactscontactid"><code>DELETE /:id/contacts/:contactId</code><a href="#delete-idcontactscontactid" class="hash-link" aria-label="Direct link to delete-idcontactscontactid" title="Direct link to delete-idcontactscontactid">​</a></h3>
+<p>Removes a contact from a project.</p>
+<ul>
+<li><strong>Permissions:</strong> Requires <code>ADMIN</code> or <code>EDITOR</code> role on the project.</li>
+<li><strong>Success Response (<code>204</code>):</strong> No content.</li>
+<li><strong>Behavior:</strong> Deletes the <code>ProjectContact</code> link record.</li>
+</ul>
+<hr>
+<h2 class="anchor anchorWithStickyNavbar_fF9Z" id="endpoints-technology-management">Endpoints (Technology Management)<a href="#endpoints-technology-management" class="hash-link" aria-label="Direct link to Endpoints (Technology Management)" title="Direct link to Endpoints (Technology Management)">​</a></h2>
+<h3 class="anchor anchorWithStickyNavbar_fF9Z" id="post-idtechnologies"><code>POST /:id/technologies</code><a href="#post-idtechnologies" class="hash-link" aria-label="Direct link to post-idtechnologies" title="Direct link to post-idtechnologies">​</a></h3>
+<p>Links a technology (e.g., &#x27;React&#x27;, &#x27;Node.js&#x27;) to a project.</p>
+<ul>
+<li><strong>Permissions:</strong> Requires <code>ADMIN</code> or <code>EDITOR</code> role on the project.</li>
+<li><strong>Body (<code>application/json</code>):</strong>
+<ul>
+<li><code>technologyId</code> (string, required): The ID of the technology to add.</li>
+<li><code>version</code> (string, optional): The version of the technology being used.</li>
+</ul>
+</li>
+<li><strong>Success Response (<code>201</code>):</strong> The new <code>ProjectTechnology</code> object.</li>
+<li><strong>Behavior:</strong> Creates a <code>ProjectTechnology</code> record to link the <code>Technology</code> to the <code>Project</code>.</li>
+</ul>
+<hr>
+<h3 class="anchor anchorWithStickyNavbar_fF9Z" id="delete-idtechnologiestechnologyid"><code>DELETE /:id/technologies/:technologyId</code><a href="#delete-idtechnologiestechnologyid" class="hash-link" aria-label="Direct link to delete-idtechnologiestechnologyid" title="Direct link to delete-idtechnologiestechnologyid">​</a></h3>
+<p>Removes a technology from a project.</p>
+<ul>
+<li><strong>Permissions:</strong> Requires <code>ADMIN</code> or <code>EDITOR</code> role on the project.</li>
+<li><strong>Success Response (<code>204</code>):</strong> No content.</li>
+<li><strong>Behavior:</strong> Deletes the <code>ProjectTechnology</code> link record.</li>
+</ul>
+<hr>
+<h2 class="anchor anchorWithStickyNavbar_fF9Z" id="endpoints-security-tool-integration">Endpoints (Security Tool Integration)<a href="#endpoints-security-tool-integration" class="hash-link" aria-label="Direct link to Endpoints (Security Tool Integration)" title="Direct link to Endpoints (Security Tool Integration)">​</a></h2>
+<h3 class="anchor anchorWithStickyNavbar_fF9Z" id="post-idlink-security-tool"><code>POST /:id/link-security-tool</code><a href="#post-idlink-security-tool" class="hash-link" aria-label="Direct link to post-idlink-security-tool" title="Direct link to post-idlink-security-tool">​</a></h3>
+<p>Links a project to a specific security tool configuration that has been set up at the company level.</p>
+<ul>
+<li><strong>Permissions:</strong> Requires <code>ADMIN</code> or <code>EDITOR</code> role on the project.</li>
+<li><strong>Body (<code>application/json</code>):</strong>
+<ul>
+<li><code>toolConfigurationId</code> (string, required): The ID of the <code>ToolConfiguration</code> to link.</li>
+<li><code>projectMappings</code> (object, required): A JSON object that maps project identifiers needed by the external tool (e.g., <code>{ &quot;repository&quot;: &quot;owner/repo&quot; }</code> for GitHub).</li>
+</ul>
+</li>
+<li><strong>Success Response (<code>200</code>):</strong> The created or updated <code>SecurityToolProjectLink</code> object.</li>
+<li><strong>Behavior:</strong> Creates or updates the <code>SecurityToolProjectLink</code> record. This connection is essential for the system to know where to pull security findings from for this project.</li>
+</ul>
+<hr>
+<h3 class="anchor anchorWithStickyNavbar_fF9Z" id="post-idsync-findings"><code>POST /:id/sync-findings</code><a href="#post-idsync-findings" class="hash-link" aria-label="Direct link to post-idsync-findings" title="Direct link to post-idsync-findings">​</a></h3>
+<p>Triggers a manual synchronization of security findings from a linked external tool.</p>
+<ul>
+<li>
+<p><strong>Permissions:</strong> Requires <code>ADMIN</code> or <code>EDITOR</code> role on the project.</p>
+</li>
+<li>
+<p><strong>Body (<code>application/json</code>):</strong></p>
+<ul>
+<li><code>toolType</code> (string, required): The type of tool to sync from (e.g., <code>&#x27;GITHUB&#x27;</code>).</li>
+</ul>
+</li>
+<li>
+<p><strong>Success Response (<code>200</code>):</strong> A summary object, e.g., <code>{ &quot;message&quot;: &quot;Sync completed&quot;, &quot;newFindings&quot;: 5, &quot;updatedFindings&quot;: 2 }</code>.</p>
+</li>
+<li>
+<p><strong>Behavior:</strong></p>
+<ol>
+<li>Identifies the appropriate <code>SecurityToolProjectLink</code> for the given <code>toolType</code>.</li>
+<li>Calls a specific utility function (e.g., <code>syncGitHubFindings</code> from <code>src/utils/findings.js</code>) which contains the business logic to:
+a. Connect to the external tool&#x27;s API.
+b. Fetch the security findings.
+c. Normalize the data into the Stagehand <code>Finding</code> format.
+d. Save the findings to the database, linking them to this project.</li>
+<li>This is a critical ASPM function.</li>
+</ol>
+</li>
+</ul></div><footer class="theme-doc-footer docusaurus-mt-lg"><div class="row margin-top--sm theme-doc-footer-edit-meta-row"><div class="col"><a href="https://github.com/your-org/stagehand/tree/main/packages/docs/docs/api/projects.md" target="_blank" rel="noopener noreferrer" class="theme-edit-this-page"><svg fill="currentColor" height="20" width="20" viewBox="0 0 40 40" class="iconEdit_UohW" aria-hidden="true"><g><path d="m34.5 11.7l-3 3.1-6.3-6.3 3.1-3q0.5-0.5 1.2-0.5t1.1 0.5l3.9 3.9q0.5 0.4 0.5 1.1t-0.5 1.2z m-29.5 17.1l18.4-18.5 6.3 6.3-18.4 18.4h-6.3v-6.2z"></path></g></svg>Edit this page</a></div><div class="col lastUpdated_g62E"></div></div></footer></article><nav class="docusaurus-mt-lg pagination-nav" aria-label="Docs pages"><a class="pagination-nav__link pagination-nav__link--prev" href="/api/teams"><div class="pagination-nav__sublabel">Previous</div><div class="pagination-nav__label">API Reference: Teams</div></a><a class="pagination-nav__link pagination-nav__link--next" href="/api/memberships"><div class="pagination-nav__sublabel">Next</div><div class="pagination-nav__label">API Reference: Memberships</div></a></nav></div></div><div class="col col--3"><div class="tableOfContents_TN1Q thin-scrollbar theme-doc-toc-desktop"><ul class="table-of-contents table-of-contents__left-border"><li><a href="#overview" class="table-of-contents__link toc-highlight">Overview</a></li><li><a href="#endpoints-core" class="table-of-contents__link toc-highlight">Endpoints (Core)</a><ul><li><a href="#get-" class="table-of-contents__link toc-highlight"><code>GET /</code></a></li><li><a href="#get-id" class="table-of-contents__link toc-highlight"><code>GET /:id</code></a></li><li><a href="#post-" class="table-of-contents__link toc-highlight"><code>POST /</code></a></li><li><a href="#put-id" class="table-of-contents__link toc-highlight"><code>PUT /:id</code></a></li><li><a href="#delete-id" class="table-of-contents__link toc-highlight"><code>DELETE /:id</code></a></li></ul></li><li><a href="#endpoints-contact-management" class="table-of-contents__link toc-highlight">Endpoints (Contact Management)</a><ul><li><a href="#get-idmembers" class="table-of-contents__link toc-highlight"><code>GET /:id/members</code></a></li><li><a href="#post-idcontacts" class="table-of-contents__link toc-highlight"><code>POST /:id/contacts</code></a></li><li><a href="#put-idcontactscontactid" class="table-of-contents__link toc-highlight"><code>PUT /:id/contacts/:contactId</code></a></li><li><a href="#delete-idcontactscontactid" class="table-of-contents__link toc-highlight"><code>DELETE /:id/contacts/:contactId</code></a></li></ul></li><li><a href="#endpoints-technology-management" class="table-of-contents__link toc-highlight">Endpoints (Technology Management)</a><ul><li><a href="#post-idtechnologies" class="table-of-contents__link toc-highlight"><code>POST /:id/technologies</code></a></li><li><a href="#delete-idtechnologiestechnologyid" class="table-of-contents__link toc-highlight"><code>DELETE /:id/technologies/:technologyId</code></a></li></ul></li><li><a href="#endpoints-security-tool-integration" class="table-of-contents__link toc-highlight">Endpoints (Security Tool Integration)</a><ul><li><a href="#post-idlink-security-tool" class="table-of-contents__link toc-highlight"><code>POST /:id/link-security-tool</code></a></li><li><a href="#post-idsync-findings" class="table-of-contents__link toc-highlight"><code>POST /:id/sync-findings</code></a></li></ul></li></ul></div></div></div></div></main></div></div></div><footer class="theme-layout-footer footer footer--dark"><div class="container container-fluid"><div class="row footer__links"><div class="theme-layout-footer-column col footer__col"><div class="footer__title">Documentation</div><ul class="footer__items clean-list"><li class="footer__item"><a class="footer__link-item" href="/api-reference">API Reference</a></li><li class="footer__item"><a class="footer__link-item" href="/backend-architecture">Backend Architecture</a></li><li class="footer__item"><a class="footer__link-item" href="/frontend-architecture">Frontend Architecture</a></li></ul></div><div class="theme-layout-footer-column col footer__col"><div class="footer__title">API Docs</div><ul class="footer__items clean-list"><li class="footer__item"><a class="footer__link-item" href="/api/auth">Authentication</a></li><li class="footer__item"><a class="footer__link-item" href="/api/organizations">Organizations</a></li><li class="footer__item"><a class="footer__link-item" href="/api/projects">Projects</a></li></ul></div><div class="theme-layout-footer-column col footer__col"><div class="footer__title">More</div><ul class="footer__items clean-list"><li class="footer__item"><a href="https://github.com/your-org/stagehand" target="_blank" rel="noopener noreferrer" class="footer__link-item">GitHub<svg width="13.5" height="13.5" aria-hidden="true" class="iconExternalLink_awgD"><use href="#theme-svg-external-link"></use></svg></a></li></ul></div></div><div class="footer__bottom text--center"><div class="footer__copyright">Copyright © 2025 Stagehand. Built with Docusaurus.</div></div></div></footer></div>
+</body>
+</html>

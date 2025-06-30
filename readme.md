@@ -1,37 +1,102 @@
-# Stagehand
+# Stagehand - The Developer-First Application Security Platform
 
-### The Developer-First Application Security Platform
-
-Stagehand is an Application Security Posture Management (ASPM) tool built with the developer experience at its core. It bridges the gap between development and security by acting as both a comprehensive **Developer Catalog** and a centralized **Security Findings Hub**.
-
-Built on a flexible multi-tenant boilerplate, Stagehand is designed to give engineering and security teams a unified view of their software assets and the security posture associated with them.
+Stagehand is an Application Security Posture Management (ASPM) tool that serves as a rich **Developer Catalog** and a centralized **Security Findings Hub**. It's built to give engineering and security teams a unified, actionable view of their software assets and security posture.
 
 ---
 
-## Core Goals
+## Quick Start: Local Development
 
-The primary objective of Stagehand is to provide a single pane of glass for application security, driven by two main functions:
+Follow these steps to get the entire Stagehand platform running on your local machine.
 
-1.  **A Rich Developer Catalog:**
-    *   Stagehand maintains a detailed inventory of all your applications, services, and projects.
-    *   It captures not just the name and description, but also critical metadata like repository URLs, deployment status, versioning, ownership, and the technologies used.
-    *   This provides a single source of truth for understanding your engineering landscape.
+### Prerequisites
 
-2.  **Centralized Security Findings:**
-    *   The platform is designed to integrate with a wide array of security tools (SAST, DAST, SCA, etc.).
-    *   It will pull, normalize, and deduplicate findings from these tools, linking each vulnerability to the specific application in the catalog.
-    *   This allows teams to see all security issues related to an application in one place, prioritized and ready for action.
+*   [Docker](https://www.docker.com/products/docker-desktop/) and Docker Compose
+*   [Node.js](https://nodejs.org/) (v18 or higher) and npm
+
+### 1. Set Up Environment Variables
+
+First, create a local environment file by copying the example:
+
+```bash
+cp .env.example .env
+```
+
+Next, open the new `.env` file and generate the required secrets. Run the following commands and paste the output into the corresponding fields in the file.
+
+```bash
+# Generate a SESSION_SECRET
+node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+
+# Generate an ENCRYPTION_KEY
+node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+```
+**Important:** The `ENCRYPTION_KEY` is used to protect sensitive data. Do not change it after you have created data in your local database.
+
+### 2. Install Dependencies
+
+Install all project dependencies from the root directory:
+
+```bash
+npm install
+```
+
+### 3. Run the Application
+
+Start all services (database, api, web) using Docker Compose:
+
+```bash
+docker-compose up --build
+```
+
+The services will be available at:
+*   **Frontend UI:** `http://localhost:3000`
+*   **Backend API:** `http://localhost:3001`
+*   **Database:** Connect on port `5432`
+
+The first time you run this, it will also create the initial database schema.
+
+### 4. Stop the Application
+
+To stop all services, press `Ctrl+C` in the terminal where `docker-compose` is running, and then run:
+```bash
+docker-compose down
+```
 
 ---
 
-## The Vision: Future State
+## Available Scripts
 
-Stagehand aims to become a comprehensive and indispensable tool for development and security teams. Our roadmap includes:
+From the project root, you can run the following commands:
 
-*   **Broad Tool Integration:** Building a library of connectors for popular security tools like Snyk, SonarQube, Dependabot, and more.
-*   **Infrastructure & Host Tracking:** Expanding the catalog beyond just application code to include the hosts and infrastructure where applications run, allowing for the tracking of server-level vulnerabilities.
-*   **Flexible Metadata:** Implementing a custom fields feature so that organizations can track the specific metadata that matters most to their workflow.
-*   **Advanced Reporting:** Providing dashboards and reports to track security posture over time, identify trends, and measure remediation efforts.
-*   **Automated Workflows & Notifications:** Creating rules and notifications to alert teams about new, critical vulnerabilities as soon as they are discovered.
+*   `npm run dev`: Starts both the `api` and `web` services in development mode (without Docker).
+*   `npm run build`: Builds all workspaces for production.
+*   `npm run lint`: Lints all code in the project.
+*   `npm run format`: Formats all code with Prettier.
+*   `npm run prisma -- <command>`: Runs a Prisma command against the database (e.g., `npm run prisma -- db seed`).
 
-By combining a detailed developer catalog with powerful security data aggregation, Stagehand empowers teams to build more secure software, faster.
+---
+
+## Project Structure
+
+This project is a monorepo managed by npm workspaces. The main packages are:
+
+*   `packages/api`: The Node.js/Express.js backend API.
+*   `packages/web`: The React/Vite frontend application.
+*   `packages/emails`: A collection of transactional email templates.
+
+---
+
+## In-Depth Documentation
+
+For a deeper understanding of the project's architecture, conventions, and design, please refer to the documentation:
+
+### Developer Guides
+
+*   **[Backend Architecture](./developer-docs/backend-architecture.md):** A detailed guide to the API's structure, patterns, and conventions.
+*   **[Frontend Architecture](./developer-docs/frontend-architecture.md):** A detailed guide to the web app's structure, state management, and component strategy.
+
+### System Design & Features
+
+*   **[High-Level Architecture](./docs/architecture.md):** An overview of the entire system, tenancy model, and core concepts.
+*   **[Authentication Deep Dive](./docs/authentication.md):** A detailed explanation of the authentication and session management flow.
+*   **[Testing Guide](./docs/testing-guide.md):** Information on the project's testing strategy.

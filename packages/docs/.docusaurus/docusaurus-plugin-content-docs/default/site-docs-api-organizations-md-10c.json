@@ -1,0 +1,24 @@
+{
+  "id": "api/organizations",
+  "title": "API Reference: Organizations",
+  "description": "This document provides a detailed breakdown of the organization-related API endpoints.",
+  "source": "@site/docs/api/organizations.md",
+  "sourceDirName": "api",
+  "slug": "/api/organizations",
+  "permalink": "/api/organizations",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/your-org/stagehand/tree/main/packages/docs/docs/api/organizations.md",
+  "tags": [],
+  "version": "current",
+  "frontMatter": {},
+  "sidebar": "docsSidebar",
+  "previous": {
+    "title": "API Reference: OIDC Configuration",
+    "permalink": "/api/oidc"
+  },
+  "next": {
+    "title": "API Reference: Companies",
+    "permalink": "/api/company"
+  }
+}

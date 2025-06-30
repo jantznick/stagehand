@@ -1,0 +1,24 @@
+{
+  "id": "api/oidc",
+  "title": "API Reference: OIDC Configuration",
+  "description": "This document provides a detailed breakdown of the OIDC configuration-related API endpoints.",
+  "source": "@site/docs/api/oidc.md",
+  "sourceDirName": "api",
+  "slug": "/api/oidc",
+  "permalink": "/api/oidc",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/your-org/stagehand/tree/main/packages/docs/docs/api/oidc.md",
+  "tags": [],
+  "version": "current",
+  "frontMatter": {},
+  "sidebar": "docsSidebar",
+  "previous": {
+    "title": "API Reference: Authentication",
+    "permalink": "/api/auth"
+  },
+  "next": {
+    "title": "API Reference: Organizations",
+    "permalink": "/api/organizations"
+  }
+}

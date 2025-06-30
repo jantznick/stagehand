@@ -1,0 +1,24 @@
+{
+  "id": "frontend/stores/useDomainStore",
+  "title": "Store: useDomainStore",
+  "description": "File:* packages/web/src/stores/useDomainStore.js",
+  "source": "@site/docs/frontend/stores/useDomainStore.md",
+  "sourceDirName": "frontend/stores",
+  "slug": "/frontend/stores/useDomainStore",
+  "permalink": "/frontend/stores/useDomainStore",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/your-org/stagehand/tree/main/packages/docs/docs/frontend/stores/useDomainStore.md",
+  "tags": [],
+  "version": "current",
+  "frontMatter": {},
+  "sidebar": "docsSidebar",
+  "previous": {
+    "title": "Store: useCompanyStore",
+    "permalink": "/frontend/stores/useCompanyStore"
+  },
+  "next": {
+    "title": "Store: useFindingStore",
+    "permalink": "/frontend/stores/useFindingStore"
+  }
+}

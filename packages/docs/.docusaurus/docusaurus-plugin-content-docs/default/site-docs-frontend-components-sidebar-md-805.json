@@ -1,0 +1,24 @@
+{
+  "id": "frontend/components/sidebar",
+  "title": "Frontend Documentation: Sidebar Components",
+  "description": "This document provides a breakdown of the components that make up the main navigation sidebar.",
+  "source": "@site/docs/frontend/components/sidebar.md",
+  "sourceDirName": "frontend/components",
+  "slug": "/frontend/components/sidebar",
+  "permalink": "/frontend/components/sidebar",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/your-org/stagehand/tree/main/packages/docs/docs/frontend/components/sidebar.md",
+  "tags": [],
+  "version": "current",
+  "frontMatter": {},
+  "sidebar": "docsSidebar",
+  "previous": {
+    "title": "Frontend Documentation: Settings Components",
+    "permalink": "/frontend/components/settings"
+  },
+  "next": {
+    "title": "Store: useAuthStore",
+    "permalink": "/frontend/stores/useAuthStore"
+  }
+}

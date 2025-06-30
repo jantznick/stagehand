@@ -1,0 +1,24 @@
+{
+  "id": "backend-architecture",
+  "title": "Backend Architecture & Conventions",
+  "description": "This document provides a detailed guide to the structure, conventions, and patterns used in the packages/api service. It is intended for developers working on the backend to ensure consistency and maintainability.",
+  "source": "@site/docs/backend-architecture.md",
+  "sourceDirName": ".",
+  "slug": "/backend-architecture",
+  "permalink": "/backend-architecture",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/your-org/stagehand/tree/main/packages/docs/docs/backend-architecture.md",
+  "tags": [],
+  "version": "current",
+  "frontMatter": {},
+  "sidebar": "docsSidebar",
+  "previous": {
+    "title": "API Reference",
+    "permalink": "/api-reference"
+  },
+  "next": {
+    "title": "Frontend Architecture & Conventions",
+    "permalink": "/frontend-architecture"
+  }
+}

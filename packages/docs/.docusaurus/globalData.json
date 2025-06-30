@@ -1,0 +1,227 @@
+{
+  "docusaurus-plugin-content-docs": {
+    "default": {
+      "path": "/",
+      "versions": [
+        {
+          "name": "current",
+          "label": "Next",
+          "isLast": true,
+          "path": "/",
+          "mainDocId": "index",
+          "docs": [
+            {
+              "id": "api-reference",
+              "path": "/api-reference",
+              "sidebar": "docsSidebar"
+            },
+            {
+              "id": "api/auth",
+              "path": "/api/auth",
+              "sidebar": "docsSidebar"
+            },
+            {
+              "id": "api/company",
+              "path": "/api/company",
+              "sidebar": "docsSidebar"
+            },
+            {
+              "id": "api/findings",
+              "path": "/api/findings",
+              "sidebar": "docsSidebar"
+            },
+            {
+              "id": "api/hierarchy",
+              "path": "/api/hierarchy",
+              "sidebar": "docsSidebar"
+            },
+            {
+              "id": "api/integrations",
+              "path": "/api/integrations",
+              "sidebar": "docsSidebar"
+            },
+            {
+              "id": "api/invitations",
+              "path": "/api/invitations",
+              "sidebar": "docsSidebar"
+            },
+            {
+              "id": "api/memberships",
+              "path": "/api/memberships",
+              "sidebar": "docsSidebar"
+            },
+            {
+              "id": "api/oidc",
+              "path": "/api/oidc",
+              "sidebar": "docsSidebar"
+            },
+            {
+              "id": "api/organizations",
+              "path": "/api/organizations",
+              "sidebar": "docsSidebar"
+            },
+            {
+              "id": "api/projects",
+              "path": "/api/projects",
+              "sidebar": "docsSidebar"
+            },
+            {
+              "id": "api/relationships",
+              "path": "/api/relationships",
+              "sidebar": "docsSidebar"
+            },
+            {
+              "id": "api/security-tools",
+              "path": "/api/security-tools",
+              "sidebar": "docsSidebar"
+            },
+            {
+              "id": "api/teams",
+              "path": "/api/teams",
+              "sidebar": "docsSidebar"
+            },
+            {
+              "id": "api/technologies",
+              "path": "/api/technologies",
+              "sidebar": "docsSidebar"
+            },
+            {
+              "id": "backend-architecture",
+              "path": "/backend-architecture",
+              "sidebar": "docsSidebar"
+            },
+            {
+              "id": "frontend-architecture",
+              "path": "/frontend-architecture",
+              "sidebar": "docsSidebar"
+            },
+            {
+              "id": "frontend/components/applications",
+              "path": "/frontend/components/applications",
+              "sidebar": "docsSidebar"
+            },
+            {
+              "id": "frontend/components/architecture",
+              "path": "/frontend/components/architecture",
+              "sidebar": "docsSidebar"
+            },
+            {
+              "id": "frontend/components/findings",
+              "path": "/frontend/components/findings",
+              "sidebar": "docsSidebar"
+            },
+            {
+              "id": "frontend/components/integrations",
+              "path": "/frontend/components/integrations",
+              "sidebar": "docsSidebar"
+            },
+            {
+              "id": "frontend/components/settings",
+              "path": "/frontend/components/settings",
+              "sidebar": "docsSidebar"
+            },
+            {
+              "id": "frontend/components/sidebar",
+              "path": "/frontend/components/sidebar",
+              "sidebar": "docsSidebar"
+            },
+            {
+              "id": "frontend/hooks",
+              "path": "/frontend/hooks",
+              "sidebar": "docsSidebar"
+            },
+            {
+              "id": "frontend/lib",
+              "path": "/frontend/lib",
+              "sidebar": "docsSidebar"
+            },
+            {
+              "id": "frontend/pages",
+              "path": "/frontend/pages",
+              "sidebar": "docsSidebar"
+            },
+            {
+              "id": "frontend/stores/useArchitectureStore",
+              "path": "/frontend/stores/useArchitectureStore",
+              "sidebar": "docsSidebar"
+            },
+            {
+              "id": "frontend/stores/useAuthStore",
+              "path": "/frontend/stores/useAuthStore",
+              "sidebar": "docsSidebar"
+            },
+            {
+              "id": "frontend/stores/useCompanyStore",
+              "path": "/frontend/stores/useCompanyStore",
+              "sidebar": "docsSidebar"
+            },
+            {
+              "id": "frontend/stores/useDomainStore",
+              "path": "/frontend/stores/useDomainStore",
+              "sidebar": "docsSidebar"
+            },
+            {
+              "id": "frontend/stores/useFindingStore",
+              "path": "/frontend/stores/useFindingStore",
+              "sidebar": "docsSidebar"
+            },
+            {
+              "id": "frontend/stores/useHierarchyStore",
+              "path": "/frontend/stores/useHierarchyStore",
+              "sidebar": "docsSidebar"
+            },
+            {
+              "id": "frontend/stores/useIntegrationStore",
+              "path": "/frontend/stores/useIntegrationStore",
+              "sidebar": "docsSidebar"
+            },
+            {
+              "id": "frontend/stores/useMembershipStore",
+              "path": "/frontend/stores/useMembershipStore",
+              "sidebar": "docsSidebar"
+            },
+            {
+              "id": "frontend/stores/useOIDCStore",
+              "path": "/frontend/stores/useOIDCStore",
+              "sidebar": "docsSidebar"
+            },
+            {
+              "id": "frontend/stores/useOrganizationStore",
+              "path": "/frontend/stores/useOrganizationStore",
+              "sidebar": "docsSidebar"
+            },
+            {
+              "id": "frontend/stores/useProjectStore",
+              "path": "/frontend/stores/useProjectStore",
+              "sidebar": "docsSidebar"
+            },
+            {
+              "id": "frontend/stores/useTeamStore",
+              "path": "/frontend/stores/useTeamStore",
+              "sidebar": "docsSidebar"
+            },
+            {
+              "id": "frontend/stores/useUIStore",
+              "path": "/frontend/stores/useUIStore",
+              "sidebar": "docsSidebar"
+            },
+            {
+              "id": "index",
+              "path": "/"
+            }
+          ],
+          "draftIds": [],
+          "sidebars": {
+            "docsSidebar": {
+              "link": {
+                "path": "/api-reference",
+                "label": "API Reference"
+              }
+            }
+          }
+        }
+      ],
+      "breadcrumbs": true
+    }
+  }
+}

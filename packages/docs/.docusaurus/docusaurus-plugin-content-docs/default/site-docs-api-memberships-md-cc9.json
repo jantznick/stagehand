@@ -1,0 +1,24 @@
+{
+  "id": "api/memberships",
+  "title": "API Reference: Memberships",
+  "description": "This document provides a detailed breakdown of the membership-related API endpoints.",
+  "source": "@site/docs/api/memberships.md",
+  "sourceDirName": "api",
+  "slug": "/api/memberships",
+  "permalink": "/api/memberships",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/your-org/stagehand/tree/main/packages/docs/docs/api/memberships.md",
+  "tags": [],
+  "version": "current",
+  "frontMatter": {},
+  "sidebar": "docsSidebar",
+  "previous": {
+    "title": "API Reference: Projects (Applications)",
+    "permalink": "/api/projects"
+  },
+  "next": {
+    "title": "API Reference: Invitations",
+    "permalink": "/api/invitations"
+  }
+}

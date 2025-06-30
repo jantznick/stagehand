@@ -1,0 +1,24 @@
+{
+  "id": "api/auth",
+  "title": "API Reference: Authentication",
+  "description": "This document provides a detailed breakdown of the authentication-related API endpoints.",
+  "source": "@site/docs/api/auth.md",
+  "sourceDirName": "api",
+  "slug": "/api/auth",
+  "permalink": "/api/auth",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/your-org/stagehand/tree/main/packages/docs/docs/api/auth.md",
+  "tags": [],
+  "version": "current",
+  "frontMatter": {},
+  "sidebar": "docsSidebar",
+  "previous": {
+    "title": "Frontend Architecture & Conventions",
+    "permalink": "/frontend-architecture"
+  },
+  "next": {
+    "title": "API Reference: OIDC Configuration",
+    "permalink": "/api/oidc"
+  }
+}

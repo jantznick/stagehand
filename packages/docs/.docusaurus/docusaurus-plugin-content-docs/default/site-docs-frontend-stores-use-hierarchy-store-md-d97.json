@@ -1,0 +1,24 @@
+{
+  "id": "frontend/stores/useHierarchyStore",
+  "title": "Store: useHierarchyStore",
+  "description": "File:* packages/web/src/stores/useHierarchyStore.js",
+  "source": "@site/docs/frontend/stores/useHierarchyStore.md",
+  "sourceDirName": "frontend/stores",
+  "slug": "/frontend/stores/useHierarchyStore",
+  "permalink": "/frontend/stores/useHierarchyStore",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/your-org/stagehand/tree/main/packages/docs/docs/frontend/stores/useHierarchyStore.md",
+  "tags": [],
+  "version": "current",
+  "frontMatter": {},
+  "sidebar": "docsSidebar",
+  "previous": {
+    "title": "Store: useFindingStore",
+    "permalink": "/frontend/stores/useFindingStore"
+  },
+  "next": {
+    "title": "Store: useIntegrationStore",
+    "permalink": "/frontend/stores/useIntegrationStore"
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "id": "frontend/stores/useProjectStore",
+  "title": "Store: useProjectStore",
+  "description": "File:* packages/web/src/stores/useProjectStore.js",
+  "source": "@site/docs/frontend/stores/useProjectStore.md",
+  "sourceDirName": "frontend/stores",
+  "slug": "/frontend/stores/useProjectStore",
+  "permalink": "/frontend/stores/useProjectStore",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/your-org/stagehand/tree/main/packages/docs/docs/frontend/stores/useProjectStore.md",
+  "tags": [],
+  "version": "current",
+  "frontMatter": {},
+  "sidebar": "docsSidebar",
+  "previous": {
+    "title": "Store: useOrganizationStore",
+    "permalink": "/frontend/stores/useOrganizationStore"
+  },
+  "next": {
+    "title": "Store: useTeamStore",
+    "permalink": "/frontend/stores/useTeamStore"
+  }
+}

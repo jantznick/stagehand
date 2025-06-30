@@ -1,0 +1,218 @@
+{
+  "/__docusaurus/debug-5ff": {
+    "__comp": "__comp---theme-debug-config-23-a-2ff",
+    "__context": {
+      "plugin": "plugin---docusaurus-debugb-38-ad3"
+    }
+  },
+  "/__docusaurus/debug/config-5ba": {
+    "__comp": "__comp---theme-debug-config-23-a-2ff",
+    "__context": {
+      "plugin": "plugin---docusaurus-debugb-38-ad3"
+    }
+  },
+  "/__docusaurus/debug/content-a2b": {
+    "__comp": "__comp---theme-debug-contentba-8-ce7",
+    "__context": {
+      "plugin": "plugin---docusaurus-debugb-38-ad3"
+    },
+    "__props": "__props---docusaurus-debug-content-3-c-0-be2"
+  },
+  "/__docusaurus/debug/globalData-c3c": {
+    "__comp": "__comp---theme-debug-global-dataede-0fa",
+    "__context": {
+      "plugin": "plugin---docusaurus-debugb-38-ad3"
+    }
+  },
+  "/__docusaurus/debug/metadata-156": {
+    "__comp": "__comp---theme-debug-site-metadata-68-e-3d4",
+    "__context": {
+      "plugin": "plugin---docusaurus-debugb-38-ad3"
+    }
+  },
+  "/__docusaurus/debug/registry-88c": {
+    "__comp": "__comp---theme-debug-registry-679-501",
+    "__context": {
+      "plugin": "plugin---docusaurus-debugb-38-ad3"
+    }
+  },
+  "/__docusaurus/debug/routes-000": {
+    "__comp": "__comp---theme-debug-routes-946-699",
+    "__context": {
+      "plugin": "plugin---docusaurus-debugb-38-ad3"
+    }
+  },
+  "/-440": {
+    "__comp": "__comp---theme-docs-root-5-e-9-0b6",
+    "__context": {
+      "plugin": "plugin---aba-d70"
+    }
+  },
+  "/-4f4": {
+    "__comp": "__comp---theme-doc-version-roota-7-b-5de",
+    "__props": "__props---22-d-307"
+  },
+  "/-615": {
+    "__comp": "__comp---theme-doc-roota-94-67a"
+  },
+  "/api-reference-0dd": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---api-reference-964-cce"
+  },
+  "/api/auth-323": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---api-authe-50-aad"
+  },
+  "/api/company-7b8": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---api-company-7-aa-c3d"
+  },
+  "/api/findings-557": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---api-findingsdd-2-727"
+  },
+  "/api/hierarchy-b7c": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---api-hierarchyc-9-d-535"
+  },
+  "/api/integrations-5fa": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---api-integrations-07-c-53c"
+  },
+  "/api/invitations-be0": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---api-invitations-99-d-e77"
+  },
+  "/api/memberships-401": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---api-membershipscc-9-525"
+  },
+  "/api/oidc-f20": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---api-oidc-890-85b"
+  },
+  "/api/organizations-3ed": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---api-organizations-10-c-467"
+  },
+  "/api/projects-2b8": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---api-projects-99-d-b65"
+  },
+  "/api/relationships-41c": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---api-relationships-9-f-1-097"
+  },
+  "/api/security-tools-7de": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---api-security-tools-47-c-8a6"
+  },
+  "/api/teams-7ce": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---api-teams-86-f-89f"
+  },
+  "/api/technologies-31a": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---api-technologies-0-a-2-05e"
+  },
+  "/backend-architecture-800": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---backend-architecture-946-fbe"
+  },
+  "/frontend-architecture-4ce": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---frontend-architecturef-46-dcd"
+  },
+  "/frontend/components/applications-5ec": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---frontend-components-applicationsd-27-643"
+  },
+  "/frontend/components/architecture-762": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---frontend-components-architecture-368-d4f"
+  },
+  "/frontend/components/findings-0a4": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---frontend-components-findings-557-744"
+  },
+  "/frontend/components/integrations-8b7": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---frontend-components-integrationsdc-4-a8b"
+  },
+  "/frontend/components/settings-3ef": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---frontend-components-settings-80-c-bd4"
+  },
+  "/frontend/components/sidebar-14a": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---frontend-components-sidebar-805-e9b"
+  },
+  "/frontend/hooks-4fa": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---frontend-hooks-10-d-1ac"
+  },
+  "/frontend/lib-a2b": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---frontend-lib-898-3ac"
+  },
+  "/frontend/pages-8b0": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---frontend-pages-4-fa-854"
+  },
+  "/frontend/stores/useArchitectureStore-526": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---frontend-stores-use-architecture-stored-99-6eb"
+  },
+  "/frontend/stores/useAuthStore-0a8": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---frontend-stores-use-auth-store-481-7b0"
+  },
+  "/frontend/stores/useCompanyStore-414": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---frontend-stores-use-company-store-0-df-a5c"
+  },
+  "/frontend/stores/useDomainStore-c08": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---frontend-stores-use-domain-storecc-6-4c0"
+  },
+  "/frontend/stores/useFindingStore-d11": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---frontend-stores-use-finding-store-1-e-4-c56"
+  },
+  "/frontend/stores/useHierarchyStore-485": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---frontend-stores-use-hierarchy-stored-97-100"
+  },
+  "/frontend/stores/useIntegrationStore-628": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---frontend-stores-use-integration-store-7-df-c61"
+  },
+  "/frontend/stores/useMembershipStore-377": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---frontend-stores-use-membership-store-43-c-fb2"
+  },
+  "/frontend/stores/useOIDCStore-930": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---frontend-stores-use-oidc-storee-14-d32"
+  },
+  "/frontend/stores/useOrganizationStore-132": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---frontend-stores-use-organization-storea-53-453"
+  },
+  "/frontend/stores/useProjectStore-141": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---frontend-stores-use-project-storebeb-8ff"
+  },
+  "/frontend/stores/useTeamStore-bdc": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---frontend-stores-use-team-stored-3-c-f40"
+  },
+  "/frontend/stores/useUIStore-608": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---frontend-stores-use-ui-storea-32-a9b"
+  },
+  "/-c48": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---c-37-d02"
+  }
+}

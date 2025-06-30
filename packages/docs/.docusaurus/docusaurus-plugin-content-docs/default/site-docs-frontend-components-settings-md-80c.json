@@ -1,0 +1,24 @@
+{
+  "id": "frontend/components/settings",
+  "title": "Frontend Documentation: Settings Components",
+  "description": "This document provides a breakdown of the components used within the SettingsPage.",
+  "source": "@site/docs/frontend/components/settings.md",
+  "sourceDirName": "frontend/components",
+  "slug": "/frontend/components/settings",
+  "permalink": "/frontend/components/settings",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/your-org/stagehand/tree/main/packages/docs/docs/frontend/components/settings.md",
+  "tags": [],
+  "version": "current",
+  "frontMatter": {},
+  "sidebar": "docsSidebar",
+  "previous": {
+    "title": "Frontend Documentation: Integration Components",
+    "permalink": "/frontend/components/integrations"
+  },
+  "next": {
+    "title": "Frontend Documentation: Sidebar Components",
+    "permalink": "/frontend/components/sidebar"
+  }
+}

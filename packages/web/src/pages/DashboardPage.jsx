@@ -53,15 +53,17 @@ function DashboardPage() {
                 </div>
 			) : (
                 <div className="bg-white/5 p-8 rounded-xl border border-white/10">
-                    <div className="flex items-center mb-6">
-                        <div className="mr-5 flex-shrink-0 bg-[var(--orange-wheel)]/10 p-3 rounded-lg">
-                            {icons[selectedItem.type]}
+                    {selectedItem.type !== 'project' && (
+                        <div className="flex items-center mb-6">
+                            <div className="mr-5 flex-shrink-0 bg-[var(--orange-wheel)]/10 p-3 rounded-lg">
+                                {icons[selectedItem.type]}
+                            </div>
+                            <div className="flex-grow">
+                                <p className="text-sm text-[var(--vanilla)]/60 font-semibold uppercase tracking-wider">{selectedItem.type}</p>
+                                <h2 className="text-3xl font-bold text-white capitalize truncate">{selectedItem.name}</h2>
+                            </div>
                         </div>
-                        <div className="flex-grow">
-                            <p className="text-sm text-[var(--vanilla)]/60 font-semibold uppercase tracking-wider">{selectedItem.type}</p>
-                            <h2 className="text-3xl font-bold text-white capitalize truncate">{selectedItem.name}</h2>
-                        </div>
-                    </div>
+                    )}
                     
                     <div className="mt-8">
                         {selectedItem.type === 'project' && <ApplicationDetails project={selectedItem} />}

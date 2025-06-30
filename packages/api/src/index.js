@@ -18,6 +18,7 @@ import oidcRoutes from './routes/oidc.js';
 import technologyRoutes from './routes/technologies.js';
 import relationshipRoutes from './routes/relationships.js';
 import integrationRoutes from './routes/integrations.js';
+import securityToolRoutes from './routes/securityTools.js';
 import findingsRoutes from './routes/findings.js';
 
 const app = express();
@@ -71,6 +72,7 @@ app.use('/api/v1', oidcRoutes);
 app.use('/api/v1/technologies', technologyRoutes);
 app.use('/api/v1/relationships', relationshipRoutes);
 app.use('/api/v1/integrations', integrationRoutes);
+app.use('/api/v1/security-tools', securityToolRoutes);
 app.use('/api/v1/projects', findingsRoutes);
 
 app.listen(port, () => {

@@ -4,6 +4,7 @@ import { protect } from '../middleware/authMiddleware.js';
 import { getVisibleResourceIds, hasPermission, isMemberOfCompany } from '../utils/permissions.js';
 import { getDescendants } from '../utils/hierarchy.js';
 import { decrypt } from '../utils/crypto.js';
+import { syncGitHubFindings } from '../utils/findings.js';
 
 const prisma = new PrismaClient();
 const router = Router();
@@ -846,6 +847,52 @@ router.get('/:id/repo-stats', async (req, res) => {
         console.error(`Get repo stats error for project ${projectId}:`, error);
         res.status(500).json({ error: 'Failed to retrieve repository statistics.' });
     }
+});
+
+/**
+ * @route POST /api/v1/projects/:projectId/link-security-tool
+ * @desc Link a project to a security tool and its specific project ID
+ * @access Private
+ */
+router.post('/:projectId/link-security-tool', protect, async (req, res) => {
+  const { projectId } = req.params;
+  const { securityToolIntegrationId, provider, toolSpecificId } = req.body;
+
+  if (!securityToolIntegrationId || !provider || !toolSpecificId) {
+    return res.status(400).json({ error: 'Missing required fields for linking.' });
+  }
+
+  try {
+    const canEdit = await hasPermission(req.user, ['ADMIN', 'EDITOR'], 'project', projectId);
+    if (!canEdit) {
+      return res.status(403).json({ error: 'You are not authorized to modify this project.' });
+    }
+
+    const project = await prisma.project.findUnique({ where: { id: projectId } });
+    if (!project) {
+      return res.status(404).json({ error: 'Project not found.' });
+    }
+    
+    // Merge the new tool ID into the existing JSON object
+    const updatedToolIds = {
+      ...project.toolSpecificIds,
+      [provider.toLowerCase()]: toolSpecificId
+    };
+
+    await prisma.project.update({
+      where: { id: projectId },
+      data: {
+        securityToolIntegrationId, // Link to the main integration
+        toolSpecificIds: updatedToolIds
+      },
+    });
+
+    res.status(200).json({ message: 'Project linked successfully.' });
+
+  } catch (error) {
+    console.error(`Failed to link project ${projectId} to security tool:`, error);
+    res.status(500).json({ error: 'An internal server error occurred.' });
+  }
 });
 
 export default router; 

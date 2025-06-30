@@ -1,7 +1,7 @@
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
-//  url      = "postgresql://admin:password@localhost:5432/stagehand?schema=public"
+  //  url      = "postgresql://admin:password@localhost:5432/stagehand?schema=public"
 }
 
 generator client {
@@ -72,48 +72,62 @@ enum SCMProvider {
   AZURE_DEVOPS
 }
 
+enum SecurityToolType {
+  SAST
+  DAST
+  SCA
+  APISEC
+}
+
 model User {
-  id        String    @id @default(cuid())
-  email     String    @unique
+  id        String   @id @default(cuid())
+  email     String   @unique
   password  String? // Hashed password, optional for invited users
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   emailVerified              Boolean   @default(false)
   verificationToken          String?
   verificationTokenExpiresAt DateTime?
 
-  memberships Membership[]
-  invitation  Invitation?
+  memberships        Membership[]
+  invitation         Invitation?
   passwordResetToken PasswordResetToken?
-  loginTokens LoginToken[]
-  
-  contacts    Contact[]
-  scmIntegrations SCMIntegration[]
+  loginTokens        LoginToken[]
+
+  contacts                 Contact[]
+  scmIntegrations          SCMIntegration[]
+  securityToolIntegrations SecurityToolIntegration[]
 }
 
 model Session {
-  id        String   @id @default(cuid())
-  sid       String   @unique
-  data      String
-  expiresAt DateTime
+  id                       String                    @id @default(cuid())
+  sid                      String                    @unique
+  data                     String
+  expiresAt                DateTime
+  autoJoinDomains          AutoJoinDomain[]
+  oidcConfiguration        OIDCConfiguration?        @relation(fields: [oIDCConfigurationId], references: [id])
+  integrations             SCMIntegration[]
+  securityToolIntegrations SecurityToolIntegration[]
+  oIDCConfigurationId      String?
 }
 
 model Organization {
-  id               String    @id @default(cuid())
-  name             String
-  description      String?
-  accountType      String    @default("STANDARD") // STANDARD or ENTERPRISE
+  id                    String   @id @default(cuid())
+  name                  String
+  description           String?
+  accountType           String   @default("STANDARD") // STANDARD or ENTERPRISE
   hierarchyDisplayNames Json?
-  createdAt        DateTime  @default(now())
-  updatedAt        DateTime  @updatedAt
-  defaultCompanyId String?
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+  defaultCompanyId      String?
 
-  companies   Company[]
-  memberships Membership[]
-  autoJoinDomains  AutoJoinDomain[]
-  oidcConfiguration OIDCConfiguration?
-  integrations      SCMIntegration[]
+  companies                Company[]
+  memberships              Membership[]
+  autoJoinDomains          AutoJoinDomain[]
+  oidcConfiguration        OIDCConfiguration?
+  integrations             SCMIntegration[]
+  securityToolIntegrations SecurityToolIntegration[]
 }
 
 model Company {
@@ -126,10 +140,11 @@ model Company {
   organizationId String
   organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
 
-  teams      Team[]
-  memberships Membership[]
-  autoJoinDomains AutoJoinDomain[]
-  integrations SCMIntegration[]
+  teams                    Team[]
+  memberships              Membership[]
+  autoJoinDomains          AutoJoinDomain[]
+  integrations             SCMIntegration[]
+  securityToolIntegrations SecurityToolIntegration[]
 }
 
 model Team {
@@ -142,9 +157,10 @@ model Team {
   companyId String
   company   Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
 
-  projects   Project[]
-  memberships Membership[]
-  integrations SCMIntegration[]
+  projects                 Project[]
+  memberships              Membership[]
+  integrations             SCMIntegration[]
+  securityToolIntegrations SecurityToolIntegration[]
 }
 
 model Project {
@@ -155,54 +171,61 @@ model Project {
   updatedAt   DateTime @updatedAt
 
   teamId String
-  team   Team @relation(fields: [teamId], references: [id], onDelete: Cascade)
-  
+  team   Team   @relation(fields: [teamId], references: [id], onDelete: Cascade)
+
   memberships Membership[]
 
   // --- Stagehand Fields ---
   /// Primary URL for the deployed application
-  applicationUrl      String?
+  applicationUrl   String?
   /// Current public version, e.g., 2.1.4
-  version             String?
-  deploymentStatus    DeploymentStatus @default(IN_DEVELOPMENT)
-  
+  version          String?
+  deploymentStatus DeploymentStatus @default(IN_DEVELOPMENT)
+
   /// Link to the source code repository (e.g., GitHub)
-  repositoryUrl       String?
+  repositoryUrl   String?
   /// Link to the CI/CD pipeline (e.g., Jenkins, GitHub Actions)
-  ciCdPipelineUrl     String?
+  ciCdPipelineUrl String?
 
   /// Timestamp of the last successful scan by any integrated tool
-  lastScanDate        DateTime?
+  lastScanDate DateTime?
 
-  projectType          ProjectType?
-  dataClassification   DataClassification?
+  projectType            ProjectType?
+  dataClassification     DataClassification?
   applicationCriticality ApplicationCriticality?
-  isExternallyExposed  Boolean?          @default(false)
+  isExternallyExposed    Boolean?                @default(false)
 
-  communicationChannel String?     // e.g., Slack channel link
-  documentationUrl     String?     // Link to general project documentation (e.g., Confluence)
-  apiReferenceUrl      String?     // Link to API documentation (e.g., Swagger, OpenAPI)
-  runbookUrl           String?     // Link to operational runbooks for on-call
-  threatModelUrl       String?     // Link to threat model document
-  lastSecurityReview   DateTime?   // Date of last manual security review
+  communicationChannel String? // e.g., Slack channel link
+  documentationUrl     String? // Link to general project documentation (e.g., Confluence)
+  apiReferenceUrl      String? // Link to API documentation (e.g., Swagger, OpenAPI)
+  runbookUrl           String? // Link to operational runbooks for on-call
+  threatModelUrl       String? // Link to threat model document
+  lastSecurityReview   DateTime? // Date of last manual security review
 
   /// Points of contact for this application
-  contacts    ProjectContact[]
-  technologies        ProjectTechnology[]
-  dependencies        ProjectDependency[]
+  contacts     ProjectContact[]
+  technologies ProjectTechnology[]
+  dependencies ProjectDependency[]
 
-  outboundDependencies ProjectRelationship[] @relation("outboundDependencies")
-  inboundDependencies  ProjectRelationship[] @relation("inboundDependencies")
-  integrations         SCMIntegration[] @relation("DirectProjectIntegrations")
+  outboundDependencies           ProjectRelationship[]     @relation("outboundDependencies")
+  inboundDependencies            ProjectRelationship[]     @relation("inboundDependencies")
+  integrations                   SCMIntegration[]          @relation("DirectProjectIntegrations")
+  directSecurityToolIntegrations SecurityToolIntegration[] @relation("DirectProjectSecurityToolIntegrations")
 
   scmIntegrationId String?
   scmIntegration   SCMIntegration? @relation("ProjectRepositoryLink", fields: [scmIntegrationId], references: [id], onDelete: SetNull)
+
+  securityToolIntegrationId String?
+  securityToolIntegration   SecurityToolIntegration? @relation("ProjectSecurityToolLink", fields: [securityToolIntegrationId], references: [id], onDelete: SetNull)
+
+  // Flexible JSON object for tool-specific IDs
+  toolSpecificIds Json? @default("{}")
 
   findings Finding[]
 }
 
 model ProjectRelationship {
-  id          String @id @default(cuid())
+  id          String  @id @default(cuid())
   description String?
   // Type of relationship, e.g., 'API', 'DATABASE', 'MESSAGE_QUEUE', 'DIRECT_DEPENDENCY'
   type        String
@@ -225,19 +248,19 @@ model Invitation {
   token     String   @unique
   expires   DateTime
   createdAt DateTime @default(now())
-  
-  userId    String   @unique
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  userId    String    @unique
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   expiresAt DateTime
   usedAt    DateTime?
-  updatedAt DateTime @updatedAt
+  updatedAt DateTime  @updatedAt
 }
 
 model Membership {
-  id        String   @id @default(cuid())
-  role      Role
-  userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id     String @id @default(cuid())
+  role   Role
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   organizationId String?
   organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
@@ -246,8 +269,8 @@ model Membership {
   company   Company? @relation(fields: [companyId], references: [id], onDelete: Cascade)
 
   teamId String?
-  team   Team? @relation(fields: [teamId], references: [id], onDelete: Cascade)
-  
+  team   Team?   @relation(fields: [teamId], references: [id], onDelete: Cascade)
+
   projectId String?
   project   Project? @relation(fields: [projectId], references: [id], onDelete: Cascade)
 
@@ -265,7 +288,7 @@ model Contact {
   email String  @unique
   /// e.g., Engineering Manager, External Consultant
   role  String?
-  
+
   userId String? @unique
   user   User?   @relation(fields: [userId], references: [id])
 
@@ -275,21 +298,21 @@ model Contact {
 model ProjectContact {
   projectId String
   project   Project @relation(fields: [projectId], references: [id])
-  
-  contactId     String
-  contact       Contact @relation(fields: [contactId], references: [id])
+
+  contactId String
+  contact   Contact @relation(fields: [contactId], references: [id])
 
   /// e.g., 'Primary Owner', 'Technical Lead', 'Product Manager'
-  contactType   String
+  contactType String
 
   @@id([projectId, contactId, contactType])
 }
 
 model Technology {
-  id   String @id @default(cuid())
+  id   String         @id @default(cuid())
   name String // e.g., "React", "Snyk", "Jira", "Python"
   type TechnologyType // To categorize the technology
-  
+
   applications ProjectTechnology[]
   dependencies ProjectDependency[]
 
@@ -297,27 +320,27 @@ model Technology {
 }
 
 model ProjectTechnology {
-  id            String @id @default(cuid())
-  projectId     String
-  project       Project @relation(fields: [projectId], references: [id])
+  id        String  @id @default(cuid())
+  projectId String
+  project   Project @relation(fields: [projectId], references: [id])
 
-  technologyId  String
-  technology    Technology @relation(fields: [technologyId], references: [id])
+  technologyId String
+  technology   Technology @relation(fields: [technologyId], references: [id])
 
   /// e.g., 18.2.0 for React
-  version       String?
+  version String?
   /// How was this discovered? e.g., 'user-entered' or 'Discovered by Snyk'
-  source        String
+  source  String
 
   @@unique([projectId, technologyId, version])
 }
 
 model ProjectDependency {
-  id        String  @id @default(cuid())
-  name      String  // e.g., "express"
-  version   String  // e.g., "4.17.1"
-  type      String  // e.g., "npm", "maven"
-  
+  id      String @id @default(cuid())
+  name    String // e.g., "express"
+  version String // e.g., "4.17.1"
+  type    String // e.g., "npm", "maven"
+
   projectId String
   project   Project @relation(fields: [projectId], references: [id])
 
@@ -330,41 +353,44 @@ model ProjectDependency {
 }
 
 model AutoJoinDomain {
-  id        String @id @default(cuid())
-  domain    String
-  role      Role
+  id               String             @id @default(cuid())
+  domain           String
+  role             Role
   status           VerificationStatus @default(PENDING)
   verificationCode String             @unique
 
   organizationId String?
   organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  
+
   companyId String?
   company   Company? @relation(fields: [companyId], references: [id], onDelete: Cascade)
 
   createdAt DateTime @default(now())
+  Session   Session? @relation(fields: [sessionId], references: [id])
+  sessionId String?
 
   @@unique([domain, organizationId])
   @@unique([domain, companyId])
 }
 
 model OIDCConfiguration {
-  id               String   @id @default(cuid())
-  organizationId   String   @unique
-  isEnabled        Boolean  @default(false)
-  issuer           String   @unique
+  id               String  @id @default(cuid())
+  organizationId   String  @unique
+  isEnabled        Boolean @default(false)
+  issuer           String  @unique
   clientId         String
   clientSecret     String
   authorizationUrl String
   tokenUrl         String
   userInfoUrl      String
-  defaultRole      Role     @default(READER)
+  defaultRole      Role    @default(READER)
   buttonText       String?
 
   organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  Session   Session[]
 }
 
 model PasswordResetToken {
@@ -378,18 +404,18 @@ model PasswordResetToken {
 }
 
 model LoginToken {
-  id        String   @id @default(cuid())
-  token     String   @unique
+  id        String    @id @default(cuid())
+  token     String    @unique
   userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   expiresAt DateTime
-  createdAt DateTime @default(now())
+  createdAt DateTime  @default(now())
   usedAt    DateTime?
 }
 
 model SCMIntegration {
-  id        String  @id @default(cuid())
-  provider  SCMProvider
+  id          String      @id @default(cuid())
+  provider    SCMProvider
   displayName String?
 
   installationId        String?
@@ -403,18 +429,69 @@ model SCMIntegration {
   organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
 
   companyId String?
-  company   Company?      @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  company   Company? @relation(fields: [companyId], references: [id], onDelete: Cascade)
 
   teamId String?
-  team   Team?         @relation(fields: [teamId], references: [id], onDelete: Cascade)
-  
+  team   Team?   @relation(fields: [teamId], references: [id], onDelete: Cascade)
+
   projectId String?
-  project   Project?      @relation("DirectProjectIntegrations", fields: [projectId], references: [id], onDelete: Cascade)
+  project   Project? @relation("DirectProjectIntegrations", fields: [projectId], references: [id], onDelete: Cascade)
 
   projectLinks Project[] @relation("ProjectRepositoryLink")
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt DateTime             @default(now())
+  updatedAt DateTime             @updatedAt
+  syncLogs  IntegrationSyncLog[]
+  Session   Session?             @relation(fields: [sessionId], references: [id])
+  sessionId String?
+}
+
+model SecurityToolIntegration {
+  id        String           @id @default(cuid())
+  provider  String // e.g., "Snyk", "Dependabot"
+  type      SecurityToolType // e.g., "SAST", "SCA"
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+
+  // Flexible, encrypted credentials
+  encryptedCredentials Json
+
+  // Relationships to hierarchical entities
+  createdById String
+  createdBy   User   @relation(fields: [createdById], references: [id], onDelete: Cascade)
+
+  organizationId String?
+  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  companyId      String?
+  company        Company?      @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  teamId         String?
+  team           Team?         @relation(fields: [teamId], references: [id], onDelete: Cascade)
+
+  // A security tool integration can be directly linked to multiple projects
+  directProjectLinks Project[] @relation("DirectProjectSecurityToolIntegrations")
+  linkedProjects     Project[] @relation("ProjectSecurityToolLink")
+
+  syncLogs  IntegrationSyncLog[]
+  Session   Session?             @relation(fields: [sessionId], references: [id])
+  sessionId String?
+}
+
+model IntegrationSyncLog {
+  id              String    @id @default(cuid())
+  status          String // 'SUCCESS', 'FAILURE', 'IN_PROGRESS'
+  startTime       DateTime
+  endTime         DateTime?
+  errorMessage    String?   @db.Text
+  findingsAdded   Int       @default(0)
+  findingsUpdated Int       @default(0)
+  syncedProjectsJson Json?
+  scmIntegrationId          String?
+  scmIntegration            SCMIntegration?          @relation(fields: [scmIntegrationId], references: [id], onDelete: Cascade)
+  securityToolIntegrationId String?
+  securityToolIntegration   SecurityToolIntegration? @relation(fields: [securityToolIntegrationId], references: [id], onDelete: Cascade)
+
+  @@index([scmIntegrationId])
+  @@index([securityToolIntegrationId])
 }
 
 enum VulnerabilitySource {
@@ -434,17 +511,17 @@ enum FindingStatus {
 }
 
 model Vulnerability {
-  id              String    @id @default(cuid())
+  id              String              @id @default(cuid())
   // Canonical ID from the source, e.g., 'CVE-2023-1234' or 'GHSA-...'
   vulnerabilityId String
   source          VulnerabilitySource
 
-  title           String
-  description     String    @db.Text
-  severity        String    // e.g., 'CRITICAL', 'HIGH', 'MEDIUM', 'LOW'
-  cvssScore       Float?
-  remediation     String?   @db.Text
-  references      Json?     // List of URLs to advisories
+  title       String
+  description String  @db.Text
+  severity    String // e.g., 'CRITICAL', 'HIGH', 'MEDIUM', 'LOW'
+  cvssScore   Float?
+  remediation String? @db.Text
+  references  Json? // List of URLs to advisories
 
   findings Finding[]
 
@@ -455,18 +532,18 @@ model Vulnerability {
 }
 
 model Finding {
-  id              String        @id @default(cuid())
-  status          FindingStatus @default(NEW)
-  
-  projectId       String
-  project         Project       @relation(fields: [projectId], references: [id], onDelete:Cascade)
+  id     String        @id @default(cuid())
+  status FindingStatus @default(NEW)
+
+  projectId String
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
 
   vulnerabilityId String
   source          VulnerabilitySource // To satisfy the compound key of Vulnerability
-  vulnerability   Vulnerability @relation(fields: [vulnerabilityId, source], references: [vulnerabilityId, source])
+  vulnerability   Vulnerability       @relation(fields: [vulnerabilityId, source], references: [vulnerabilityId, source])
 
   // Source-specific details, e.g., { "dependencyName": "lodash", "filePath": "package-lock.json" }
-  metadata        Json?
+  metadata Json?
 
   firstSeenAt DateTime  @default(now())
   lastSeenAt  DateTime  @updatedAt
@@ -474,4 +551,4 @@ model Finding {
 
   @@unique([projectId, vulnerabilityId, source])
   @@index([projectId])
-} 
+}

@@ -1,17 +1,12 @@
 import { create } from 'zustand';
 import useHierarchyStore from './useHierarchyStore';
 
-const useProjectStore = create((set) => {
-    const initialState = {
+const useProjectStore = create((set) => ({
     isLoading: false,
     error: null,
     repoStats: null,
     isStatsLoading: false,
     statsError: null,
-    };
-
-    return {
-        ...initialState,
 
     // Create a new project
     createProject: async (projectData) => {
@@ -75,7 +70,7 @@ const useProjectStore = create((set) => {
         }
     },
 
-    reset: () => set(initialState),
+    reset: () => set({ isLoading: false, error: null, repoStats: null, isStatsLoading: false, statsError: null }),
 
     fetchRepoStats: async (projectId) => {
         set({ isStatsLoading: true, statsError: null });
@@ -99,31 +94,43 @@ const useProjectStore = create((set) => {
         }
     },
 
-    linkRepositoryToProject: async (projectId, data) => {
-        set({ isLoading: true, error: null });
+    linkRepositoryToProject: async (projectId, repoData) => {
         try {
             const response = await fetch(`/api/v1/projects/${projectId}/link-repo`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(data),
+                body: JSON.stringify(repoData),
             });
             if (!response.ok) {
                 const err = await response.json();
-                throw new Error(err.error || 'Failed to link repository');
+                throw new Error(err.error || 'Failed to link repo to project');
             }
-            const updatedProject = await response.json();
-            
-            // Refresh the main hierarchy store to reflect the change
+            // Optimistically update the store or trigger a refetch
             useHierarchyStore.getState().fetchAndSetSelectedItem('project', projectId);
-
-            set({ isLoading: false });
-            return updatedProject;
         } catch (error) {
-            set({ isLoading: false, error: error.message });
+            console.error("Failed to link repo to project:", error);
             throw error;
         }
     },
-    };
-});
+
+    linkSecurityToolToProject: async (projectId, linkData) => {
+        try {
+            const response = await fetch(`/api/v1/projects/${projectId}/link-security-tool`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(linkData),
+            });
+            if (!response.ok) {
+                const err = await response.json();
+                throw new Error(err.error || 'Failed to link security tool to project');
+            }
+            // Optimistically update the store or trigger a refetch
+            useHierarchyStore.getState().fetchAndSetSelectedItem('project', projectId);
+        } catch (error) {
+            console.error("Failed to link security tool to project:", error);
+            throw error;
+        }
+    },
+}));
 
 export default useProjectStore; 

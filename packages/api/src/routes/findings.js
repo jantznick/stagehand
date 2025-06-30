@@ -1,9 +1,10 @@
-const express = require('express');
-const router = express.Router();
-const { PrismaClient } = require('@prisma/client');
+import { Router } from 'express';
+import { PrismaClient } from '@prisma/client';
+import { protect } from '../middleware/authMiddleware.js';
+import { hasPermission } from '../utils/permissions.js';
+
 const prisma = new PrismaClient();
-const { protect } = require('../middleware/authMiddleware');
-const { hasPermission } = require('../utils/permissions');
+const router = Router();
 
 // GET /api/v1/projects/:projectId/findings
 // Fetches all findings for a specific project
@@ -42,4 +43,4 @@ router.get('/:projectId/findings', protect, async (req, res) => {
   }
 });
 
-module.exports = router; 
+export default router; 

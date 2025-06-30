@@ -1,45 +1,48 @@
 import React, { useState, useEffect } from 'react';
 import useIntegrationStore from '../../stores/useIntegrationStore';
-import { Github, Trash2, Link } from 'lucide-react';
+import { Github, Trash2, Link, ShieldCheck, History } from 'lucide-react';
 import { DiBitbucket } from "react-icons/di";
 import AddIntegrationModal from './AddIntegrationModal';
 import ConfirmationModal from '../ConfirmationModal';
 import LinkRepositoriesModal from './LinkRepositoriesModal';
+import LinkSecurityToolProjectsModal from './LinkSecurityToolProjectsModal';
+import SyncHistoryModal from './SyncHistoryModal';
+import {
+  CloudArrowDownIcon,
+  LinkIcon,
+  PencilSquareIcon,
+  TrashIcon,
+  ArrowPathIcon,
+} from '@heroicons/react/24/solid';
 
-const SCM_PROVIDERS = [
-  {
-    name: 'GitHub',
-    providerKey: 'GITHUB',
-    Icon: Github,
-    connect: (resourceType, resourceId, connectFn) => connectFn(resourceType, resourceId),
-  },
-  // {
-  //   name: 'Bitbucket',
-  //   providerKey: 'BITBUCKET',
-//     Icon: DiBitbucket,
-//     connect: () => alert('Bitbucket integration coming soon!'),
-//   },
-];
-
-// A map to get the correct icon for a given provider key
-const ICONS = {
+const SCM_ICONS = {
   GITHUB: Github,
   // Add other icons as needed
+};
+
+const SECURITY_TOOL_ICONS = {
+  Snyk: ShieldCheck,
 };
 
 const IntegrationManager = ({ resourceType, resourceId }) => {
   const {
     integrations,
+    securityToolIntegrations,
     loading,
     error,
     fetchIntegrations,
     connectGitHub,
-    disconnectIntegration
+    addSnykIntegration,
+    disconnectIntegration,
+    syncSecurityToolIntegration,
   } = useIntegrationStore();
 
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-  const [isLinkModalOpen, setIsLinkModalOpen] = useState(false);
+  const [isLinkRepoModalOpen, setIsLinkRepoModalOpen] = useState(false);
+  const [isLinkSecurityModalOpen, setIsLinkSecurityModalOpen] = useState(false);
+  const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
   const [selectedIntegration, setSelectedIntegration] = useState(null);
+  const [selectedIntegrationType, setSelectedIntegrationType] = useState('');
   const [integrationToDisconnect, setIntegrationToDisconnect] = useState(null);
 
   useEffect(() => {
@@ -55,13 +58,26 @@ const IntegrationManager = ({ resourceType, resourceId }) => {
     }
   };
 
-  const openLinkModal = (integration) => {
+  const openLinkRepoModal = (integration) => {
     setSelectedIntegration(integration);
-    setIsLinkModalOpen(true);
+    setIsLinkRepoModalOpen(true);
+  };
+
+  const openLinkSecurityModal = (integration) => {
+    setSelectedIntegration(integration);
+    setIsLinkSecurityModalOpen(true);
+  };
+
+  const openHistoryModal = (integration, type) => {
+    setSelectedIntegration(integration);
+    setSelectedIntegrationType(type);
+    setIsHistoryModalOpen(true);
   };
 
   return (
-    <div className="mt-8">
+    <div className="mt-8 space-y-8">
+      {/* SCM Integrations Section */}
+      <div>
         <div className="flex items-center justify-between mb-4">
             <h2 className="text-xl font-bold" id="integrations-section">SCM Integrations</h2>
             <button
@@ -78,7 +94,7 @@ const IntegrationManager = ({ resourceType, resourceId }) => {
             <div className="space-y-3">
               {integrations.length > 0 ? (
                 integrations.map(integration => {
-                  const Icon = ICONS[integration.provider] || Github;
+                  const Icon = SCM_ICONS[integration.provider] || Github;
                   return (
                     <div key={integration.id} className="flex items-center justify-between p-3 bg-black/20 rounded-lg">
                       <div className="flex items-center space-x-3 flex-1">
@@ -92,11 +108,18 @@ const IntegrationManager = ({ resourceType, resourceId }) => {
                       </div>
                       <div className="flex items-center gap-2">
                         <button
-                            onClick={() => openLinkModal(integration)}
+                            onClick={() => openLinkRepoModal(integration)}
                             className="p-2 text-gray-300 hover:text-white hover:bg-white/10 rounded-full transition-colors"
                             title="Link Repositories"
                         >
                             <Link size={18} />
+                        </button>
+                        <button
+                            onClick={() => openHistoryModal(integration, 'SCM')}
+                            className="p-2 text-gray-300 hover:text-white hover:bg-white/10 rounded-full transition-colors"
+                            title="Sync History"
+                        >
+                            <History size={18} />
                         </button>
                         <button
                             onClick={() => setIntegrationToDisconnect(integration)}
@@ -111,26 +134,117 @@ const IntegrationManager = ({ resourceType, resourceId }) => {
                   )
                 })
               ) : (
-                <p className="text-gray-400 text-center py-4">No integrations connected.</p>
+                <p className="text-gray-400 text-center py-4">No SCM integrations connected.</p>
               )}
             </div>
         </div>
+      </div>
+
+      {/* Security Tool Integrations Section */}
+      <div>
+        <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xl font-bold" id="security-tool-integrations-section">Security Tool Integrations</h2>
+        </div>
+
+        <div className="bg-white/5 p-6 rounded-xl border border-white/10">
+            <div className="space-y-3">
+              {securityToolIntegrations.length > 0 ? (
+                securityToolIntegrations.map(integration => {
+                  const Icon = SECURITY_TOOL_ICONS[integration.provider] || ShieldCheck;
+                  return (
+                    <div key={integration.id} className="flex items-center justify-between p-3 bg-black/20 rounded-lg">
+                      <div className="flex items-center space-x-3 flex-1">
+                        <Icon className="w-6 h-6 text-gray-300" />
+                        <div>
+                          <span className="font-medium">{integration.provider}</span>
+                            <p className="text-sm text-gray-400">
+                                Type: <span className="font-semibold text-gray-300">{integration.type}</span>
+                            </p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-4">
+                        <button
+                            onClick={() => openLinkSecurityModal(integration)}
+                            className="p-2 text-gray-300 hover:text-white hover:bg-white/10 rounded-full transition-colors"
+                            title="Link Projects"
+                        >
+                            <Link size={18} />
+                        </button>
+                        <button
+                          onClick={() => openHistoryModal(integration, 'SecurityTool')}
+                          className="p-2 text-gray-300 hover:text-white hover:bg-white/10 rounded-full transition-colors"
+                          title="Sync History"
+                        >
+                          <History size={18} />
+                        </button>
+                        <button
+                          onClick={() => syncSecurityToolIntegration(integration.id, resourceType, resourceId)}
+                          disabled={loading}
+                          className="p-2 text-gray-300 hover:text-white hover:bg-white/10 rounded-full transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                          title="Sync Now"
+                        >
+                          <ArrowPathIcon className="h-5 w-5" />
+                        </button>
+                        <button
+                          onClick={() => alert('Editing coming soon!')}
+                          className="p-2 text-gray-300 hover:text-white hover:bg-white/10 rounded-full transition-colors"
+                          title="Edit"
+                        >
+                          <PencilSquareIcon className="h-5 w-5" />
+                        </button>
+                        <button
+                          onClick={() => alert('Deletion coming soon!')}
+                          className="p-2 text-red-500 hover:text-red-400 hover:bg-red-500/10 rounded-full transition-colors"
+                          title="Delete"
+                        >
+                          <TrashIcon className="h-5 w-5" />
+                        </button>
+                      </div>
+                    </div>
+                  )
+                })
+              ) : (
+                <p className="text-gray-400 text-center py-4">No security tool integrations connected.</p>
+              )}
+            </div>
+        </div>
+      </div>
 
         <AddIntegrationModal
           isOpen={isAddModalOpen}
           onClose={() => setIsAddModalOpen(false)}
           onConnectGitHub={connectGitHub}
+          onAddSnyk={addSnykIntegration}
           resourceType={resourceType}
           resourceId={resourceId}
         />
         
         {selectedIntegration && (
             <LinkRepositoriesModal
-                isOpen={isLinkModalOpen}
-                onClose={() => setIsLinkModalOpen(false)}
+                isOpen={isLinkRepoModalOpen}
+                onClose={() => setIsLinkRepoModalOpen(false)}
                 integration={selectedIntegration}
                 resourceType={resourceType}
                 resourceId={resourceId}
+            />
+        )}
+
+        {selectedIntegration && (
+            <LinkSecurityToolProjectsModal
+                isOpen={isLinkSecurityModalOpen}
+                onClose={() => setIsLinkSecurityModalOpen(false)}
+                integration={selectedIntegration}
+                resourceType={resourceType}
+                resourceId={resourceId}
+            />
+        )}
+        
+        {isHistoryModalOpen && selectedIntegration && (
+            <SyncHistoryModal
+                isOpen={isHistoryModalOpen}
+                onClose={() => setIsHistoryModalOpen(false)}
+                integrationId={selectedIntegration.id}
+                integrationType={selectedIntegrationType}
             />
         )}
         

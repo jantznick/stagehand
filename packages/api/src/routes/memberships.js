@@ -4,6 +4,8 @@ import { protect } from '../middleware/authMiddleware.js';
 import { hasPermission } from '../utils/permissions.js';
 import crypto from 'crypto';
 import { getAncestors, getDescendants } from '../utils/hierarchy.js';
+import { getMembershipDetails } from '../utils/membership.js';
+import { sendEmail } from '../utils/email.js';
 
 const prisma = new PrismaClient();
 const router = Router();
@@ -177,7 +179,8 @@ router.post('/', async (req, res) => {
                         create: {
                             email,
                             token: invitationToken,
-                            expires,
+							expires,
+                            expiresAt:expires,
                         },
                     },
                 },
@@ -186,8 +189,8 @@ router.post('/', async (req, res) => {
             // Note: In a real app, you'd use a frontend URL from an environment variable.
             invitationLink = `${process.env.WEB_URL}/register?invite_token=${invitationToken}`;
 			const inviter = await prisma.user.findUnique({ where: { id: req.user.id } });
-			const { organization, company } = await getMembershipDetails(resourceId);
-			const itemName = company?.name || organization?.name;
+			const resourceName = await getMembershipDetails(resourceType, resourceId);
+			const itemName = resourceName || 'Stagehand';
 	
 			// Send invitation email
 			await sendEmail({

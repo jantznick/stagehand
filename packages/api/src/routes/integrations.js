@@ -297,6 +297,28 @@ router.post('/:integrationId/sync', async (req, res) => {
   }
 });
 
+/**
+ * @route GET /api/v1/integrations/:integrationId/sync-logs
+ * @desc Get sync logs for a specific SCM integration
+ * @access Private
+ */
+router.get('/:integrationId/sync-logs', async (req, res) => {
+    const { integrationId } = req.params;
+
+    try {
+        // Basic permission check can be added here if needed
+        const logs = await prisma.integrationSyncLog.findMany({
+            where: { scmIntegrationId: integrationId },
+            orderBy: { startTime: 'desc' },
+            take: 20, // Limit to the last 20 syncs
+        });
+        res.status(200).json(logs);
+    } catch (error) {
+        console.error(`Failed to fetch sync logs for integration ${integrationId}:`, error);
+        res.status(500).json({ error: 'An internal server error occurred.' });
+    }
+});
+
 // Helper to consolidate deletion permission logic
 const canUserDeleteIntegration = async (user, integration) => {
     // Rule: The user who created the integration can delete it.

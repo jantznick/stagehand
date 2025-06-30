@@ -6,6 +6,7 @@ const useFindingStore = create(
     findings: {}, // Store findings per project
     isLoading: false,
     error: null,
+    lastFetched: {}, // Changed to an object to store timestamps per project
 
     fetchFindings: async (projectId) => {
       if (!projectId) return;
@@ -27,6 +28,7 @@ const useFindingStore = create(
         set((state) => {
           state.findings[projectId] = findingsData;
           state.isLoading = false;
+          state.lastFetched[projectId] = new Date(); // Set timestamp for the specific project
         });
       } catch (error) {
         set((state) => {

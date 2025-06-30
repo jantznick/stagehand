@@ -12,6 +12,8 @@
   "dependencies": {
     "@headlessui/react": "^2.2.4",
     "@heroicons/react": "^2.2.0",
+    "@tailwindcss/typography": "^0.5.16",
+    "@tanstack/react-table": "^8.21.3",
     "dagre": "^0.8.5",
     "date-fns": "^4.1.0",
     "immer": "^10.1.1",
@@ -20,9 +22,11 @@
     "react-dom": "^18.2.0",
     "react-icons": "^5.5.0",
     "react-is": "^18.3.1",
+    "react-markdown": "^10.1.0",
     "react-router-dom": "^7.6.2",
     "reactflow": "^11.11.4",
     "recharts": "^2.15.4",
+    "remark-gfm": "^4.0.1",
     "zustand": "^4.5.2"
   },
   "devDependencies": {

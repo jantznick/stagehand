@@ -33,7 +33,7 @@ function DashboardPage() {
 
 
     return (
-        <div className="p-8 max-w-4xl min-w-3/4 mx-auto text-white">
+        <div className="p-8 min-w-3/4 text-white">
              <h1 className="text-4xl font-bold text-white mb-8">Dashboard</h1>
 
 			{isLoading ? (

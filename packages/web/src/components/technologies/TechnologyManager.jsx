@@ -68,7 +68,6 @@ const TechnologyManager = ({ project }) => {
 				{!isAdding && !editingGroupId && (
                      <button
                         onClick={handleBeginAddTechnology}
-						disabled={!isAdding && !editingGroupId}
                         className="px-3 py-1 text-sm rounded-md bg-indigo-600 hover:bg-indigo-500 text-white"
                     >
                         Add Technology

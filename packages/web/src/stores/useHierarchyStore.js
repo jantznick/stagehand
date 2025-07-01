@@ -468,17 +468,21 @@ const useHierarchyStore = create((set, get) => {
                 body: JSON.stringify(techData),
             });
             if (!response.ok) {
-                throw new Error('Failed to add technology');
+                const errorData = await response.json();
+                throw new Error(errorData.error || 'Failed to add technology');
             }
             const newTechnology = await response.json();
-            set(state => ({
-                selectedItem: {
-                    ...state.selectedItem,
-                    technologies: [...state.selectedItem.technologies, newTechnology]
+            set(produce(draft => {
+                if (draft.selectedItem?.id === projectId) {
+                    if (!draft.selectedItem.technologies) {
+                        draft.selectedItem.technologies = [];
+                    }
+                    draft.selectedItem.technologies.push(newTechnology);
                 }
             }));
         } catch (error) {
             console.error("Error adding technology:", error);
+            set(produce(draft => { draft.error = error.message; }));
         }
     },
 
@@ -490,19 +494,21 @@ const useHierarchyStore = create((set, get) => {
                 body: JSON.stringify(data),
             });
             if (!response.ok) {
-                throw new Error('Failed to update technology');
+                const errorData = await response.json();
+                throw new Error(errorData.error || 'Failed to update technology');
             }
             const updatedTechnology = await response.json();
-            set(state => ({
-                selectedItem: {
-                    ...state.selectedItem,
-                    technologies: state.selectedItem.technologies.map(t => 
-                        t.id === projectTechnologyId ? updatedTechnology : t
-                    )
+            set(produce(draft => {
+                if (draft.selectedItem?.id === projectId && draft.selectedItem.technologies) {
+                    const index = draft.selectedItem.technologies.findIndex(t => t.id === projectTechnologyId);
+                    if (index !== -1) {
+                        draft.selectedItem.technologies[index] = updatedTechnology;
+                    }
                 }
             }));
         } catch (error) {
             console.error("Error updating technology:", error);
+            set(produce(draft => { draft.error = error.message; }));
         }
     },
 
@@ -512,16 +518,17 @@ const useHierarchyStore = create((set, get) => {
                 method: 'DELETE',
             });
             if (!response.ok) {
-                throw new Error('Failed to remove technology');
+                const errorData = await response.json();
+                throw new Error(errorData.error || 'Failed to remove technology');
             }
-            set(state => ({
-                selectedItem: {
-                    ...state.selectedItem,
-                    technologies: state.selectedItem.technologies.filter(t => t.id !== projectTechnologyId)
+            set(produce(draft => {
+                if (draft.selectedItem?.id === projectId && draft.selectedItem.technologies) {
+                    draft.selectedItem.technologies = draft.selectedItem.technologies.filter(t => t.id !== projectTechnologyId);
                 }
             }));
         } catch (error) {
             console.error("Error removing technology:", error);
+            set(produce(draft => { draft.error = error.message; }));
         }
     },
     };

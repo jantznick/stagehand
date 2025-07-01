@@ -20,6 +20,13 @@ const AddTechnologyForm = ({
     const [query, setQuery] = useState('');
     const [selectedTech, setSelectedTech] = useState(null);
     const [type, setType] = useState(TECHNOLOGY_TYPES[0]);
+    
+    // Update type when selectedTech changes, but allow user to override it
+    useEffect(() => {
+        if (selectedTech && selectedTech.type) {
+            setType(selectedTech.type);
+        }
+    }, [selectedTech]);
     const [searchResults, setSearchResults] = useState([]);
     const [isLoading, setIsLoading] = useState(false);
     const debouncedQuery = useDebounce(query, 300);
@@ -58,7 +65,7 @@ const AddTechnologyForm = ({
             if (techName) {
                 onAddTechnology({ 
                     name: techName, 
-                    type: selectedTech?.type || type, 
+                    type: type, 
                     version: version, 
                     source: 'user-entered'
                 });
@@ -165,18 +172,26 @@ const AddTechnologyForm = ({
                             </Transition>
                         </Combobox>
                     </div>
-                    <select
-                        value={selectedTech ? selectedTech.type : type}
-                        onChange={(e) => setType(e.target.value)}
-                        disabled={!!selectedTech}
-                        className="block basis-1/4 rounded-md border-0 bg-white/5 py-1.5 px-3 text-white shadow-sm ring-1 ring-inset ring-white/10 focus:ring-2 focus:ring-inset focus:ring-indigo-500 sm:text-sm sm:leading-6 disabled:bg-white/10 disabled:cursor-not-allowed"
-                    >
-                        {TECHNOLOGY_TYPES.map((t) => (
-                            <option key={t} value={t} className="bg-gray-800 text-white">
-                                {t}
-                            </option>
-                        ))}
-                    </select>
+                    <div className="basis-1/4 relative">
+                        <select
+                            value={type}
+                            onChange={(e) => setType(e.target.value)}
+                            className={`block w-full rounded-md border-0 bg-white/5 py-1.5 px-3 text-white shadow-sm ring-1 ring-inset ring-white/10 focus:ring-2 focus:ring-inset focus:ring-indigo-500 sm:text-sm sm:leading-6 ${
+                                selectedTech && selectedTech.type !== type ? 'ring-orange-500/50' : ''
+                            }`}
+                        >
+                            {TECHNOLOGY_TYPES.map((t) => (
+                                <option key={t} value={t} className="bg-gray-800 text-white">
+                                    {t}
+                                </option>
+                            ))}
+                        </select>
+                        {selectedTech && selectedTech.type !== type && (
+                            <p className="text-xs text-orange-400 mt-1">
+                                Overriding suggested type: {selectedTech.type}
+                            </p>
+                        )}
+                    </div>
                     <input
                         type="text"
                         name="version"

@@ -79,6 +79,24 @@ enum SecurityToolType {
   APISEC
 }
 
+enum DastScanType {
+  ACTIVE
+  PASSIVE
+  BASELINE
+  FULL
+  CUSTOM
+}
+
+enum ScanStatus {
+  PENDING
+  QUEUED
+  RUNNING
+  COMPLETED
+  FAILED
+  CANCELLED
+  IMPORTED
+}
+
 model User {
   id        String   @id @default(cuid())
   email     String   @unique
@@ -98,6 +116,7 @@ model User {
   contacts                 Contact[]
   scmIntegrations          SCMIntegration[]
   securityToolIntegrations SecurityToolIntegration[]
+  initiatedScans           ScanExecution[]
 }
 
 model Session {
@@ -182,6 +201,11 @@ model Project {
   version          String?
   deploymentStatus DeploymentStatus @default(IN_DEVELOPMENT)
 
+  // --- DAST Scanning Fields ---
+  dastScanEnabled  Boolean? @default(false)
+  lastDastScanDate DateTime?
+  dastScanSettings Json? // Store tool-agnostic scan configuration
+
   /// Link to the source code repository (e.g., GitHub)
   repositoryUrl   String?
   /// Link to the CI/CD pipeline (e.g., Jenkins, GitHub Actions)
@@ -221,7 +245,8 @@ model Project {
   // Flexible JSON object for tool-specific IDs
   toolSpecificIds Json? @default("{}")
 
-  findings Finding[]
+  findings       Finding[]
+  scanExecutions ScanExecution[]
 }
 
 model ProjectRelationship {
@@ -471,9 +496,10 @@ model SecurityToolIntegration {
   directProjectLinks Project[] @relation("DirectProjectSecurityToolIntegrations")
   linkedProjects     Project[] @relation("ProjectSecurityToolLink")
 
-  syncLogs  IntegrationSyncLog[]
-  Session   Session?             @relation(fields: [sessionId], references: [id])
-  sessionId String?
+  syncLogs       IntegrationSyncLog[]
+  scanExecutions ScanExecution[]
+  Session        Session?             @relation(fields: [sessionId], references: [id])
+  sessionId      String?
 }
 
 model IntegrationSyncLog {
@@ -490,16 +516,10 @@ model IntegrationSyncLog {
   securityToolIntegrationId String?
   securityToolIntegration   SecurityToolIntegration? @relation(fields: [securityToolIntegrationId], references: [id], onDelete: Cascade)
 
+  scanExecutions ScanExecution[]
+
   @@index([scmIntegrationId])
   @@index([securityToolIntegrationId])
-}
-
-enum VulnerabilitySource {
-  GITHUB
-  SNYK
-  QUALYS
-  INTERNAL
-  MANUAL
 }
 
 enum FindingStatus {
@@ -514,7 +534,8 @@ model Vulnerability {
   id              String              @id @default(cuid())
   // Canonical ID from the source, e.g., 'CVE-2023-1234' or 'GHSA-...'
   vulnerabilityId String
-  source          VulnerabilitySource
+  source          String              // Descriptive source string like "Stagehand DAST (OWASP ZAP)"
+  type            SecurityToolType?   // DAST, SAST, SCA, APISEC
 
   title       String
   description String  @db.Text
@@ -539,8 +560,11 @@ model Finding {
   project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
 
   vulnerabilityId String
-  source          VulnerabilitySource // To satisfy the compound key of Vulnerability
-  vulnerability   Vulnerability       @relation(fields: [vulnerabilityId, source], references: [vulnerabilityId, source])
+  source          String        // To satisfy the compound key of Vulnerability
+  vulnerability   Vulnerability @relation(fields: [vulnerabilityId, source], references: [vulnerabilityId, source])
+
+  // URL where the vulnerability was found (specific URL or fallback to scan target)
+  url String?
 
   // Source-specific details, e.g., { "dependencyName": "lodash", "filePath": "package-lock.json" }
   metadata Json?
@@ -551,4 +575,65 @@ model Finding {
 
   @@unique([projectId, vulnerabilityId, source])
   @@index([projectId])
+  @@index([url])
+}
+
+model ScanExecution {
+  id        String      @id @default(cuid())
+  projectId String
+  project   Project     @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  // Tool identification
+  provider    String      // "OWASP_ZAP", "BURP_SUITE", etc.
+  toolVersion String?     // Version of the scanning tool used
+
+  // Scan configuration
+  targetUrl String       // The URL that was scanned
+  scanType  DastScanType @default(ACTIVE)
+  status    ScanStatus
+
+  // Timing (optional for imported scans)
+  queuedAt    DateTime? // When scan was queued
+  startedAt   DateTime? // When scan actually started
+  completedAt DateTime? // When scan finished
+  duration    Int?      // Scan duration in seconds
+
+  // Error handling
+  errorMessage String? @db.Text
+  errorCode    String? // Tool-specific error codes
+
+  // Results summary
+  findingsCount Int @default(0)
+  criticalCount Int @default(0)
+  highCount     Int @default(0)
+  mediumCount   Int @default(0)
+  lowCount      Int @default(0)
+  infoCount     Int @default(0)
+
+  // Tool-specific configuration and metadata
+  toolConfig   Json? // Scan parameters (policies, depth, etc.)
+  toolMetadata Json? // Tool-specific data (scan ID, report URLs, etc.)
+
+  // External scan tracking (for future use)
+  externalScanId    String?  // ID from external tool
+  externalReportUrl String?  // Link to external report
+  isExternalScan    Boolean  @default(false) // Whether this was run externally
+
+  // Integration tracking
+  securityToolIntegrationId String?
+  securityToolIntegration   SecurityToolIntegration? @relation(fields: [securityToolIntegrationId], references: [id])
+  syncLogId                 String?
+  syncLog                   IntegrationSyncLog?      @relation(fields: [syncLogId], references: [id])
+
+  // User who initiated (optional for imported scans)
+  initiatedById String?
+  initiatedBy   User?   @relation(fields: [initiatedById], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([projectId])
+  @@index([status])
+  @@index([provider])
+  @@index([targetUrl])
 }

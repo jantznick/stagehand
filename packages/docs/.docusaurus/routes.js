@@ -39,15 +39,15 @@ export default [
   },
   {
     path: '/',
-    component: ComponentCreator('/', '440'),
+    component: ComponentCreator('/', 'bd2'),
     routes: [
       {
         path: '/',
-        component: ComponentCreator('/', '4f4'),
+        component: ComponentCreator('/', '8b2'),
         routes: [
           {
             path: '/',
-            component: ComponentCreator('/', '615'),
+            component: ComponentCreator('/', '5a0'),
             routes: [
               {
                 path: '/api-reference',
@@ -66,6 +66,11 @@ export default [
                 component: ComponentCreator('/api/company', '7b8'),
                 exact: true,
                 sidebar: "docsSidebar"
+              },
+              {
+                path: '/api/dast-scans',
+                component: ComponentCreator('/api/dast-scans', 'e15'),
+                exact: true
               },
               {
                 path: '/api/findings',
@@ -144,6 +149,16 @@ export default [
                 component: ComponentCreator('/backend-architecture', '800'),
                 exact: true,
                 sidebar: "docsSidebar"
+              },
+              {
+                path: '/dast-implementation-changelog',
+                component: ComponentCreator('/dast-implementation-changelog', 'b8d'),
+                exact: true
+              },
+              {
+                path: '/dast-scanning-feature',
+                component: ComponentCreator('/dast-scanning-feature', '831'),
+                exact: true
               },
               {
                 path: '/frontend-architecture',

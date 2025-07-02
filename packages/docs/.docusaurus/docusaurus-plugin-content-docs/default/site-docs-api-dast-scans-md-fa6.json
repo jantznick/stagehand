@@ -1,0 +1,15 @@
+{
+  "id": "api/dast-scans",
+  "title": "DAST Scans API",
+  "description": "Dynamic Application Security Testing (DAST) scanning endpoints for managing automated security scans on web applications.",
+  "source": "@site/docs/api/dast-scans.md",
+  "sourceDirName": "api",
+  "slug": "/api/dast-scans",
+  "permalink": "/api/dast-scans",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/your-org/stagehand/tree/main/packages/docs/docs/api/dast-scans.md",
+  "tags": [],
+  "version": "current",
+  "frontMatter": {}
+}

@@ -64,4 +64,75 @@ Application components are used to render a detailed view of a single software p
 
 *   **Rendered in:** `ApplicationDetails.jsx`.
 *   **Purpose:** A small component intended to display statistics about the linked repository.
-*   **Behavior:** In its current form, it's mostly a placeholder for future functionality like displaying lines of code, primary language, etc. 
+*   **Behavior:** In its current form, it's mostly a placeholder for future functionality like displaying lines of code, primary language, etc.
+
+### `DastScanManager.jsx`
+
+*   **Rendered in:** `ApplicationDetails.jsx` (Security tab).
+*   **Purpose:** Manages DAST (Dynamic Application Security Testing) scanning functionality for web applications.
+*   **Key Features:**
+    *   **Scan Launching**: "Launch DAST Scan" button opens customization modal
+    *   **Real-time Monitoring**: Live progress updates with polling every 5 seconds
+    *   **Scan History**: Displays 5 most recent scans with "View All" modal
+    *   **Cancellation**: Cancel running scans with confirmation
+*   **Behavior:**
+    *   Integrates with project security findings workflow
+    *   Automatically refreshes findings when scans complete
+    *   Shows real-time progress bars and status indicators
+    *   Handles scan lifecycle from launch to completion
+*   **State Management:** Uses local state for UI and integrates with project/finding stores
+
+#### DAST Scan Customization
+
+The scan launch modal provides several customization options:
+
+*   **Scan Intensity:**
+    *   `QUICK` (~5-10 minutes): Basic passive scan
+    *   `STANDARD` (~15-30 minutes): Active scan with moderate depth  
+    *   `THOROUGH` (~30+ minutes): Comprehensive scan with deep crawling
+
+*   **Crawl Depth:**
+    *   `SHALLOW` (1-2 levels): Limited site exploration
+    *   `MEDIUM` (3-5 levels): Moderate site coverage
+    *   `DEEP` (unlimited): Complete site discovery
+
+*   **Additional Options:**
+    *   Maximum duration (15 minutes to 2 hours)
+    *   Include subdomains checkbox
+    *   URL confirmation and validation
+
+### `ScanDetailsModal.jsx`
+
+*   **Rendered by:** `DastScanManager.jsx` (when scan row is clicked).
+*   **Purpose:** Displays comprehensive details about a completed or running DAST scan.
+*   **Key Features:**
+    *   **Tabbed Interface**: Overview, Crawled Pages, Findings tabs
+    *   **Scan Overview**: Basic scan information, configuration, and summary
+    *   **Crawled Pages**: All discovered URLs with CSV export functionality
+    *   **Detailed Findings**: Vulnerability information with severity colors, solutions, and references
+*   **Behavior:**
+    *   Fetches detailed scan information via API
+    *   Provides CSV export of crawled pages
+    *   Shows ZAP statistics and scan configuration
+    *   Displays rich vulnerability details with external references
+
+#### Tabs Overview
+
+**Overview Tab:**
+- Scan basic information (status, duration, target URL)
+- Findings summary with severity breakdown
+- Scan configuration details (intensity, depth, duration)
+- Discovery summary (pages crawled, domains found)
+
+**Crawled Pages Tab:**
+- Tabular display of all discovered URLs
+- Columns: URL, Site, Discovery Time, Method, Status Code
+- CSV export functionality with filename: `scan-crawled-pages-{scanId}.csv`
+- Pagination for large result sets
+
+**Findings Tab:**
+- Detailed vulnerability information
+- Severity-based color coding (Critical: red, High: orange, etc.)
+- Solution and remediation guidance
+- External references and OWASP links
+- Technical details (CWE ID, WASC ID, confidence level) 

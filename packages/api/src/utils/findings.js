@@ -99,7 +99,7 @@ export const syncGitHubFindings = async (integrationId, projectIds) => {
             where: {
               vulnerabilityId_source: {
                 vulnerabilityId: security_advisory.ghsa_id,
-                source: 'GITHUB',
+                source: 'GitHub Dependabot',
               },
             },
             update: {
@@ -107,10 +107,12 @@ export const syncGitHubFindings = async (integrationId, projectIds) => {
               description: security_advisory.description,
               severity: security_advisory.severity.toUpperCase(),
               references: { urls: [html_url, ...security_advisory.references.map(ref => ref.url)] },
+              type: 'SCA',
             },
             create: {
               vulnerabilityId: security_advisory.ghsa_id,
-              source: 'GITHUB',
+              source: 'GitHub Dependabot',
+              type: 'SCA',
               title: security_advisory.summary,
               description: security_advisory.description,
               severity: security_advisory.severity.toUpperCase(),
@@ -152,7 +154,7 @@ export const syncGitHubFindings = async (integrationId, projectIds) => {
             await prisma.finding.create({
               data: {
                 project: { connect: { id: projectId } },
-                vulnerability: { connect: { vulnerabilityId_source: { vulnerabilityId: vulnerability.vulnerabilityId, source: 'GITHUB' } } },
+                vulnerability: { connect: { vulnerabilityId_source: { vulnerabilityId: vulnerability.vulnerabilityId, source: 'GitHub Dependabot' } } },
                 status: state === 'fixed' ? 'RESOLVED' : 'NEW',
                 firstSeenAt: created_at,
                 lastSeenAt: new Date(),
@@ -270,17 +272,19 @@ export const syncSnykFindings = async (integrationId, projectIds) => {
 
         // 1. Upsert Vulnerability
         const vulnerability = await prisma.vulnerability.upsert({
-            where: { vulnerabilityId_source: { vulnerabilityId: snykIssueId, source: 'SNYK' } },
+            where: { vulnerabilityId_source: { vulnerabilityId: snykIssueId, source: 'Snyk' } },
             update: {
                 title: issueData.title,
                 description: issueData.description,
                 severity: issueData.severity.toUpperCase(),
                 remediation: issueData.remediation,
                 references: { urls: (issueData.references || []).map(ref => ref.url) },
+                type: 'SCA',
             },
             create: {
                 vulnerabilityId: snykIssueId,
-                source: 'SNYK',
+                source: 'Snyk',
+                type: 'SCA',
                 title: issueData.title,
                 description: issueData.description,
                 severity: issueData.severity.toUpperCase(),
@@ -318,7 +322,7 @@ export const syncSnykFindings = async (integrationId, projectIds) => {
           await prisma.finding.create({
             data: {
               project: { connect: { id: projectId } },
-              vulnerability: { connect: { vulnerabilityId_source: { vulnerabilityId: vulnerability.vulnerabilityId, source: 'SNYK' } } },
+              vulnerability: { connect: { vulnerabilityId_source: { vulnerabilityId: vulnerability.vulnerabilityId, source: 'Snyk' } } },
               status: isFixed ? 'RESOLVED' : 'NEW',
               firstSeenAt: introducedDate,
               lastSeenAt: new Date(),

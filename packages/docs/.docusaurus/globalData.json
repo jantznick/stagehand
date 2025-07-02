@@ -26,6 +26,10 @@
               "sidebar": "docsSidebar"
             },
             {
+              "id": "api/dast-scans",
+              "path": "/api/dast-scans"
+            },
+            {
               "id": "api/findings",
               "path": "/api/findings",
               "sidebar": "docsSidebar"
@@ -89,6 +93,14 @@
               "id": "backend-architecture",
               "path": "/backend-architecture",
               "sidebar": "docsSidebar"
+            },
+            {
+              "id": "dast-implementation-changelog",
+              "path": "/dast-implementation-changelog"
+            },
+            {
+              "id": "dast-scanning-feature",
+              "path": "/dast-scanning-feature"
             },
             {
               "id": "frontend-architecture",

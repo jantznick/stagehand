@@ -4,7 +4,12 @@ This document provides a breakdown of the components used for displaying securit
 
 ## Overview
 
-The findings components are responsible for rendering the security findings that have been imported from integrated tools like Snyk. They provide both a high-level visual summary and a detailed, filterable list of all vulnerabilities for a given application.
+The findings components are responsible for rendering security findings from multiple sources:
+- **DAST Scanning**: Web application vulnerabilities discovered by OWASP ZAP
+- **SAST/SCA Tools**: Code vulnerabilities from Snyk, GitHub Dependabot, etc.
+- **Manual Imports**: Manually imported vulnerability data
+
+They provide both a high-level visual summary and a detailed, filterable list of all vulnerabilities for a given application, with special handling for URL-based findings from DAST scans.
 
 ---
 
@@ -16,9 +21,28 @@ The findings components are responsible for rendering the security findings that
 *   **Purpose:** The primary component for displaying a comprehensive, filterable list of all security findings for the current project.
 *   **Behavior:**
     *   It uses the `useFindingStore` to fetch all findings for the project (`fetchFindings`).
-    *   It renders the findings in a table, with columns for severity, vulnerability name, file path, etc.
+    *   It renders the findings in a table with columns for:
+        *   **Severity**: Color-coded badges (Critical, High, Medium, Low, Info)
+        *   **Vulnerability Name**: Finding title/name
+        *   **Source**: Finding source (e.g., "Stagehand DAST (OWASP ZAP)", "GitHub Dependabot")
+        *   **URL**: For DAST findings, shows the specific URL where vulnerability was found
+        *   **File Path**: For code-based findings (SAST/SCA), shows affected file path
+        *   **Status**: Finding triage status (NEW, TRIAGED, etc.)
+        *   **Last Seen**: When finding was last detected
     *   It includes controls for filtering the list by severity (`Critical`, `High`, etc.) and for searching by name.
+    *   It automatically refreshes when new DAST scans complete.
     *   When a user clicks on a finding in the table, it opens the `<FindingDetailsModal />` to show more information. This is managed by the `useUIStore`.
+
+#### URL Display Logic
+
+The FindingList component intelligently displays location information based on finding source:
+
+*   **DAST Findings**: Shows the specific URL where the vulnerability was discovered
+    *   Example: `https://example.com/login?param=vulnerable`
+    *   Links are clickable to open the vulnerable page in a new tab
+*   **Code-based Findings**: Shows file path information from metadata
+    *   Example: `package.json` or `src/components/Login.jsx`
+    *   No URL column displayed for these findings
 
 ### `FindingsSeverityChart.jsx`
 

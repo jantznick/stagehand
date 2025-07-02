@@ -30,6 +30,14 @@ const sidebars = {
     },
     {
       type: 'category',
+      label: 'Features',
+      items: [
+        'dast-scanning-feature',
+        'dast-implementation-changelog',
+      ],
+    },
+    {
+      type: 'category',
       label: 'API Documentation',
       items: [
         {
@@ -53,6 +61,7 @@ const sidebars = {
             'api/integrations',
             'api/security-tools',
             'api/findings',
+            'api/dast-scans',
             'api/hierarchy',
             'api/relationships',
             'api/technologies',

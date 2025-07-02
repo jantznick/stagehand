@@ -45,6 +45,23 @@ const FindingList = (props) => {
     }
   }, [props.project.id, fetchFindings]);
 
+  // Helper function to determine if a finding is DAST-based
+  const isDastFinding = (finding) => {
+    return finding?.source?.includes('DAST') || finding?.source?.includes('ZAP');
+  };
+
+  // Helper function to get location information for different finding types
+  const getLocationInfo = (finding) => {
+    if (isDastFinding(finding)) {
+      return finding.url || 'N/A';
+    }
+    // For code-based findings (Snyk, GitHub), show file/dependency info
+    return finding.metadata?.manifestPath || 
+           finding.metadata?.dependencyName || 
+           finding.metadata?.filePath || 
+           'N/A';
+  };
+
   const columns = useMemo(() => [
     {
       id: 'vulnerability.title',
@@ -73,16 +90,82 @@ const FindingList = (props) => {
       cell: info => <span className="text-sm text-gray-300 capitalize">{info.getValue().toLowerCase().replace('_', ' ')}</span>,
     },
     {
-      id: 'metadata.dependencyName',
-      accessorKey: 'metadata.dependencyName',
-      header: 'Dependency',
-      cell: info => <span className="text-sm text-gray-400 font-mono truncate" title={info.getValue()}>{info.getValue() || 'N/A'}</span>,
+      id: 'location',
+      accessorFn: row => getLocationInfo(row),
+      header: 'Location',
+      cell: ({ row, getValue }) => {
+        const value = getValue();
+        const finding = row.original;
+        
+        if (isDastFinding(finding) && finding.url && finding.url !== 'N/A') {
+          return (
+            <a
+              href={finding.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-sm text-blue-400 font-mono truncate hover:text-blue-300 hover:underline transition-colors"
+              title={value}
+            >
+              {value}
+            </a>
+          );
+        }
+        
+        return (
+          <span className="text-sm text-gray-400 font-mono truncate" title={value}>
+            {value}
+          </span>
+        );
+      },
     },
+    {
+      id: 'dependency',
+      accessorFn: row => row.metadata?.dependencyName,
+      header: 'Dependency',
+      cell: ({ getValue, row }) => {
+        const dependencyName = getValue();
+        const finding = row.original;
+        
+        // Only show dependency column for non-DAST findings
+        if (isDastFinding(finding)) {
+          return <span className="text-sm text-gray-500">-</span>;
+        }
+        
+        return (
+          <span className="text-sm text-gray-400 font-mono truncate" title={dependencyName}>
+            {dependencyName || 'N/A'}
+          </span>
+        );
+      },
+    },
+	{
+		id: 'url',
+		accessorKey: 'url',
+		header: 'URL',
+		cell: info => <span className="text-sm text-gray-400 font-mono truncate" title={info.getValue()}>{info.getValue() || 'N/A'}</span>,
+	},
     {
         id: 'source',
         accessorKey: 'source',
         header: 'Source',
-        cell: info => <span className="text-sm text-gray-400 capitalize">{info.getValue().toLowerCase()}</span>
+        cell: info => (
+          <span className="text-sm text-gray-400" title={info.getValue()}>
+            {info.getValue()}
+          </span>
+        )
+    },
+    {
+      id: 'lastSeenAt',
+      accessorKey: 'lastSeenAt',
+      header: 'Last Seen',
+      cell: info => {
+        const date = new Date(info.getValue());
+        return (
+          <span className="text-sm text-gray-400">
+            {date.toLocaleDateString()}
+          </span>
+        );
+      },
     }
   ], []);
 
@@ -115,7 +198,7 @@ const FindingList = (props) => {
       <div className="text-center py-10 px-4 border-2 border-dashed border-gray-700 rounded-lg">
         <h3 className="text-lg font-medium text-white">No Findings Yet</h3>
         <p className="text-sm text-gray-400 mt-2 max-w-md mx-auto">
-            Link this project to a repository and run a sync to pull in vulnerability data from sources like Dependabot or Snyk.
+            Launch a DAST scan from the Security tab, or link this project to a repository and run a sync to pull in vulnerability data from sources like Dependabot or Snyk.
         </p>
       </div>
     );

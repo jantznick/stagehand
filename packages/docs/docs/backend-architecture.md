@@ -11,6 +11,7 @@ The backend is a Node.js application built with the following core technologies:
 *   **ORM:** [Prisma](https://www.prisma.io/) for database access and migrations.
 *   **Authentication:** [Passport.js](http://www.passportjs.org/) for handling authentication strategies, primarily OIDC.
 *   **Sessions:** [express-session](https://www.npmjs.com/package/express-session) with [PrismaSessionStore](https://www.npmjs.com/package/@quixo3/prisma-session-store) for persistent, database-backed sessions.
+*   **DAST Scanning:** [OWASP ZAP](https://zaproxy.org/) Docker container integration for automated web application security testing.
 
 ## Directory Structure
 
@@ -26,7 +27,14 @@ packages/api/
     ├── index.js        # Application entry point, middleware setup, and server start.
     ├── middleware/     # Custom Express middleware (e.g., auth checks).
     ├── routes/         # API route definitions, one file per resource.
-    └── utils/          # Helper functions, business logic, and integrations (e.g., crypto, passport).
+    └── utils/          # Helper functions, business logic, and integrations:
+        ├── crypto.js         # Encryption/decryption utilities
+        ├── passport.js       # Authentication configuration
+        ├── findings.js       # GitHub/Snyk findings synchronization
+        ├── dastService.js    # DAST scanner factory and service
+        ├── dastScannerBase.js # Abstract base class for DAST scanners
+        ├── zapScanner.js     # OWASP ZAP scanner implementation
+        └── scanProcessor.js  # Background scan processing and results
 ```
 
 ---
@@ -74,4 +82,36 @@ packages/api/
 
 *   **Sensitive Data:** Any sensitive information stored in the database that is not required for querying (e.g., external API keys, secrets) **must** be encrypted.
 *   **Encryption Utility:** Use the `encrypt` and `decrypt` functions from `src/utils/crypto.js`.
-*   **Encryption Key:** This system relies on the `ENCRYPTION_KEY` environment variable. This key must be a 64-character hex string and must be kept secret. Losing or changing this key will result in data loss. 
+*   **Encryption Key:** This system relies on the `ENCRYPTION_KEY` environment variable. This key must be a 64-character hex string and must be kept secret. Losing or changing this key will result in data loss.
+
+### 6. DAST Scanning Architecture
+
+The DAST (Dynamic Application Security Testing) scanning feature provides automated web application security testing using OWASP ZAP.
+
+#### Components
+
+*   **Scanner Abstraction Layer (`dastScannerBase.js`):** Abstract base class defining the interface for DAST scanners, enabling support for multiple scanning tools.
+*   **ZAP Scanner Implementation (`zapScanner.js`):** Concrete implementation for OWASP ZAP integration with comprehensive error handling and retry logic.
+*   **Service Factory (`dastService.js`):** Factory pattern for creating scanner instances based on provider type.
+*   **Background Processing (`scanProcessor.js`):** Handles scan lifecycle management, results processing, and findings integration.
+
+#### Database Models
+
+*   **`ScanExecution`:** Tracks scan lifecycle with status, progress, configuration, and results.
+*   **Enhanced `Finding` Model:** Includes URL field for DAST findings to track where vulnerabilities were discovered.
+*   **Enums:** `DastScanType` and `ScanStatus` for type safety and validation.
+
+#### Integration Points
+
+*   **Docker Infrastructure:** ZAP runs in isolated container with persistent sessions and data volumes.
+*   **Background Jobs:** Scans run asynchronously with real-time status polling.
+*   **Findings Integration:** Results automatically create Vulnerability and Finding records.
+*   **Permissions:** Integrates with existing role-based access control.
+
+#### API Endpoints
+
+*   **`/api/projects/:id/dast/*`:** RESTful endpoints for scan management (launch, status, results, cancel).
+*   **Real-time Updates:** Polling-based progress monitoring with intelligent fallback.
+*   **Detailed Reporting:** Comprehensive scan information including crawled pages and ZAP statistics.
+
+For detailed DAST scanning documentation, see [DAST Scanning Feature](../dast-scanning-feature.md) and [DAST Scans API](../api/dast-scans.md). 

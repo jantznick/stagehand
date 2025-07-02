@@ -32,7 +32,32 @@ const FindingDetailsModal = ({ finding, onClose }) => {
     return null;
   }
 
-  const { vulnerability, status, source, metadata } = finding;
+  const { vulnerability, status, source, metadata, url } = finding;
+
+  // Helper function to determine if this is a DAST finding
+  const isDastFinding = source?.includes('DAST') || source?.includes('ZAP');
+
+  // Helper function to get relevant metadata for display
+  const getMetadataForDisplay = () => {
+    if (isDastFinding) {
+      return {
+        url: url || 'N/A',
+        confidence: metadata?.confidence || 'N/A',
+        param: metadata?.param || 'N/A',
+        attack: metadata?.attack || 'N/A',
+        evidence: metadata?.evidence || 'N/A'
+      };
+    } else {
+      return {
+        dependencyName: metadata?.dependencyName || 'N/A',
+        ecosystem: metadata?.ecosystem || 'N/A',
+        manifestPath: metadata?.manifestPath || 'N/A',
+        version: metadata?.version || 'N/A'
+      };
+    }
+  };
+
+  const displayMetadata = getMetadataForDisplay();
 
   const MarkdownWrapper = ({ content }) => (
     <div className="prose prose-sm prose-invert text-gray-300
@@ -70,13 +95,81 @@ const FindingDetailsModal = ({ finding, onClose }) => {
             <div className="divide-y divide-white/10">
                 <DetailItem label="Severity" value={<SeverityBadge severity={vulnerability.severity} />} />
                 <DetailItem label="Status" value={<span className="capitalize">{status.toLowerCase().replace('_', ' ')}</span>} />
-                <DetailItem label="Source" value={<span className="capitalize">{source.toLowerCase()}</span>} />
-                <DetailItem label="Dependency" value={<span className="font-mono">{metadata?.dependencyName || 'N/A'}</span>} />
+                <DetailItem label="Source" value={<span>{source}</span>} />
+                
+                {isDastFinding ? (
+                  // DAST-specific metadata
+                  <>
+                    <DetailItem 
+                      label="URL" 
+                      value={
+                        url && url !== 'N/A' ? (
+                          <a 
+                            href={url} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="font-mono text-blue-400 hover:text-blue-300 hover:underline transition-colors"
+                          >
+                            {url}
+                          </a>
+                        ) : (
+                          <span className="font-mono">N/A</span>
+                        )
+                      } 
+                    />
+                    <DetailItem label="Confidence" value={<span className="font-mono">{displayMetadata.confidence}</span>} />
+                    {displayMetadata.param !== 'N/A' && (
+                      <DetailItem label="Parameter" value={<span className="font-mono">{displayMetadata.param}</span>} />
+                    )}
+                    {displayMetadata.attack !== 'N/A' && (
+                      <DetailItem label="Attack" value={<span className="font-mono break-all">{displayMetadata.attack}</span>} />
+                    )}
+                    {displayMetadata.evidence !== 'N/A' && (
+                      <DetailItem label="Evidence" value={<span className="font-mono break-all">{displayMetadata.evidence}</span>} />
+                    )}
+                  </>
+                ) : (
+                  // Code-based finding metadata (Snyk, GitHub)
+                  <>
+                    <DetailItem label="Dependency" value={<span className="font-mono">{displayMetadata.dependencyName}</span>} />
+                    {displayMetadata.ecosystem !== 'N/A' && (
+                      <DetailItem label="Ecosystem" value={<span className="font-mono">{displayMetadata.ecosystem}</span>} />
+                    )}
+                    {displayMetadata.manifestPath !== 'N/A' && (
+                      <DetailItem label="Manifest Path" value={<span className="font-mono">{displayMetadata.manifestPath}</span>} />
+                    )}
+                    {displayMetadata.version !== 'N/A' && (
+                      <DetailItem label="Version" value={<span className="font-mono">{displayMetadata.version}</span>} />
+                    )}
+                  </>
+                )}
+                
                 {vulnerability.remediation && (
                     <div className="py-3 sm:grid sm:grid-cols-3 sm:gap-4">
                         <dt className="text-sm font-medium text-gray-400">Remediation</dt>
                         <dd className="mt-1 text-sm text-white sm:mt-0 sm:col-span-2">
                              <MarkdownWrapper content={vulnerability.remediation} />
+                        </dd>
+                    </div>
+                )}
+                
+                {vulnerability.references?.urls && vulnerability.references.urls.length > 0 && (
+                    <div className="py-3 sm:grid sm:grid-cols-3 sm:gap-4">
+                        <dt className="text-sm font-medium text-gray-400">References</dt>
+                        <dd className="mt-1 text-sm text-white sm:mt-0 sm:col-span-2">
+                            <div className="space-y-1">
+                                {vulnerability.references.urls.map((url, index) => (
+                                    <a 
+                                        key={index}
+                                        href={url} 
+                                        target="_blank" 
+                                        rel="noopener noreferrer"
+                                        className="block text-blue-400 hover:text-blue-300 hover:underline transition-colors break-all"
+                                    >
+                                        {url}
+                                    </a>
+                                ))}
+                            </div>
                         </dd>
                     </div>
                 )}

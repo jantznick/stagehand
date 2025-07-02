@@ -12,6 +12,7 @@ import LinkSecurityToolControl from './LinkSecurityToolControl';
 import RepoStats from './RepoStats';
 import FindingList from '../findings/FindingList';
 import FindingsSeverityChart from '../findings/FindingsSeverityChart';
+import DastScanManager from './DastScanManager';
 
 const TABS = ['Details', 'Security', 'Architecture', 'Contacts', 'Technologies'];
 
@@ -352,29 +353,35 @@ const ApplicationDetails = ({ project }) => {
 				)}
 
 				{activeTab === 'Security' && (
-					<div className="space-y-6">
-						<div className="flex justify-between items-center">
-							<div>
-								<h4 className="text-lg font-medium text-white">Security Posture</h4>
-								<p className="text-sm text-gray-400">Overview of findings from integrated security tools.</p>
+					<div className="space-y-8">
+						{/* DAST Scanning Section */}
+						<DastScanManager project={project} />
+
+						{/* Existing Security Findings Section */}
+						<div className="space-y-6">
+							<div className="flex justify-between items-center">
+								<div>
+									<h4 className="text-lg font-medium text-white">Security Findings</h4>
+									<p className="text-sm text-gray-400">Overview of findings from integrated security tools.</p>
+								</div>
+								<div className="flex items-center gap-4">
+									<button
+										onClick={handleSync}
+										disabled={isFindingSyncing || isSecuritySyncing}
+										className="px-4 py-2 text-sm font-bold text-white bg-blue-600 rounded-md hover:bg-blue-700 disabled:bg-blue-400 disabled:cursor-not-allowed"
+									>
+										{isFindingSyncing || isSecuritySyncing ? 'Syncing...' : 'Sync Findings'}
+									</button>
+								</div>
 							</div>
-							<div className="flex items-center gap-4">
-								<button
-									onClick={handleSync}
-									disabled={isFindingSyncing || isSecuritySyncing}
-									className="px-4 py-2 text-sm font-bold text-white bg-blue-600 rounded-md hover:bg-blue-700 disabled:bg-blue-400 disabled:cursor-not-allowed"
-								>
-									{isFindingSyncing || isSecuritySyncing ? 'Syncing...' : 'Sync Findings'}
-								</button>
-							</div>
+							{syncError && (
+								<div className="p-3 my-2 text-sm text-red-200 bg-red-800/50 rounded-md text-center">
+									{syncError}
+								</div>
+							)}
+							<FindingsSeverityChart project={project} />
+							<FindingList project={project} />
 						</div>
-						{syncError && (
-							<div className="p-3 my-2 text-sm text-red-200 bg-red-800/50 rounded-md text-center">
-								{syncError}
-							</div>
-						)}
-						<FindingsSeverityChart project={project} />
-						<FindingList project={project} />
 					</div>
 				)}
 

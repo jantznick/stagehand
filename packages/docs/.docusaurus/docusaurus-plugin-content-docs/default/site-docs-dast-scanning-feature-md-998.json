@@ -1,0 +1,15 @@
+{
+  "id": "dast-scanning-feature",
+  "title": "DAST Scanning Feature",
+  "description": "Overview",
+  "source": "@site/docs/dast-scanning-feature.md",
+  "sourceDirName": ".",
+  "slug": "/dast-scanning-feature",
+  "permalink": "/dast-scanning-feature",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/your-org/stagehand/tree/main/packages/docs/docs/dast-scanning-feature.md",
+  "tags": [],
+  "version": "current",
+  "frontMatter": {}
+}

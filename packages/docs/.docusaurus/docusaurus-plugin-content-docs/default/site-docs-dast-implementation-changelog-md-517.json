@@ -1,0 +1,15 @@
+{
+  "id": "dast-implementation-changelog",
+  "title": "DAST Scanning Implementation Changelog",
+  "description": "This document provides a comprehensive summary of all changes made during the implementation of the DAST (Dynamic Application Security Testing) scanning feature.",
+  "source": "@site/docs/dast-implementation-changelog.md",
+  "sourceDirName": ".",
+  "slug": "/dast-implementation-changelog",
+  "permalink": "/dast-implementation-changelog",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/your-org/stagehand/tree/main/packages/docs/docs/dast-implementation-changelog.md",
+  "tags": [],
+  "version": "current",
+  "frontMatter": {}
+}

@@ -26,7 +26,10 @@ CREATE TYPE "SCMProvider" AS ENUM ('GITHUB', 'BITBUCKET', 'AZURE_DEVOPS');
 CREATE TYPE "SecurityToolType" AS ENUM ('SAST', 'DAST', 'SCA', 'APISEC');
 
 -- CreateEnum
-CREATE TYPE "VulnerabilitySource" AS ENUM ('GITHUB', 'SNYK', 'QUALYS', 'INTERNAL', 'MANUAL');
+CREATE TYPE "DastScanType" AS ENUM ('ACTIVE', 'PASSIVE', 'BASELINE', 'FULL', 'CUSTOM');
+
+-- CreateEnum
+CREATE TYPE "ScanStatus" AS ENUM ('PENDING', 'QUEUED', 'RUNNING', 'COMPLETED', 'FAILED', 'CANCELLED', 'IMPORTED');
 
 -- CreateEnum
 CREATE TYPE "FindingStatus" AS ENUM ('NEW', 'TRIAGED', 'IN_PROGRESS', 'RESOLVED', 'IGNORED');
@@ -105,6 +108,9 @@ CREATE TABLE "Project" (
     "applicationUrl" TEXT,
     "version" TEXT,
     "deploymentStatus" "DeploymentStatus" NOT NULL DEFAULT 'IN_DEVELOPMENT',
+    "dastScanEnabled" BOOLEAN DEFAULT false,
+    "lastDastScanDate" TIMESTAMP(3),
+    "dastScanSettings" JSONB,
     "repositoryUrl" TEXT,
     "ciCdPipelineUrl" TEXT,
     "lastScanDate" TIMESTAMP(3),
@@ -332,7 +338,8 @@ CREATE TABLE "IntegrationSyncLog" (
 CREATE TABLE "Vulnerability" (
     "id" TEXT NOT NULL,
     "vulnerabilityId" TEXT NOT NULL,
-    "source" "VulnerabilitySource" NOT NULL,
+    "source" TEXT NOT NULL,
+    "type" "SecurityToolType",
     "title" TEXT NOT NULL,
     "description" TEXT NOT NULL,
     "severity" TEXT NOT NULL,
@@ -351,13 +358,48 @@ CREATE TABLE "Finding" (
     "status" "FindingStatus" NOT NULL DEFAULT 'NEW',
     "projectId" TEXT NOT NULL,
     "vulnerabilityId" TEXT NOT NULL,
-    "source" "VulnerabilitySource" NOT NULL,
+    "source" TEXT NOT NULL,
     "metadata" JSONB,
     "firstSeenAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "lastSeenAt" TIMESTAMP(3) NOT NULL,
     "resolvedAt" TIMESTAMP(3),
 
     CONSTRAINT "Finding_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "ScanExecution" (
+    "id" TEXT NOT NULL,
+    "projectId" TEXT NOT NULL,
+    "provider" TEXT NOT NULL,
+    "toolVersion" TEXT,
+    "targetUrl" TEXT NOT NULL,
+    "scanType" "DastScanType" NOT NULL DEFAULT 'ACTIVE',
+    "status" "ScanStatus" NOT NULL,
+    "queuedAt" TIMESTAMP(3),
+    "startedAt" TIMESTAMP(3),
+    "completedAt" TIMESTAMP(3),
+    "duration" INTEGER,
+    "errorMessage" TEXT,
+    "errorCode" TEXT,
+    "findingsCount" INTEGER NOT NULL DEFAULT 0,
+    "criticalCount" INTEGER NOT NULL DEFAULT 0,
+    "highCount" INTEGER NOT NULL DEFAULT 0,
+    "mediumCount" INTEGER NOT NULL DEFAULT 0,
+    "lowCount" INTEGER NOT NULL DEFAULT 0,
+    "infoCount" INTEGER NOT NULL DEFAULT 0,
+    "toolConfig" JSONB,
+    "toolMetadata" JSONB,
+    "externalScanId" TEXT,
+    "externalReportUrl" TEXT,
+    "isExternalScan" BOOLEAN NOT NULL DEFAULT false,
+    "securityToolIntegrationId" TEXT,
+    "syncLogId" TEXT,
+    "initiatedById" TEXT,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "ScanExecution_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -457,6 +499,18 @@ CREATE INDEX "Finding_projectId_idx" ON "Finding"("projectId");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "Finding_projectId_vulnerabilityId_source_key" ON "Finding"("projectId", "vulnerabilityId", "source");
+
+-- CreateIndex
+CREATE INDEX "ScanExecution_projectId_idx" ON "ScanExecution"("projectId");
+
+-- CreateIndex
+CREATE INDEX "ScanExecution_status_idx" ON "ScanExecution"("status");
+
+-- CreateIndex
+CREATE INDEX "ScanExecution_provider_idx" ON "ScanExecution"("provider");
+
+-- CreateIndex
+CREATE INDEX "ScanExecution_targetUrl_idx" ON "ScanExecution"("targetUrl");
 
 -- CreateIndex
 CREATE INDEX "_DirectProjectSecurityToolIntegrations_B_index" ON "_DirectProjectSecurityToolIntegrations"("B");
@@ -586,6 +640,18 @@ ALTER TABLE "Finding" ADD CONSTRAINT "Finding_projectId_fkey" FOREIGN KEY ("proj
 
 -- AddForeignKey
 ALTER TABLE "Finding" ADD CONSTRAINT "Finding_vulnerabilityId_source_fkey" FOREIGN KEY ("vulnerabilityId", "source") REFERENCES "Vulnerability"("vulnerabilityId", "source") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "ScanExecution" ADD CONSTRAINT "ScanExecution_projectId_fkey" FOREIGN KEY ("projectId") REFERENCES "Project"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "ScanExecution" ADD CONSTRAINT "ScanExecution_securityToolIntegrationId_fkey" FOREIGN KEY ("securityToolIntegrationId") REFERENCES "SecurityToolIntegration"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "ScanExecution" ADD CONSTRAINT "ScanExecution_syncLogId_fkey" FOREIGN KEY ("syncLogId") REFERENCES "IntegrationSyncLog"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "ScanExecution" ADD CONSTRAINT "ScanExecution_initiatedById_fkey" FOREIGN KEY ("initiatedById") REFERENCES "User"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "_DirectProjectSecurityToolIntegrations" ADD CONSTRAINT "_DirectProjectSecurityToolIntegrations_A_fkey" FOREIGN KEY ("A") REFERENCES "Project"("id") ON DELETE CASCADE ON UPDATE CASCADE;

@@ -16,11 +16,11 @@ export default function ConfirmationModal({
 
   return (
     <div
-      className="fixed inset-0 bg-black/75 backdrop-blur-sm flex justify-center items-center z-50"
+      className="fixed inset-0 bg-black/75 max-h-screen backdrop-blur-sm flex justify-center items-center z-50"
       aria-modal="true"
       role="dialog"
     >
-      <div className="bg-[var(--prussian-blue)] rounded-xl shadow-xl p-6 border border-white/10 w-full max-w-md">
+      <div className="bg-[var(--prussian-blue)] max-h-screen overflow-scroll rounded-xl shadow-xl p-6 border border-white/10 w-full max-w-md">
         <h3 className="text-lg font-bold text-white mb-4">{title}</h3>
         <p className="text-sm text-white/70 mb-6">{message}</p>
         <div className="flex justify-end gap-4">

@@ -54,12 +54,51 @@ export const processDastScan = async (scanExecutionId) => {
       }
     });
 
-    // Wait fixed time for scan to complete (ZAP scans are typically quick)
-    console.log(`Waiting 60 seconds for ZAP scan to complete...`);
-    await new Promise(resolve => setTimeout(resolve, 60000));
+    // Poll ZAP every 10 seconds and update cache with progress
+    console.log(`Starting polling for ZAP scan ${scanResult.scanId}...`);
+    let isComplete = false;
+    let scanResults = null;
     
-    // Get scan results regardless of polling status
-    const scanResults = await scanner.getScanResults(scanResult.scanId, scanExecution.targetUrl);
+    while (!isComplete) {
+      try {
+        // Get current scan status from ZAP
+        const statusCheck = await scanner.getScanStatus(scanResult.scanId);
+        
+        // Update cache with current progress
+        const progressData = {
+          scanId: scanExecutionId,
+          status: statusCheck.status,
+          progress: statusCheck.progress,
+          isActive: !statusCheck.isComplete
+        };
+        
+        // Import progressCache here since we need it
+        const { progressCache } = await import('./progressCache.js');
+        progressCache.set(scanExecutionId, progressData);
+        
+        console.log(`Scan ${scanExecutionId} progress: ${statusCheck.progress}%`);
+        
+        if (statusCheck.isComplete) {
+          console.log(`Scan ${scanExecutionId} completed, fetching results...`);
+          isComplete = true;
+          scanResults = await scanner.getScanResults(scanResult.scanId, scanExecution.targetUrl);
+        } else {
+          // Wait 10 seconds before next poll
+          await new Promise(resolve => setTimeout(resolve, 5000));
+        }
+        
+      } catch (error) {
+        console.error(`Error polling scan ${scanExecutionId}:`, error);
+        // Wait 10 seconds and try again
+        await new Promise(resolve => setTimeout(resolve, 10000));
+        
+        // After 5 minutes of errors, give up
+        const elapsed = Date.now() - new Date(scanExecution.startedAt).getTime();
+        if (elapsed > 300000) { // 5 minutes
+          throw new Error(`Polling failed for 5 minutes: ${error.message}`);
+        }
+      }
+    }
     
     // Only process findings if we have valid results
     if (scanResults && scanResults.findings && Array.isArray(scanResults.findings)) {

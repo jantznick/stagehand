@@ -91,6 +91,7 @@ import { protect } from '../middleware/authMiddleware.js';
 import { hasPermission } from '../utils/permissions.js';
 import { processDastScan, cancelDastScan, getDastScanStatus } from '../utils/scanProcessor.js';
 import { getSupportedProviders, createDastScanner } from '../utils/dastService.js';
+import { progressCache } from '../utils/progressCache.js';
 
 const prisma = new PrismaClient();
 const router = Router();
@@ -588,6 +589,153 @@ router.get('/:projectId/dast/scans/:scanId/details', async (req, res) => {
   } catch (error) {
     console.error(`Failed to get detailed scan information for ${scanId}:`, error);
     res.status(500).json({ error: 'Failed to retrieve detailed scan information' });
+  }
+});
+
+/**
+ * @openapi
+ * /api/v1/projects/{projectId}/dast/scans/{scanId}/progress:
+ *   get:
+ *     summary: Get DAST scan progress
+ *     description: Get real-time progress information for a running DAST scan
+ *     tags: [DAST Scans]
+ *     security:
+ *       - cookieAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: projectId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Project ID
+ *       - in: path
+ *         name: scanId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Scan execution ID
+ *     responses:
+ *       200:
+ *         description: Scan progress information
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 scanId:
+ *                   type: string
+ *                 status:
+ *                   type: string
+ *                   enum: [PENDING, QUEUED, RUNNING, COMPLETED, FAILED, CANCELLED]
+ *                 progress:
+ *                   type: integer
+ *                   minimum: 0
+ *                   maximum: 100
+ *                 isActive:
+ *                   type: boolean
+ *       403:
+ *         description: Insufficient permissions
+ *       404:
+ *         description: Project or scan not found
+ */
+router.get('/:projectId/dast/scans/:scanId/progress', async (req, res) => {
+  const { projectId, scanId } = req.params;
+
+  try {
+    // Check permissions
+    const canView = await hasPermission(req.user, ['READER', 'EDITOR', 'ADMIN'], 'project', projectId);
+    if (!canView) {
+      return res.status(403).json({ error: 'Insufficient permissions to view scan progress' });
+    }
+
+    // Get scan execution record
+    const scan = await prisma.scanExecution.findUnique({
+      where: { id: scanId }
+    });
+
+    if (!scan || scan.projectId !== projectId) {
+      return res.status(404).json({ error: 'Scan not found for this project' });
+    }
+
+    // If scan is not active, return database status
+    const isActiveStatus = ['PENDING', 'QUEUED', 'RUNNING'].includes(scan.status);
+    if (!isActiveStatus) {
+      return res.json({
+        scanId: scanId,
+        status: scan.status,
+        progress: scan.status === 'COMPLETED' ? 100 : 0,
+        isActive: false
+      });
+    }
+
+    // For PENDING/QUEUED scans, return basic progress without ZAP polling
+    if (scan.status !== 'RUNNING') {
+      return res.json({
+        scanId: scanId,
+        status: scan.status,
+        progress: scan.status === 'PENDING' ? 0 : 5, // Show minimal progress for queued
+        isActive: true
+      });
+    }
+
+    // Check cache first for running scans
+    const cached = progressCache.get(scanId);
+    if (cached) {
+      return res.json(cached);
+    }
+
+    // Get live progress from ZAP
+    try {
+      const scanner = await createDastScanner(scan.provider);
+      const toolScanId = scan.toolMetadata?.zapScanId || scan.toolMetadata?.scanId;
+      
+      if (!toolScanId) {
+        // No ZAP scan ID, return database status
+        const response = {
+          scanId: scanId,
+          status: scan.status,
+          progress: 10, // Show small progress for running scans without ZAP ID
+          isActive: scan.status === 'RUNNING'
+        };
+        progressCache.set(scanId, response);
+        return res.json(response);
+      }
+
+      const zapProgress = await scanner.getProgressOnly(toolScanId);
+      const response = {
+        scanId: scanId,
+        status: zapProgress.status,
+        progress: zapProgress.progress,
+        isActive: zapProgress.isActive
+      };
+
+      // Cache the response
+      progressCache.set(scanId, response);
+      
+      res.json(response);
+
+    } catch (error) {
+      console.error(`Failed to get ZAP progress for scan ${scanId}:`, error);
+      
+      // Return fallback progress on ZAP error
+      const fallbackResponse = {
+        scanId: scanId,
+        status: scan.status,
+        progress: scan.startedAt ? Math.min(90, Math.max(10, 
+          Math.floor((Date.now() - new Date(scan.startedAt).getTime()) / (1000 * 60) * 6)
+        )) : 10,
+        isActive: scan.status === 'RUNNING'
+      };
+
+      // Cache fallback response for shorter time
+      progressCache.set(scanId, fallbackResponse, 1000); // 1 second cache for errors
+      
+      res.json(fallbackResponse);
+    }
+
+  } catch (error) {
+    console.error(`Failed to get scan progress for ${scanId}:`, error);
+    res.status(500).json({ error: 'Failed to retrieve scan progress' });
   }
 });
 

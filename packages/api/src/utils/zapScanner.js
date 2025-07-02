@@ -189,6 +189,33 @@ export class ZapScanner extends DastScannerBase {
   }
 
   /**
+   * Get only progress information for a running scan (lightweight version)
+   * @param {string} scanId - The ZAP scan identifier
+   * @returns {Promise<object>} - Progress information only
+   */
+  async getProgressOnly(scanId) {
+    try {
+      const statusResponse = await this.zapApiRequest('/JSON/ascan/view/status/', {
+        scanId: scanId
+      });
+
+      const progress = parseInt(statusResponse.status) || 0;
+      const isActive = progress < 100;
+
+      return {
+        scanId,
+        progress: progress,
+        isActive,
+        status: isActive ? 'RUNNING' : 'COMPLETED'
+      };
+
+    } catch (error) {
+      console.error(`Failed to get ZAP scan progress for ${scanId}:`, error);
+      throw error;
+    }
+  }
+
+  /**
    * Get the results of a completed scan
    * @param {string} scanId - The ZAP scan identifier
    * @param {string} targetUrl - The target URL that was scanned

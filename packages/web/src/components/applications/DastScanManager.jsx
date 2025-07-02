@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Shield, Play, Clock, CheckCircle, XCircle, AlertTriangle, Info, X, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Shield, Play, AlertTriangle, X, ChevronLeft, ChevronRight } from 'lucide-react';
 import ConfirmationModal from '../ConfirmationModal';
 import ScanDetailsModal from './ScanDetailsModal';
+import ScanRow from './ScanRow';
 import useFindingStore from '../../stores/useFindingStore';
 
 const DastScanManager = ({ project }) => {
@@ -188,24 +189,6 @@ const DastScanManager = ({ project }) => {
 
 
 
-  // Get status icon and color
-  const getStatusDisplay = (status) => {
-    switch (status) {
-      case 'PENDING':
-      case 'QUEUED':
-        return { icon: Clock, color: 'text-yellow-400' };
-      case 'RUNNING':
-        return { icon: Play, color: 'text-blue-400' };
-      case 'COMPLETED':
-        return { icon: CheckCircle, color: 'text-green-400' };
-      case 'FAILED':
-        return { icon: XCircle, color: 'text-red-400' };
-      case 'CANCELLED':
-        return { icon: XCircle, color: 'text-gray-400' };
-      default:
-        return { icon: Info, color: 'text-gray-400' };
-    }
-  };
 
   // Format duration
   const formatDuration = (seconds) => {
@@ -238,6 +221,19 @@ const DastScanManager = ({ project }) => {
     setIncludeSubdomains(false);
     setMaxDuration(30);
     setTargetUrl(project.applicationUrl || '');
+  };
+
+  // Handle scan completion - refresh data when a scan finishes
+  const handleScanComplete = async (scanId) => {
+    console.log(`handleScanComplete called for scan ${scanId}, refreshing data...`);
+    
+    // Refresh scan list (without loading spinner to avoid UI flickering)
+    await fetchScans(false);
+    
+    // Refresh findings to show new vulnerabilities
+    await fetchFindings(project.id);
+    
+    console.log(`Data refresh completed for scan ${scanId}`);
   };
 
   // Initial load and project change
@@ -322,63 +318,18 @@ const DastScanManager = ({ project }) => {
           </div>
         ) : (
           <div className="space-y-3">
-            {scans.map((scan) => {
-              const { icon: StatusIcon, color } = getStatusDisplay(scan.status);
-              
-              return (
-                <div 
-                  key={scan.id} 
-                  className="bg-gray-800 rounded-lg p-4 cursor-pointer hover:bg-gray-700 transition-colors"
-                  onClick={() => openScanDetails(scan.id)}
-                >
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <StatusIcon size={16} className={color} />
-                      <div>
-                        <div className="text-white font-medium">
-                          {scan.targetUrl}
-                        </div>
-                        <div className="text-sm text-gray-400">
-                          Started {formatDate(scan.queuedAt)} by {scan.initiatedBy}
-                        </div>
-                      </div>
-                    </div>
-                    
-                    <div className="flex items-center gap-4">
-                      {/* Status */}
-                      <div className="text-right">
-                        <div className="text-sm text-white">
-                          {scan.status.charAt(0) + scan.status.slice(1).toLowerCase()}
-                        </div>
-                        {scan.duration && (
-                          <div className="text-xs text-gray-400">
-                            Duration: {formatDuration(scan.duration)}
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Findings Summary */}
-                      {scan.status === 'COMPLETED' && scan.findingsCount > 0 && (
-                        <div className="flex gap-2">
-                          {getSeverityBadge(scan.criticalCount, 'Critical', 'bg-red-900 text-red-200')}
-                          {getSeverityBadge(scan.highCount, 'High', 'bg-orange-900 text-orange-200')}
-                          {getSeverityBadge(scan.mediumCount, 'Medium', 'bg-yellow-900 text-yellow-200')}
-                          {getSeverityBadge(scan.lowCount, 'Low', 'bg-blue-900 text-blue-200')}
-                          {getSeverityBadge(scan.infoCount, 'Info', 'bg-gray-900 text-gray-200')}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Error Message */}
-                  {scan.status === 'FAILED' && scan.errorMessage && (
-                    <div className="mt-2 text-sm text-red-300">
-                      Error: {scan.errorMessage}
-                    </div>
-                  )}
-                </div>
-              );
-            })}
+            {scans.map((scan) => (
+              <ScanRow
+                key={scan.id}
+                scan={scan}
+                project={project}
+                onScanClick={openScanDetails}
+                formatDate={formatDate}
+                formatDuration={formatDuration}
+                getSeverityBadge={getSeverityBadge}
+                onScanComplete={handleScanComplete}
+              />
+            ))}
           </div>
         )}
       </div>
@@ -541,63 +492,18 @@ const DastScanManager = ({ project }) => {
                 </div>
               ) : (
                 <div className="space-y-3">
-                  {allScans.map((scan) => {
-                    const { icon: StatusIcon, color } = getStatusDisplay(scan.status);
-                    
-                    return (
-                      <div 
-                        key={scan.id} 
-                        className="bg-gray-800 rounded-lg p-4 cursor-pointer hover:bg-gray-700 transition-colors"
-                        onClick={() => openScanDetails(scan.id)}
-                      >
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-3">
-                            <StatusIcon size={16} className={color} />
-                            <div>
-                              <div className="text-white font-medium">
-                                {scan.targetUrl}
-                              </div>
-                              <div className="text-sm text-gray-400">
-                                Started {formatDate(scan.queuedAt)} by {scan.initiatedBy}
-                              </div>
-                            </div>
-                          </div>
-                          
-                          <div className="flex items-center gap-4">
-                            {/* Status */}
-                            <div className="text-right">
-                              <div className="text-sm text-white">
-                                {scan.status.charAt(0) + scan.status.slice(1).toLowerCase()}
-                              </div>
-                              {scan.duration && (
-                                <div className="text-xs text-gray-400">
-                                  Duration: {formatDuration(scan.duration)}
-                                </div>
-                              )}
-                            </div>
-
-                            {/* Findings Summary */}
-                            {scan.status === 'COMPLETED' && scan.findingsCount > 0 && (
-                              <div className="flex gap-2">
-                                {getSeverityBadge(scan.criticalCount, 'Critical', 'bg-red-900 text-red-200')}
-                                {getSeverityBadge(scan.highCount, 'High', 'bg-orange-900 text-orange-200')}
-                                {getSeverityBadge(scan.mediumCount, 'Medium', 'bg-yellow-900 text-yellow-200')}
-                                {getSeverityBadge(scan.lowCount, 'Low', 'bg-blue-900 text-blue-200')}
-                                {getSeverityBadge(scan.infoCount, 'Info', 'bg-gray-900 text-gray-200')}
-                              </div>
-                            )}
-                          </div>
-                        </div>
-
-                        {/* Error Message */}
-                        {scan.status === 'FAILED' && scan.errorMessage && (
-                          <div className="mt-2 text-sm text-red-300">
-                            Error: {scan.errorMessage}
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })}
+                  {allScans.map((scan) => (
+                    <ScanRow
+                      key={scan.id}
+                      scan={scan}
+                      project={project}
+                      onScanClick={openScanDetails}
+                      formatDate={formatDate}
+                      formatDuration={formatDuration}
+                      getSeverityBadge={getSeverityBadge}
+                      onScanComplete={handleScanComplete}
+                    />
+                  ))}
                 </div>
               )}
             </div>

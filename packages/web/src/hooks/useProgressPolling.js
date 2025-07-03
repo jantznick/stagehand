@@ -11,6 +11,8 @@ import { useState, useEffect, useRef } from 'react';
 const useProgressPolling = (scanId, projectId, isActive, onComplete = null) => {
   const [progress, setProgress] = useState(null);
   const [status, setStatus] = useState(null);
+  const [phase, setPhase] = useState(null);
+  const [message, setMessage] = useState(null);
   const [isPolling, setIsPolling] = useState(false);
   const [hasCompleted, setHasCompleted] = useState(false);
   const intervalRef = useRef(null);
@@ -34,10 +36,13 @@ const useProgressPolling = (scanId, projectId, isActive, onComplete = null) => {
 
       if (response.ok) {
         const data = await response.json();
+        console.log(`Progress API response for scan ${scanId}:`, data);
         
         // Update state with API response
         setProgress(data.progress);
         setStatus(data.status);
+        setPhase(data.phase);
+        setMessage(data.message);
 
         // If scan completed, trigger callback and stop polling
         if (!data.isActive && !hasCompleted && onComplete) {
@@ -90,6 +95,8 @@ const useProgressPolling = (scanId, projectId, isActive, onComplete = null) => {
   return {
     progress,
     status,
+    phase,
+    message,
     isPolling
   };
 };

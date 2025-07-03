@@ -11,5 +11,14 @@
   "editUrl": "https://github.com/your-org/stagehand/tree/main/packages/docs/docs/api/dast-scans.md",
   "tags": [],
   "version": "current",
-  "frontMatter": {}
+  "frontMatter": {},
+  "sidebar": "docsSidebar",
+  "previous": {
+    "title": "API Reference: Findings",
+    "permalink": "/api/findings"
+  },
+  "next": {
+    "title": "API Reference: Hierarchy",
+    "permalink": "/api/hierarchy"
+  }
 }

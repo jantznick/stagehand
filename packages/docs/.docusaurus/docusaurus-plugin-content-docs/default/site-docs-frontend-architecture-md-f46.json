@@ -18,7 +18,7 @@
     "permalink": "/backend-architecture"
   },
   "next": {
-    "title": "API Reference: Authentication",
-    "permalink": "/api/auth"
+    "title": "DAST Scanning Feature",
+    "permalink": "/dast-scanning-feature"
   }
 }

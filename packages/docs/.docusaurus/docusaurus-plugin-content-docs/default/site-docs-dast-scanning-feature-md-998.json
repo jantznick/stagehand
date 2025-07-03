@@ -11,5 +11,14 @@
   "editUrl": "https://github.com/your-org/stagehand/tree/main/packages/docs/docs/dast-scanning-feature.md",
   "tags": [],
   "version": "current",
-  "frontMatter": {}
+  "frontMatter": {},
+  "sidebar": "docsSidebar",
+  "previous": {
+    "title": "Frontend Architecture & Conventions",
+    "permalink": "/frontend-architecture"
+  },
+  "next": {
+    "title": "DAST Scanning Implementation Changelog",
+    "permalink": "/dast-implementation-changelog"
+  }
 }

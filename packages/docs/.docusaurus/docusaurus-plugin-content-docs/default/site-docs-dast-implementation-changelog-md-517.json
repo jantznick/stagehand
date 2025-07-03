@@ -11,5 +11,14 @@
   "editUrl": "https://github.com/your-org/stagehand/tree/main/packages/docs/docs/dast-implementation-changelog.md",
   "tags": [],
   "version": "current",
-  "frontMatter": {}
+  "frontMatter": {},
+  "sidebar": "docsSidebar",
+  "previous": {
+    "title": "DAST Scanning Feature",
+    "permalink": "/dast-scanning-feature"
+  },
+  "next": {
+    "title": "API Reference: Authentication",
+    "permalink": "/api/auth"
+  }
 }

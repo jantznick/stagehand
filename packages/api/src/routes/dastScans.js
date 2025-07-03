@@ -695,19 +695,27 @@ router.get('/:projectId/dast/scans/:scanId/progress', async (req, res) => {
           scanId: scanId,
           status: scan.status,
           progress: 10, // Show small progress for running scans without ZAP ID
-          isActive: scan.status === 'RUNNING'
+          isActive: scan.status === 'RUNNING',
+          phase: scan.status === 'RUNNING' ? 'scanning' : null,
+          message: scan.status === 'RUNNING' ? 'Initializing scan...' : null
         };
         progressCache.set(scanId, response);
         return res.json(response);
       }
 
-      const zapProgress = await scanner.getProgressOnly(toolScanId);
+      console.log(`Getting progress for scan ${scanId}, toolScanId: ${toolScanId}, toolMetadata:`, scan.toolMetadata);
+      const zapProgress = await scanner.getProgressOnly(toolScanId, scan.toolMetadata);
+      console.log(`ZAP progress response:`, zapProgress);
+      
       const response = {
         scanId: scanId,
         status: zapProgress.status,
         progress: zapProgress.progress,
-        isActive: zapProgress.isActive
+        isActive: zapProgress.isActive,
+        phase: zapProgress.phase,
+        message: zapProgress.message
       };
+      console.log(`Final API response:`, response);
 
       // Cache the response
       progressCache.set(scanId, response);
@@ -717,14 +725,18 @@ router.get('/:projectId/dast/scans/:scanId/progress', async (req, res) => {
     } catch (error) {
       console.error(`Failed to get ZAP progress for scan ${scanId}:`, error);
       
-      // Return fallback progress on ZAP error
+      // Return fallback progress on ZAP error - ensure consistent API structure
+      const fallbackProgress = scan.startedAt ? Math.min(90, Math.max(10, 
+        Math.floor((Date.now() - new Date(scan.startedAt).getTime()) / (1000 * 60) * 6)
+      )) : 10;
+      
       const fallbackResponse = {
         scanId: scanId,
         status: scan.status,
-        progress: scan.startedAt ? Math.min(90, Math.max(10, 
-          Math.floor((Date.now() - new Date(scan.startedAt).getTime()) / (1000 * 60) * 6)
-        )) : 10,
-        isActive: scan.status === 'RUNNING'
+        progress: fallbackProgress,
+        isActive: scan.status === 'RUNNING',
+        phase: scan.status === 'RUNNING' ? 'scanning' : null,
+        message: scan.status === 'RUNNING' ? `Scanning: ${fallbackProgress}%` : null
       };
 
       // Cache fallback response for shorter time

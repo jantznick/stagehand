@@ -18,7 +18,7 @@
     "permalink": "/api/security-tools"
   },
   "next": {
-    "title": "API Reference: Hierarchy",
-    "permalink": "/api/hierarchy"
+    "title": "DAST Scans API",
+    "permalink": "/api/dast-scans"
   }
 }

@@ -14,8 +14,8 @@
   "frontMatter": {},
   "sidebar": "docsSidebar",
   "previous": {
-    "title": "API Reference: Findings",
-    "permalink": "/api/findings"
+    "title": "DAST Scans API",
+    "permalink": "/api/dast-scans"
   },
   "next": {
     "title": "API Reference: Relationships",

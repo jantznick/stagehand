@@ -42,17 +42,17 @@
       "plugin": "plugin---docusaurus-debugb-38-ad3"
     }
   },
-  "/-bd2": {
+  "/-0e4": {
     "__comp": "__comp---theme-docs-root-5-e-9-0b6",
     "__context": {
       "plugin": "plugin---aba-d70"
     }
   },
-  "/-8b2": {
+  "/-b7e": {
     "__comp": "__comp---theme-doc-version-roota-7-b-5de",
     "__props": "__props---22-d-307"
   },
-  "/-5a0": {
+  "/-6f7": {
     "__comp": "__comp---theme-doc-roota-94-67a"
   },
   "/api-reference-0dd": {
@@ -67,7 +67,7 @@
     "__comp": "__comp---theme-doc-item-178-a40",
     "content": "content---api-company-7-aa-c3d"
   },
-  "/api/dast-scans-e15": {
+  "/api/dast-scans-4a1": {
     "__comp": "__comp---theme-doc-item-178-a40",
     "content": "content---api-dast-scansfa-6-96b"
   },
@@ -123,11 +123,11 @@
     "__comp": "__comp---theme-doc-item-178-a40",
     "content": "content---backend-architecture-946-fbe"
   },
-  "/dast-implementation-changelog-b8d": {
+  "/dast-implementation-changelog-129": {
     "__comp": "__comp---theme-doc-item-178-a40",
     "content": "content---dast-implementation-changelog-517-c3c"
   },
-  "/dast-scanning-feature-831": {
+  "/dast-scanning-feature-92e": {
     "__comp": "__comp---theme-doc-item-178-a40",
     "content": "content---dast-scanning-feature-998-589"
   },

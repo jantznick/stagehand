@@ -1,18 +1,51 @@
-import React from 'react';
-import { Clock, CheckCircle, XCircle, AlertTriangle, Info, Play } from 'lucide-react';
+import React, { useState } from 'react';
+import { Clock, CheckCircle, XCircle, AlertTriangle, Info, Play, X } from 'lucide-react';
 import useProgressPolling from '../../hooks/useProgressPolling';
 
 const ScanRow = ({ scan, project, onScanClick, formatDate, formatDuration, getSeverityBadge, onScanComplete }) => {
   const isRunning = scan.status === 'RUNNING';
   const isActive = ['PENDING', 'QUEUED', 'RUNNING'].includes(scan.status);
+  const [isCanceling, setIsCanceling] = useState(false);
   
   // Use progress polling for active scans
-  const { progress } = useProgressPolling(
+  const { progress, phase, message } = useProgressPolling(
     scan.id, 
     project.id, 
     isActive,
     onScanComplete
   );
+
+  // Cancel scan handler
+  const handleCancelScan = async (e) => {
+    e.stopPropagation(); // Prevent triggering onScanClick
+    
+    if (isCanceling) return;
+    
+    setIsCanceling(true);
+    try {
+      const response = await fetch(`/api/v1/projects/${project.id}/dast/scans/${scan.id}`, {
+        method: 'DELETE',
+        credentials: 'include'
+      });
+
+      if (response.ok) {
+        console.log(`Scan ${scan.id} cancelled successfully`);
+        // Trigger refresh if available
+        if (onScanComplete) {
+          onScanComplete(scan.id);
+        }
+      } else {
+        const errorData = await response.json();
+        console.error('Failed to cancel scan:', errorData.error);
+        alert('Failed to cancel scan: ' + errorData.error);
+      }
+    } catch (error) {
+      console.error('Error canceling scan:', error);
+      alert('Failed to cancel scan');
+    } finally {
+      setIsCanceling(false);
+    }
+  };
 
   // Get status icon and color
   const getStatusDisplay = (status) => {
@@ -60,10 +93,18 @@ const ScanRow = ({ scan, project, onScanClick, formatDate, formatDuration, getSe
           <div className="text-right">
             <div className="text-sm text-white">
               {progress !== null && isActive
-                ? `${progress}% complete`
+                ? message || `${progress}% complete`
                 : scan.status.charAt(0) + scan.status.slice(1).toLowerCase()
               }
             </div>
+            {/* Show phase for enhanced scans */}
+            {phase && isActive && (
+              <div className="text-xs text-gray-400">
+                {phase === 'discovery' && 'Discovering pages...'}
+                {phase === 'scanning' && 'Security testing...'}
+                {phase === 'active_scan' && 'Scanning...'}
+              </div>
+            )}
             {scan.duration && (
               <div className="text-xs text-gray-400">
                 Duration: {formatDuration(scan.duration)}
@@ -74,12 +115,30 @@ const ScanRow = ({ scan, project, onScanClick, formatDate, formatDuration, getSe
             {progress !== null && isActive && (
               <div className="mt-1 w-24 bg-gray-700 rounded-full h-1.5">
                 <div 
-                  className="bg-blue-400 h-1.5 rounded-full transition-all duration-300 ease-out"
+                  className={`h-1.5 rounded-full transition-all duration-300 ease-out ${
+                    phase === 'discovery' ? 'bg-yellow-400' : 'bg-blue-400'
+                  }`}
                   style={{ width: `${Math.max(progress, 5)}%` }}
                 ></div>
               </div>
             )}
           </div>
+
+          {/* Cancel Button for Active Scans */}
+          {isActive && (
+            <button
+              onClick={handleCancelScan}
+              disabled={isCanceling}
+              className="flex items-center justify-center w-8 h-8 bg-red-900/50 hover:bg-red-900/70 text-red-400 hover:text-red-300 rounded-full transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              title="Cancel scan"
+            >
+              {isCanceling ? (
+                <div className="w-4 h-4 border-2 border-red-400 border-t-transparent rounded-full animate-spin"></div>
+              ) : (
+                <X size={14} />
+              )}
+            </button>
+          )}
 
           {/* Findings Summary */}
           {scan.status === 'COMPLETED' && scan.findingsCount > 0 && (

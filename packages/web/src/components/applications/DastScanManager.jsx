@@ -137,21 +137,32 @@ const DastScanManager = ({ project }) => {
     setError(null);
 
     try {
-      // Map user-friendly options to ZAP configuration
+      // Map user-friendly options to enhanced ZAP configuration
       const scanConfig = {
-        // Scan intensity affects which tests are run
-        scanPolicyName: scanIntensity === 'quick' ? 'Light' : scanIntensity === 'thorough' ? 'Default Policy' : '',
-        
-        // Crawl depth affects how deep ZAP goes
-        recurse: crawlDepth !== 'shallow',
-        
-        // Include subdomains
-        inScopeOnly: !includeSubdomains,
-        
-        // Custom settings for different intensities
+        // Scan intensity affects which scan policy is used
         intensity: scanIntensity,
+        
+        // Crawl depth affects spider behavior  
         depth: crawlDepth,
-        maxDuration: maxDuration
+        
+        // Subdomain inclusion
+        includeSubdomains: includeSubdomains,
+        
+        // Timeout settings
+        spiderTimeout: Math.min(maxDuration * 60 * 1000 * 0.3, 120000), // 30% of total time for spider, max 2 min
+        maxDuration: maxDuration,
+        
+        // Advanced spider settings based on intensity
+        ...(scanIntensity === 'quick' && {
+          spiderTimeout: 30000, // 30 seconds for quick scans
+        }),
+        ...(scanIntensity === 'thorough' && {
+          spiderTimeout: 180000, // 3 minutes for thorough scans
+        }),
+        
+        // Legacy ZAP settings (for compatibility)
+        recurse: true, // Always crawl discovered pages
+        inScopeOnly: false // Let spider determine scope
       };
 
       const response = await fetch(`/api/v1/projects/${project.id}/dast/scan`, {

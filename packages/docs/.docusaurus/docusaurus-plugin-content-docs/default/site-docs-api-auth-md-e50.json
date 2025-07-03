@@ -14,8 +14,8 @@
   "frontMatter": {},
   "sidebar": "docsSidebar",
   "previous": {
-    "title": "Frontend Architecture & Conventions",
-    "permalink": "/frontend-architecture"
+    "title": "DAST Scanning Implementation Changelog",
+    "permalink": "/dast-implementation-changelog"
   },
   "next": {
     "title": "API Reference: OIDC Configuration",

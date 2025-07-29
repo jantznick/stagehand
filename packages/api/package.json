@@ -7,6 +7,9 @@
   "scripts": {
     "start": "node src/index.js",
     "dev": "tsx watch src/index.js",
+    "build:openapi": "node src/openapi/build.js",
+    "build": "npm run build:openapi",
+    "test": "echo \"Error: no test specified\" && exit 1",
     "prisma:generate": "prisma generate"
   },
   "prisma": {

@@ -1,89 +1,4 @@
-/**
- * @openapi
- * tags:
- *   - name: DAST Scans
- *     description: Dynamic Application Security Testing scan management
- * 
- * components:
- *   schemas:
- *     ScanExecution:
- *       type: object
- *       properties:
- *         id:
- *           type: string
- *         projectId:
- *           type: string
- *         provider:
- *           type: string
- *           enum: [OWASP_ZAP, BURP_SUITE, ACUNETIX]
- *         targetUrl:
- *           type: string
- *         scanType:
- *           type: string
- *           enum: [ACTIVE, PASSIVE, BASELINE, FULL, CUSTOM]
- *         status:
- *           type: string
- *           enum: [PENDING, QUEUED, RUNNING, COMPLETED, FAILED, CANCELLED]
- *         progress:
- *           type: integer
- *           minimum: 0
- *           maximum: 100
- *         queuedAt:
- *           type: string
- *           format: date-time
- *         startedAt:
- *           type: string
- *           format: date-time
- *         completedAt:
- *           type: string
- *           format: date-time
- *         duration:
- *           type: integer
- *           description: Scan duration in seconds
- *         findingsCount:
- *           type: integer
- *         criticalCount:
- *           type: integer
- *         highCount:
- *           type: integer
- *         mediumCount:
- *           type: integer
- *         lowCount:
- *           type: integer
- *         infoCount:
- *           type: integer
- *         errorMessage:
- *           type: string
- *         createdAt:
- *           type: string
- *           format: date-time
- *         updatedAt:
- *           type: string
- *           format: date-time
- *     
- *     LaunchScanRequest:
- *       type: object
- *       required:
- *         - targetUrl
- *       properties:
- *         targetUrl:
- *           type: string
- *           format: uri
- *           description: The URL to scan
- *         provider:
- *           type: string
- *           enum: [OWASP_ZAP]
- *           default: OWASP_ZAP
- *           description: DAST tool provider
- *         scanType:
- *           type: string
- *           enum: [ACTIVE, PASSIVE, BASELINE]
- *           default: ACTIVE
- *           description: Type of scan to perform
- *         scanConfig:
- *           type: object
- *           description: Tool-specific scan configuration
- */
+// DAST scan routes - OpenAPI documentation moved to packages/api/src/openapi/
 
 import { Router } from 'express';
 import { PrismaClient } from '@prisma/client';
@@ -258,60 +173,8 @@ router.post('/:projectId/dast/scan', async (req, res) => {
   }
 });
 
-/**
- * @openapi
- * /api/v1/projects/{projectId}/dast/scans:
- *   get:
- *     summary: List DAST scans for a project
- *     description: Retrieves all DAST scan executions for the specified project
- *     tags: [DAST Scans]
- *     security:
- *       - cookieAuth: []
- *     parameters:
- *       - in: path
- *         name: projectId
- *         required: true
- *         schema:
- *           type: string
- *         description: Project ID
- *       - in: query
- *         name: limit
- *         schema:
- *           type: integer
- *           minimum: 1
- *           maximum: 100
- *           default: 20
- *         description: Maximum number of scans to return
- *       - in: query
- *         name: offset
- *         schema:
- *           type: integer
- *           minimum: 0
- *           default: 0
- *         description: Number of scans to skip
- *     responses:
- *       200:
- *         description: List of DAST scans
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 scans:
- *                   type: array
- *                   items:
- *                     $ref: '#/components/schemas/ScanExecution'
- *                 total:
- *                   type: integer
- *                 limit:
- *                   type: integer
- *                 offset:
- *                   type: integer
- *       403:
- *         description: Insufficient permissions
- *       404:
- *         description: Project not found
- */
+
+
 router.get('/:projectId/dast/scans', async (req, res) => {
   const { projectId } = req.params;
   const limit = Math.min(parseInt(req.query.limit) || 20, 100);
@@ -417,7 +280,7 @@ router.get('/:projectId/dast/scans', async (req, res) => {
  *         description: Scan execution ID
  *     responses:
  *       200:
- *         description: DAST scan details with live status
+ *         description: DAST scan details
  *         content:
  *           application/json:
  *             schema:
@@ -425,7 +288,7 @@ router.get('/:projectId/dast/scans', async (req, res) => {
  *       403:
  *         description: Insufficient permissions
  *       404:
- *         description: Project or scan not found
+ *         description: Scan not found
  */
 router.get('/:projectId/dast/scans/:scanId', async (req, res) => {
   const { projectId, scanId } = req.params;

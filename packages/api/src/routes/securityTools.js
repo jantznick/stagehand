@@ -3,9 +3,9 @@
 import { Router } from 'express';
 import { PrismaClient } from '@prisma/client';
 import { protect } from '../middleware/authMiddleware.js';
-import { hasPermission } from '../utils/permissions.js';
 import { encrypt, decrypt } from '../utils/crypto.js';
-import { syncSnykFindings } from '../utils/findings.js';
+import { checkPermission } from '../utils/permissions.js';
+import { syncSnykProjects, getSnykOrganizations } from '../utils/snyk.js';
 
 const prisma = new PrismaClient();
 const router = Router();
@@ -23,9 +23,10 @@ router.post('/', async (req, res) => {
     }
 
     try {
-        const canManage = await hasPermission(req.user, ['ADMIN'], resourceType, resourceId);
+        // Authorization: User must be an ADMIN of the resource to manage security tools.
+        const canManage = await checkPermission(req.user, ['ADMIN'], resourceType, resourceId);
         if (!canManage) {
-            return res.status(403).json({ error: 'You are not authorized to add integrations to this resource.' });
+            return res.status(403).json({ error: 'You are not authorized to manage security tools for this resource.' });
         }
 
         const encryptedCredentials = encrypt(JSON.stringify(credentials));
@@ -58,9 +59,10 @@ router.get('/', async (req, res) => {
         return res.status(400).json({ error: 'resourceType and resourceId query parameters are required.' });
     }
 
-    const canView = await hasPermission(req.user, ['ADMIN', 'EDITOR', 'READER'], resourceType, resourceId);
+    // Authorization: User must be a member of the resource to view its security tools.
+    const canView = await checkPermission(req.user, ['ADMIN', 'EDITOR', 'READER'], resourceType, resourceId);
     if (!canView) {
-        return res.status(403).json({ error: 'You are not authorized to view integrations for this resource.' });
+        return res.status(403).json({ error: 'You are not authorized to view security tools for this resource.' });
     }
 
     try {
@@ -195,7 +197,7 @@ router.post('/:integrationId/sync', async (req, res) => {
         // Do not await this call. This allows us to send an immediate response to the client.
         // The sync will run in the background.
         if (integration.provider === 'Snyk') {
-            syncSnykFindings(integrationId, projectIds).catch(error => {
+            syncSnykProjects(integrationId, projectIds).catch(error => {
                 console.error(`[Background Sync Error] Failed to sync Snyk integration ${integrationId}:`, error);
             });
         } else {

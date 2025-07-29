@@ -3,7 +3,7 @@
 import { Router } from 'express';
 import { PrismaClient } from '@prisma/client';
 import { protect } from '../middleware/authMiddleware.js';
-import { hasPermission } from '../utils/permissions.js';
+import { checkPermission } from '../utils/permissions.js';
 import crypto from 'crypto';
 import { getAncestors, getDescendants } from '../utils/hierarchy.js';
 import { getMembershipDetails } from '../utils/membership.js';
@@ -160,9 +160,10 @@ router.post('/', async (req, res) => {
         return res.status(400).json({ error: 'Email, role, resourceId, and resourceType are required.' });
     }
     
-    const canManage = await hasPermission(req.user, 'ADMIN', resourceType, resourceId);
+    // Authorization: User must be an ADMIN of the resource to manage members.
+    const canManage = await checkPermission(req.user, 'ADMIN', resourceType, resourceId);
     if (!canManage) {
-        return res.status(403).json({ error: 'You are not authorized to add members to this resource.' });
+        return res.status(403).json({ error: `You are not authorized to manage members for this ${resourceType}.` });
     }
 
     try {
@@ -294,6 +295,12 @@ router.post('/', async (req, res) => {
 // Remove a member from a resource
 router.delete('/:membershipId', async (req, res) => {
     const { membershipId } = req.params;
+    const { resourceType, resourceId } = req.body; // Sent in body for context
+
+    const canManage = await checkPermission(req.user, 'ADMIN', resourceType, resourceId);
+    if (!canManage) {
+        return res.status(403).json({ error: 'You do not have permission to remove this member.' });
+    }
 
     try {
         const membership = await prisma.membership.findUnique({
@@ -302,15 +309,6 @@ router.delete('/:membershipId', async (req, res) => {
 
         if (!membership) {
             return res.status(404).json({ error: 'Membership not found.' });
-        }
-
-        const { organizationId, companyId, teamId, projectId } = membership;
-        const resourceType = organizationId ? 'organization' : companyId ? 'company' : teamId ? 'team' : 'project';
-        const resourceId = organizationId || companyId || teamId || projectId;
-        
-        const canManage = await hasPermission(req.user, 'ADMIN', resourceType, resourceId);
-        if (!canManage) {
-            return res.status(403).json({ error: 'You are not authorized to remove members from this resource.' });
         }
         
         await prisma.membership.delete({
@@ -325,20 +323,16 @@ router.delete('/:membershipId', async (req, res) => {
 });
 
 // Update a member's role
-router.put('/:id', async (req, res) => {
-    const { id: membershipId } = req.params;
-    const { role, resourceId, resourceType } = req.body;
+router.put('/:membershipId', async (req, res) => {
+    const { membershipId } = req.params;
+    const { role, resourceType, resourceId } = req.body;
 
-    if (!role || !resourceId || !resourceType) {
-        return res.status(400).json({ error: 'Role, resourceId, and resourceType are required.' });
+    const canManage = await checkPermission(req.user, 'ADMIN', resourceType, resourceId);
+    if (!canManage) {
+        return res.status(403).json({ error: 'You do not have permission to edit this member.' });
     }
 
     try {
-        const canManage = await hasPermission(req.user, 'ADMIN', resourceType, resourceId);
-        if (!canManage) {
-            return res.status(403).json({ error: 'You are not authorized to change roles for this resource.' });
-        }
-
         const updatedMembership = await prisma.membership.update({
             where: { id: membershipId },
             data: { role },

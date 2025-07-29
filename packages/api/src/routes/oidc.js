@@ -1,9 +1,9 @@
 // OIDC routes - OpenAPI documentation moved to packages/api/src/openapi/
 
 import { Router } from 'express';
-import { PrismaClient, Role } from '@prisma/client';
+import { PrismaClient } from '@prisma/client';
 import { protect } from '../middleware/authMiddleware.js';
-import { hasPermission } from '../utils/permissions.js';
+import { checkPermission } from '../utils/permissions.js';
 import { encrypt, decrypt } from '../utils/crypto.js';
 
 const prisma = new PrismaClient();
@@ -19,9 +19,10 @@ router.get('/organizations/:orgId/oidc', protect, async (req, res) => {
   const user = req.user;
 
   try {
-    const hasAccess = await hasPermission(user, 'ADMIN', 'organization', orgId);
+    // Authorization: User must be an Organization Admin.
+    const hasAccess = await checkPermission(user, 'ADMIN', 'organization', orgId);
     if (!hasAccess) {
-      return res.status(403).json({ error: 'You do not have permission to view this configuration.' });
+      return res.status(403).json({ error: 'You are not authorized to view OIDC configuration for this organization.' });
     }
 
     const oidcConfig = await prisma.oIDCConfiguration.findUnique({
@@ -58,9 +59,10 @@ router.post('/organizations/:orgId/oidc', protect, async (req, res) => {
   }
 
   try {
-    const hasAccess = await hasPermission(user, 'ADMIN', 'organization', orgId);
+    // Authorization: User must be an Organization Admin.
+    const hasAccess = await checkPermission(user, 'ADMIN', 'organization', orgId);
     if (!hasAccess) {
-      return res.status(403).json({ error: 'You do not have permission to modify this configuration.' });
+      return res.status(403).json({ error: 'You are not authorized to modify OIDC configuration for this organization.' });
     }
 
     const existingConfig = await prisma.oIDCConfiguration.findUnique({
@@ -108,9 +110,10 @@ router.put('/organizations/:orgId/oidc', protect, async (req, res) => {
     }
 
     try {
-        const hasAccess = await hasPermission(user, 'ADMIN', 'organization', orgId);
+        // Authorization: User must be an Organization Admin.
+        const hasAccess = await checkPermission(user, 'ADMIN', 'organization', orgId);
         if (!hasAccess) {
-            return res.status(403).json({ error: 'You do not have permission to modify this configuration.' });
+            return res.status(403).json({ error: 'You are not authorized to update OIDC configuration.' });
         }
         
         const dataToUpdate = {};
@@ -150,9 +153,10 @@ router.delete('/organizations/:orgId/oidc', protect, async (req, res) => {
   const user = req.user;
 
   try {
-    const hasAccess = await hasPermission(user, 'ADMIN', 'organization', orgId);
+    // Authorization: User must be an Organization Admin.
+    const hasAccess = await checkPermission(user, 'ADMIN', 'organization', orgId);
     if (!hasAccess) {
-      return res.status(403).json({ error: 'You do not have permission to delete this configuration.' });
+      return res.status(403).json({ error: 'You are not authorized to delete OIDC configuration.' });
     }
 
     await prisma.oIDCConfiguration.delete({

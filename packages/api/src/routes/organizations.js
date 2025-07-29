@@ -5,7 +5,7 @@ import { PrismaClient } from '@prisma/client';
 import crypto from 'crypto';
 import { promises as dns } from 'dns';
 import { protect } from '../middleware/authMiddleware.js';
-import { hasPermission } from '../utils/permissions.js';
+import { checkPermission } from '../utils/permissions.js';
 import { getAncestors, getDescendants } from '../utils/hierarchy.js';
 
 const prisma = new PrismaClient();
@@ -14,12 +14,11 @@ const router = Router();
 // All routes in this file are protected
 router.use(protect);
 
-// Get organization by ID
+// GET /api/v1/organizations/:id - Get a single organization
 router.get('/:id', async (req, res) => {
     const { id } = req.params;
-    
-    // Authorization: Check if the user has at least READER access to the organization
-    const canView = await hasPermission(req.user, ['ADMIN', 'EDITOR', 'READER'], 'organization', id);
+    // User must have at least READER access to the organization
+    const canView = await checkPermission(req.user, ['ADMIN', 'EDITOR', 'READER'], 'organization', id);
     if (!canView) {
         return res.status(403).json({ error: 'You are not authorized to view this organization.' });
     }
@@ -41,14 +40,14 @@ router.get('/:id', async (req, res) => {
     }
 });
 
-// Update organization
+// PUT /api/v1/organizations/:id - Update an organization's settings
 router.put('/:id', async (req, res) => {
     const { id } = req.params;
     const { name, description, accountType, defaultCompanyId, hierarchyDisplayNames } = req.body;
 
-    const canUpdate = await hasPermission(req.user, 'ADMIN', 'organization', id);
+    const canUpdate = await checkPermission(req.user, 'ADMIN', 'organization', id);
     if (!canUpdate) {
-        return res.status(403).json({ error: 'You are not authorized to update this organization.' });
+        return res.status(403).json({ error: 'You must be an Organization Admin to update settings.' });
     }
 
     try {
@@ -167,7 +166,7 @@ router.post('/:id/domains', async (req, res) => {
         return res.status(400).json({ error: 'Public email domains cannot be used for auto-join.' });
     }
 
-    const canManage = await hasPermission(req.user, 'ADMIN', 'organization', id);
+    const canManage = await checkPermission(req.user, 'ADMIN', 'organization', id);
     if (!canManage) {
         return res.status(403).json({ error: 'You are not authorized to manage domains for this organization.' });
     }
@@ -202,7 +201,7 @@ router.post('/:id/domains', async (req, res) => {
 router.post('/:id/domains/:domainMappingId/verify', async (req, res) => {
     const { id: organizationId, domainMappingId } = req.params;
 
-    const canManage = await hasPermission(req.user, 'ADMIN', 'organization', organizationId);
+    const canManage = await checkPermission(req.user, 'ADMIN', 'organization', organizationId);
     if (!canManage) {
         return res.status(403).json({ error: 'You are not authorized to manage domains for this organization.' });
     }
@@ -247,7 +246,7 @@ router.post('/:id/domains/:domainMappingId/verify', async (req, res) => {
 router.delete('/:id/domains/:domainMappingId', async (req, res) => {
     const { id: organizationId, domainMappingId } = req.params;
 
-    const canManage = await hasPermission(req.user, 'ADMIN', 'organization', organizationId);
+    const canManage = await checkPermission(req.user, 'ADMIN', 'organization', organizationId);
     if (!canManage) {
         return res.status(403).json({ error: 'You are not authorized to manage domains for this organization.' });
     }

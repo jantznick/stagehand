@@ -25,6 +25,8 @@
   "dependencies": {
     "@prisma/client": "^6.10.1",
     "@react-email/components": "0.1.0",
+    "apollo-server-express": "^3.13.0",
+    "graphql": "^16.11.0",
     "jsonwebtoken": "^9.0.2",
     "react": "19.1.0",
     "react-dom": "19.1.0"

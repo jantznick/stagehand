@@ -3,10 +3,13 @@
 import { Router } from 'express';
 import { PrismaClient } from '@prisma/client';
 import { protect } from '../middleware/authMiddleware.js';
-import { hasPermission } from '../utils/permissions.js';
+import { checkPermission } from '../utils/permissions.js';
+import { DastService } from '../utils/dastService.js';
+import { getDescendants } from '../utils/hierarchy.js';
+import { progressCache } from '../utils/progressCache.js';
 import { processDastScan, cancelDastScan, getDastScanStatus } from '../utils/scanProcessor.js';
 import { getSupportedProviders, createDastScanner } from '../utils/dastService.js';
-import { progressCache } from '../utils/progressCache.js';
+
 
 const prisma = new PrismaClient();
 const router = Router();
@@ -14,769 +17,236 @@ const router = Router();
 // All routes in this file are protected
 router.use(protect);
 
-/**
- * @openapi
- * /api/v1/projects/{projectId}/dast/scan:
- *   post:
- *     summary: Launch a DAST scan
- *     description: Launches a new DAST scan for the specified project with URL confirmation
- *     tags: [DAST Scans]
- *     security:
- *       - cookieAuth: []
- *     parameters:
- *       - in: path
- *         name: projectId
- *         required: true
- *         schema:
- *           type: string
- *         description: Project ID to scan
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             $ref: '#/components/schemas/LaunchScanRequest'
- *     responses:
- *       202:
- *         description: Scan launched successfully and running in background
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
- *                   example: DAST scan launched successfully
- *                 scanExecutionId:
- *                   type: string
- *                 scanExecution:
- *                   $ref: '#/components/schemas/ScanExecution'
- *       400:
- *         description: Invalid request data
- *       403:
- *         description: Insufficient permissions (requires ADMIN or EDITOR role)
- *       404:
- *         description: Project not found
- *       500:
- *         description: Server error
- */
+// Launch a new DAST scan
 router.post('/:projectId/dast/scan', async (req, res) => {
-  const { projectId } = req.params;
-  const { targetUrl, provider = 'OWASP_ZAP', scanType = 'ACTIVE', scanConfig = {} } = req.body;
-  const { id: userId } = req.user;
-
-  try {
-    // Validate required fields
-    if (!targetUrl) {
-      return res.status(400).json({ error: 'Target URL is required' });
-    }
-
-    // Validate URL format
+    const { projectId } = req.params;
+    const { targetUrl, provider = 'OWASP_ZAP', scanType = 'ACTIVE', scanConfig = {} } = req.body;
+    const { id: userId } = req.user;
+  
     try {
-      new URL(targetUrl);
-    } catch (error) {
-      return res.status(400).json({ error: 'Invalid URL format' });
-    }
-
-    // Check if project exists and user has permission
-    const project = await prisma.project.findUnique({
-      where: { id: projectId },
-      include: {
-        team: {
-          include: {
-            company: {
-              include: {
-                organization: true
-              }
-            }
-          }
-        }
+      // Validate required fields
+      if (!targetUrl) {
+        return res.status(400).json({ error: 'Target URL is required' });
       }
-    });
-
-    if (!project) {
-      return res.status(404).json({ error: 'Project not found' });
-    }
-
-    // Check permissions - requires ADMIN or EDITOR role
-    const canLaunchScan = await hasPermission(req.user, ['ADMIN', 'EDITOR'], 'project', projectId);
-    if (!canLaunchScan) {
-      return res.status(403).json({ error: 'Insufficient permissions to launch scans' });
-    }
-
-    // Validate provider
-    const supportedProviders = getSupportedProviders();
-    if (!supportedProviders.includes(provider)) {
-      return res.status(400).json({ 
-        error: `Unsupported provider: ${provider}. Supported providers: ${supportedProviders.join(', ')}` 
-      });
-    }
-
-    // Check for concurrent scans on the same project
-    const runningScan = await prisma.scanExecution.findFirst({
-      where: {
-        projectId: projectId,
-        status: { in: ['PENDING', 'QUEUED', 'RUNNING'] }
-      }
-    });
-
-    if (runningScan) {
-      return res.status(409).json({ 
-        error: 'A scan is already running for this project. Please wait for it to complete or cancel it first.',
-        runningScanId: runningScan.id
-      });
-    }
-
-    // Create scan execution record
-    const scanExecution = await prisma.scanExecution.create({
-      data: {
-        projectId: projectId,
-        provider: provider,
-        targetUrl: targetUrl,
-        scanType: scanType,
-        status: 'PENDING',
-        queuedAt: new Date(),
-        toolConfig: scanConfig,
-        initiatedById: userId
-      },
-      include: {
-        project: { select: { name: true } },
-        initiatedBy: { select: { email: true } }
-      }
-    });
-
-    // Start background processing - don't await this
-    processDastScan(scanExecution.id).catch(error => {
-      console.error(`Background scan processing failed for ${scanExecution.id}:`, error);
-    });
-
-    console.log(`DAST scan ${scanExecution.id} launched for project ${project.name} by ${req.user.email}`);
-
-    res.status(202).json({
-      message: 'DAST scan launched successfully',
-      scanExecutionId: scanExecution.id,
-      scanExecution: {
-        id: scanExecution.id,
-        status: scanExecution.status,
-        targetUrl: scanExecution.targetUrl,
-        provider: scanExecution.provider,
-        scanType: scanExecution.scanType,
-        queuedAt: scanExecution.queuedAt,
-        projectName: scanExecution.project.name,
-        initiatedBy: scanExecution.initiatedBy?.email
-      }
-    });
-
-  } catch (error) {
-    console.error(`Failed to launch DAST scan for project ${projectId}:`, error);
-    res.status(500).json({ error: 'Failed to launch DAST scan' });
-  }
-});
-
-
-
-router.get('/:projectId/dast/scans', async (req, res) => {
-  const { projectId } = req.params;
-  const limit = Math.min(parseInt(req.query.limit) || 20, 100);
-  const offset = parseInt(req.query.offset) || 0;
-
-  try {
-    // Check if project exists and user has permission
-    const project = await prisma.project.findUnique({
-      where: { id: projectId },
-      include: {
-        team: {
-          include: {
-            company: {
-              include: {
-                organization: true
-              }
-            }
-          }
-        }
-      }
-    });
-
-    if (!project) {
-      return res.status(404).json({ error: 'Project not found' });
-    }
-
-    // Check permissions - any role can view scans
-    const canView = await hasPermission(req.user, ['READER', 'EDITOR', 'ADMIN'], 'project', projectId);
-    if (!canView) {
-      return res.status(403).json({ error: 'Insufficient permissions to view scans' });
-    }
-
-    // Get scans with pagination
-    const [scans, total] = await Promise.all([
-      prisma.scanExecution.findMany({
-        where: { projectId: projectId },
-        include: {
-          initiatedBy: { select: { email: true } }
-        },
-        orderBy: { createdAt: 'desc' },
-        take: limit,
-        skip: offset
-      }),
-      prisma.scanExecution.count({
-        where: { projectId: projectId }
-      })
-    ]);
-
-    res.json({
-      scans: scans.map(scan => ({
-        id: scan.id,
-        status: scan.status,
-        targetUrl: scan.targetUrl,
-        provider: scan.provider,
-        scanType: scan.scanType,
-        queuedAt: scan.queuedAt,
-        startedAt: scan.startedAt,
-        completedAt: scan.completedAt,
-        duration: scan.duration,
-        findingsCount: scan.findingsCount,
-        criticalCount: scan.criticalCount,
-        highCount: scan.highCount,
-        mediumCount: scan.mediumCount,
-        lowCount: scan.lowCount,
-        infoCount: scan.infoCount,
-        errorMessage: scan.errorMessage,
-        initiatedBy: scan.initiatedBy?.email,
-        createdAt: scan.createdAt,
-        updatedAt: scan.updatedAt
-      })),
-      total,
-      limit,
-      offset
-    });
-
-  } catch (error) {
-    console.error(`Failed to get DAST scans for project ${projectId}:`, error);
-    res.status(500).json({ error: 'Failed to retrieve DAST scans' });
-  }
-});
-
-/**
- * @openapi
- * /api/v1/projects/{projectId}/dast/scans/{scanId}:
- *   get:
- *     summary: Get DAST scan details
- *     description: Retrieves detailed information about a specific DAST scan execution
- *     tags: [DAST Scans]
- *     security:
- *       - cookieAuth: []
- *     parameters:
- *       - in: path
- *         name: projectId
- *         required: true
- *         schema:
- *           type: string
- *         description: Project ID
- *       - in: path
- *         name: scanId
- *         required: true
- *         schema:
- *           type: string
- *         description: Scan execution ID
- *     responses:
- *       200:
- *         description: DAST scan details
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/ScanExecution'
- *       403:
- *         description: Insufficient permissions
- *       404:
- *         description: Scan not found
- */
-router.get('/:projectId/dast/scans/:scanId', async (req, res) => {
-  const { projectId, scanId } = req.params;
-
-  try {
-    // Check permissions
-    const canView = await hasPermission(req.user, ['READER', 'EDITOR', 'ADMIN'], 'project', projectId);
-    if (!canView) {
-      return res.status(403).json({ error: 'Insufficient permissions to view scan details' });
-    }
-
-    // Get scan status (includes live status for running scans)
-    const scanStatus = await getDastScanStatus(scanId);
-
-    // Verify scan belongs to the project
-    const scan = await prisma.scanExecution.findUnique({
-      where: { id: scanId }
-    });
-
-    if (!scan || scan.projectId !== projectId) {
-      return res.status(404).json({ error: 'Scan not found for this project' });
-    }
-
-    res.json(scanStatus);
-
-  } catch (error) {
-    if (error.message.includes('not found')) {
-      return res.status(404).json({ error: error.message });
-    }
-    
-    console.error(`Failed to get DAST scan details ${scanId}:`, error);
-    res.status(500).json({ error: 'Failed to retrieve scan details' });
-  }
-});
-
-/**
- * @openapi
- * /api/v1/projects/{projectId}/dast/scans/{scanId}/details:
- *   get:
- *     summary: Get detailed DAST scan information
- *     description: Retrieves comprehensive scan details including crawled pages, statistics, and detailed findings
- *     tags: [DAST Scans]
- *     security:
- *       - cookieAuth: []
- *     parameters:
- *       - in: path
- *         name: projectId
- *         required: true
- *         schema:
- *           type: string
- *         description: Project ID
- *       - in: path
- *         name: scanId
- *         required: true
- *         schema:
- *           type: string
- *         description: Scan execution ID
- *     responses:
- *       200:
- *         description: Detailed scan information
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 scanDetails:
- *                   type: object
- *                   properties:
- *                     crawledPages:
- *                       type: array
- *                       items:
- *                         type: object
- *                         properties:
- *                           url:
- *                             type: string
- *                           site:
- *                             type: string
- *                           discoveredAt:
- *                             type: string
- *                             format: date-time
- *                     totalPagesCrawled:
- *                       type: integer
- *                     uniqueDomains:
- *                       type: array
- *                       items:
- *                         type: string
- *                     detailedAlerts:
- *                       type: array
- *                       items:
- *                         type: object
- *       403:
- *         description: Insufficient permissions
- *       404:
- *         description: Project or scan not found
- */
-router.get('/:projectId/dast/scans/:scanId/details', async (req, res) => {
-  const { projectId, scanId } = req.params;
-
-  try {
-    // Check permissions
-    const canView = await hasPermission(req.user, ['READER', 'EDITOR', 'ADMIN'], 'project', projectId);
-    if (!canView) {
-      return res.status(403).json({ error: 'Insufficient permissions to view scan details' });
-    }
-
-    // Get scan execution record
-    const scan = await prisma.scanExecution.findUnique({
-      where: { id: scanId },
-      include: {
-        project: { select: { name: true } },
-        initiatedBy: { select: { email: true } }
-      }
-    });
-
-    if (!scan || scan.projectId !== projectId) {
-      return res.status(404).json({ error: 'Scan not found for this project' });
-    }
-
-    // Get detailed information from ZAP (for completed scans)
-    let detailedInfo = null;
-    if (scan.status === 'COMPLETED' && scan.toolMetadata?.zapScanId) {
+  
+      // Validate URL format
       try {
-        const scanner = await createDastScanner(scan.provider);
-        detailedInfo = await scanner.getDetailedScanInfo(scan.toolMetadata.zapScanId, scan.targetUrl);
+        new URL(targetUrl);
       } catch (error) {
-        console.error(`Failed to get detailed scan info from ZAP for scan ${scanId}:`, error);
-        // Continue without detailed ZAP info
+        return res.status(400).json({ error: 'Invalid URL format' });
       }
+  
+      const project = await prisma.project.findUnique({ where: { id: projectId } });
+  
+      if (!project) {
+        return res.status(404).json({ error: 'Project not found' });
+      }
+  
+      // Authorization check: User needs at least EDITOR access to the project to launch a scan.
+      const canLaunchScan = await checkPermission(req.user, ['ADMIN', 'EDITOR'], 'project', projectId);
+      if (!canLaunchScan) {
+          return res.status(403).json({ error: 'You are not authorized to launch scans for this project.' });
+      }
+  
+      const supportedProviders = getSupportedProviders();
+      if (!supportedProviders.includes(provider)) {
+        return res.status(400).json({ 
+          error: `Unsupported provider: ${provider}. Supported providers: ${supportedProviders.join(', ')}` 
+        });
+      }
+  
+      const runningScan = await prisma.scanExecution.findFirst({
+        where: {
+          projectId: projectId,
+          status: { in: ['PENDING', 'QUEUED', 'RUNNING'] }
+        }
+      });
+  
+      if (runningScan) {
+        return res.status(409).json({ 
+          error: 'A scan is already running for this project. Please wait for it to complete or cancel it first.',
+          runningScanId: runningScan.id
+        });
+      }
+  
+      const scanExecution = await prisma.scanExecution.create({
+        data: {
+          projectId: projectId,
+          provider: provider,
+          targetUrl: targetUrl,
+          scanType: scanType,
+          status: 'PENDING',
+          queuedAt: new Date(),
+          toolConfig: scanConfig,
+          initiatedById: userId
+        },
+        include: {
+          project: { select: { name: true } },
+          initiatedBy: { select: { email: true } }
+        }
+      });
+  
+      processDastScan(scanExecution.id).catch(error => {
+        console.error(`Background scan processing failed for ${scanExecution.id}:`, error);
+      });
+  
+      console.log(`DAST scan ${scanExecution.id} launched for project ${project.name} by ${req.user.email}`);
+  
+      res.status(202).json({
+        message: 'DAST scan launched successfully',
+        scanExecutionId: scanExecution.id,
+        scanExecution: {
+          id: scanExecution.id,
+          status: scanExecution.status,
+          targetUrl: scanExecution.targetUrl,
+          provider: scanExecution.provider,
+          scanType: scanExecution.scanType,
+          queuedAt: scanExecution.queuedAt,
+          projectName: scanExecution.project.name,
+          initiatedBy: scanExecution.initiatedBy?.email
+        }
+      });
+  
+    } catch (error) {
+      console.error(`Failed to launch DAST scan for project ${projectId}:`, error);
+      res.status(500).json({ error: 'Failed to launch DAST scan' });
+    }
+  });
+
+// GET /api/v1/dast-scans/by-project/:projectId
+router.get('/by-project/:projectId', async (req, res) => {
+    const { projectId } = req.params;
+
+    // Authorization check
+    const canView = await checkPermission(req.user, ['READER', 'EDITOR', 'ADMIN'], 'project', projectId);
+    if (!canView) {
+        return res.status(403).json({ error: 'You do not have permission to view these scans.' });
     }
 
-    // Combine basic scan data with detailed information
-    const response = {
-      id: scan.id,
-      status: scan.status,
-      targetUrl: scan.targetUrl,
-      provider: scan.provider,
-      scanType: scan.scanType,
-      projectName: scan.project.name,
-      initiatedBy: scan.initiatedBy?.email,
-      queuedAt: scan.queuedAt,
-      startedAt: scan.startedAt,
-      completedAt: scan.completedAt,
-      duration: scan.duration,
-      findingsCount: scan.findingsCount,
-      criticalCount: scan.criticalCount,
-      highCount: scan.highCount,
-      mediumCount: scan.mediumCount,
-      lowCount: scan.lowCount,
-      infoCount: scan.infoCount,
-      errorMessage: scan.errorMessage,
-      toolConfig: scan.toolConfig,
-      toolMetadata: scan.toolMetadata,
-      createdAt: scan.createdAt,
-      updatedAt: scan.updatedAt,
-      // Include detailed ZAP information if available
-      ...(detailedInfo && { scanDetails: detailedInfo.scanDetails })
-    };
-
-    res.json(response);
-
-  } catch (error) {
-    console.error(`Failed to get detailed scan information for ${scanId}:`, error);
-    res.status(500).json({ error: 'Failed to retrieve detailed scan information' });
-  }
+    try {
+        const scans = await DastService.getScansByProject(projectId);
+        return res.status(200).json(scans);
+    } catch (err) {
+        console.error(err);
+        return res.status(500).json({ msg: 'Internal server error' });
+    }
 });
 
-/**
- * @openapi
- * /api/v1/projects/{projectId}/dast/scans/{scanId}/progress:
- *   get:
- *     summary: Get DAST scan progress
- *     description: Get real-time progress information for a running DAST scan
- *     tags: [DAST Scans]
- *     security:
- *       - cookieAuth: []
- *     parameters:
- *       - in: path
- *         name: projectId
- *         required: true
- *         schema:
- *           type: string
- *         description: Project ID
- *       - in: path
- *         name: scanId
- *         required: true
- *         schema:
- *           type: string
- *         description: Scan execution ID
- *     responses:
- *       200:
- *         description: Scan progress information
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 scanId:
- *                   type: string
- *                 status:
- *                   type: string
- *                   enum: [PENDING, QUEUED, RUNNING, COMPLETED, FAILED, CANCELLED]
- *                 progress:
- *                   type: integer
- *                   minimum: 0
- *                   maximum: 100
- *                 isActive:
- *                   type: boolean
- *       403:
- *         description: Insufficient permissions
- *       404:
- *         description: Project or scan not found
- */
-router.get('/:projectId/dast/scans/:scanId/progress', async (req, res) => {
-  const { projectId, scanId } = req.params;
+// GET /api/v1/dast-scans/by-resource
+router.get('/by-resource', async (req, res) => {
+    const { resourceType, resourceId } = req.query;
 
-  try {
-    // Check permissions
-    const canView = await hasPermission(req.user, ['READER', 'EDITOR', 'ADMIN'], 'project', projectId);
+    if (!resourceType || !resourceId) {
+        return res.status(400).json({ error: 'resourceType and resourceId query parameters are required.' });
+    }
+
+    // Authorization check
+    const canView = await checkPermission(req.user, ['READER', 'EDITOR', 'ADMIN'], resourceType, resourceId);
     if (!canView) {
-      return res.status(403).json({ error: 'Insufficient permissions to view scan progress' });
+        return res.status(403).json({ error: 'You do not have permission to view scans for this resource.' });
     }
 
-    // Get scan execution record
-    const scan = await prisma.scanExecution.findUnique({
-      where: { id: scanId }
-    });
-
-    if (!scan || scan.projectId !== projectId) {
-      return res.status(404).json({ error: 'Scan not found for this project' });
-    }
-
-    // If scan is not active, return database status
-    const isActiveStatus = ['PENDING', 'QUEUED', 'RUNNING'].includes(scan.status);
-    if (!isActiveStatus) {
-      return res.json({
-        scanId: scanId,
-        status: scan.status,
-        progress: scan.status === 'COMPLETED' ? 100 : 0,
-        isActive: false
-      });
-    }
-
-    // For PENDING/QUEUED scans, return basic progress without ZAP polling
-    if (scan.status !== 'RUNNING') {
-      return res.json({
-        scanId: scanId,
-        status: scan.status,
-        progress: scan.status === 'PENDING' ? 0 : 5, // Show minimal progress for queued
-        isActive: true
-      });
-    }
-
-    // Check cache first for running scans
-    const cached = progressCache.get(scanId);
-    if (cached) {
-      return res.json(cached);
-    }
-
-    // Get live progress from ZAP
     try {
-      const scanner = await createDastScanner(scan.provider);
-      const toolScanId = scan.toolMetadata?.zapScanId || scan.toolMetadata?.scanId;
-      
-      if (!toolScanId) {
-        // No ZAP scan ID, return database status
-        const response = {
-          scanId: scanId,
-          status: scan.status,
-          progress: 10, // Show small progress for running scans without ZAP ID
-          isActive: scan.status === 'RUNNING',
-          phase: scan.status === 'RUNNING' ? 'scanning' : null,
-          message: scan.status === 'RUNNING' ? 'Initializing scan...' : null
-        };
-        progressCache.set(scanId, response);
-        return res.json(response);
-      }
+        const descendantIds = await getDescendants(resourceType, resourceId);
+        let projectIds = descendantIds.projectIds || [];
 
-      console.log(`Getting progress for scan ${scanId}, toolScanId: ${toolScanId}, toolMetadata:`, scan.toolMetadata);
-      const zapProgress = await scanner.getProgressOnly(toolScanId, scan.toolMetadata);
-      console.log(`ZAP progress response:`, zapProgress);
-      
-      const response = {
-        scanId: scanId,
-        status: zapProgress.status,
-        progress: zapProgress.progress,
-        isActive: zapProgress.isActive,
-        phase: zapProgress.phase,
-        message: zapProgress.message
-      };
-      console.log(`Final API response:`, response);
+        if (resourceType === 'project') {
+            projectIds.push(resourceId);
+        }
 
-      // Cache the response
-      progressCache.set(scanId, response);
-      
-      res.json(response);
+        const scans = await DastService.getScansByProjects(projectIds);
+        res.status(200).json(scans);
 
     } catch (error) {
-      console.error(`Failed to get ZAP progress for scan ${scanId}:`, error);
-      
-      // Return fallback progress on ZAP error - ensure consistent API structure
-      const fallbackProgress = scan.startedAt ? Math.min(90, Math.max(10, 
-        Math.floor((Date.now() - new Date(scan.startedAt).getTime()) / (1000 * 60) * 6)
-      )) : 10;
-      
-      const fallbackResponse = {
-        scanId: scanId,
-        status: scan.status,
-        progress: fallbackProgress,
-        isActive: scan.status === 'RUNNING',
-        phase: scan.status === 'RUNNING' ? 'scanning' : null,
-        message: scan.status === 'RUNNING' ? `Scanning: ${fallbackProgress}%` : null
-      };
-
-      // Cache fallback response for shorter time
-      progressCache.set(scanId, fallbackResponse, 1000); // 1 second cache for errors
-      
-      res.json(fallbackResponse);
+        console.error('Get scans by resource error:', error);
+        res.status(500).json({ error: 'Failed to retrieve scans.' });
     }
-
-  } catch (error) {
-    console.error(`Failed to get scan progress for ${scanId}:`, error);
-    res.status(500).json({ error: 'Failed to retrieve scan progress' });
-  }
 });
 
-/**
- * @openapi
- * /api/v1/projects/{projectId}/dast/scans/{scanId}:
- *   delete:
- *     summary: Cancel a DAST scan
- *     description: Cancels a running DAST scan
- *     tags: [DAST Scans]
- *     security:
- *       - cookieAuth: []
- *     parameters:
- *       - in: path
- *         name: projectId
- *         required: true
- *         schema:
- *           type: string
- *         description: Project ID
- *       - in: path
- *         name: scanId
- *         required: true
- *         schema:
- *           type: string
- *         description: Scan execution ID
- *     responses:
- *       200:
- *         description: Scan cancelled successfully
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
- *                   example: Scan cancelled successfully
- *       400:
- *         description: Scan cannot be cancelled (already completed/failed)
- *       403:
- *         description: Insufficient permissions
- *       404:
- *         description: Project or scan not found
- */
-router.delete('/:projectId/dast/scans/:scanId', async (req, res) => {
-  const { projectId, scanId } = req.params;
+// GET /api/v1/dast-scans/:scanId
+router.get('/:scanId', async (req, res) => {
+    const { scanId } = req.params;
 
-  try {
-    // Check permissions - any role can cancel scans
-    const canCancel = await hasPermission(req.user, ['READER', 'EDITOR', 'ADMIN'], 'project', projectId);
-    if (!canCancel) {
-      return res.status(403).json({ error: 'Insufficient permissions to cancel scans' });
-    }
-
-    // Verify scan belongs to the project
-    const scan = await prisma.scanExecution.findUnique({
-      where: { id: scanId }
-    });
-
-    if (!scan || scan.projectId !== projectId) {
-      return res.status(404).json({ error: 'Scan not found for this project' });
-    }
-
-    // Check if scan can be cancelled
-    if (!['PENDING', 'QUEUED', 'RUNNING'].includes(scan.status)) {
-      return res.status(400).json({ 
-        error: `Cannot cancel scan in status: ${scan.status}`,
-        currentStatus: scan.status
-      });
-    }
-
-    // Cancel the scan
-    const success = await cancelDastScan(scanId);
-
-    if (success) {
-      console.log(`DAST scan ${scanId} cancelled by ${req.user.email}`);
-      res.json({ message: 'Scan cancelled successfully' });
-    } else {
-      res.status(500).json({ error: 'Failed to cancel scan' });
-    }
-
-  } catch (error) {
-    console.error(`Failed to cancel DAST scan ${scanId}:`, error);
-    res.status(500).json({ error: 'Failed to cancel scan' });
-  }
-});
-
-/**
- * Test ZAP connectivity - DEBUG ENDPOINT
- * GET /api/v1/projects/:projectId/dast/test
- */
-router.get('/:projectId/dast/test', async (req, res) => {
-  try {
-    console.log('Testing ZAP connectivity from API container...');
-    
-    const scanner = await createDastScanner('OWASP_ZAP');
-    
-    // Test 1: Direct ZAP API call (bypass isAvailable method)
-    console.log('Testing direct ZAP API call...');
-    let directApiResult;
     try {
-      directApiResult = await scanner.zapApiRequest('/JSON/core/view/version/');
-      console.log('Direct API result:', directApiResult);
-    } catch (directError) {
-      console.error('Direct API call failed:', directError);
-      return res.json({ 
-        error: 'Direct ZAP API call failed: ' + directError.message,
-        tests: { directApi: false }
-      });
+        const scan = await DastService.getScan(scanId);
+        if (!scan) {
+            return res.status(404).json({ error: 'Scan not found.' });
+        }
+
+        // Authorization check
+        const canView = await checkPermission(req.user, ['READER', 'EDITOR', 'ADMIN'], 'project', scan.projectId);
+        if (!canView) {
+            return res.status(403).json({ error: 'You do not have permission to view this scan.' });
+        }
+
+        res.json(scan);
+
+    } catch (error) {
+        console.error(`Get scan error for scanId ${scanId}:`, error);
+        res.status(500).json({ error: 'Failed to get scan.' });
     }
-    
-    // Test 2: Check if ZAP is available using method
-    const isAvailable = await scanner.isAvailable();
-    console.log('ZAP availability:', isAvailable);
-    
-    // Test 2: Access a URL
-    console.log('Testing URL access...');
-    const accessResult = await scanner.zapApiRequest('/JSON/core/action/accessUrl/', {
-      url: 'http://httpbin.org/get'
-    });
-    console.log('Access result:', accessResult);
-    
-    // Test 3: Start a scan
-    console.log('Testing scan start...');
-    const scanResult = await scanner.zapApiRequest('/JSON/ascan/action/scan/', {
-      url: 'http://httpbin.org/get'
-    });
-    console.log('Scan result:', scanResult);
-    
-    const scanId = scanResult.scan;
-    
-    // Test 4: Check scan status immediately
-    console.log('Testing immediate status check...');
-    const statusResult = await scanner.zapApiRequest('/JSON/ascan/view/status/', {
-      scanId: scanId
-    });
-    console.log('Status result:', statusResult);
-    
-    // Test 5: Wait a bit and check again
-    console.log('Waiting 3 seconds...');
-    await new Promise(resolve => setTimeout(resolve, 3000));
-    
-    const statusResult2 = await scanner.zapApiRequest('/JSON/ascan/view/status/', {
-      scanId: scanId
-    });
-    console.log('Status result after wait:', statusResult2);
-    
-    res.json({
-      success: true,
-      tests: {
-        directApi: !!directApiResult,
-        availability: isAvailable,
-        access: !!accessResult,
-        scanStart: !!scanResult,
-        scanId: scanId,
-        immediateStatus: statusResult,
-        delayedStatus: statusResult2
-      }
-    });
-    
-  } catch (error) {
-    console.error('ZAP test failed:', error);
-    res.status(500).json({ 
-      error: error.message,
-      stack: error.stack
-    });
-  }
+});
+
+// GET /api/v1/dast-scans/:scanId/report
+router.get('/:scanId/report', async (req, res) => {
+    const { scanId } = req.params;
+    const { format = 'json' } = req.query; // Default to JSON format
+
+    try {
+        const scan = await DastService.getScan(scanId);
+        if (!scan) {
+            return res.status(404).json({ error: 'Scan not found.' });
+        }
+
+        // Authorization check
+        const canView = await checkPermission(req.user, ['READER', 'EDITOR', 'ADMIN'], 'project', scan.projectId);
+        if (!canView) {
+            return res.status(403).json({ error: 'You do not have permission to view this report.' });
+        }
+
+        const report = await DastService.getScanReport(scanId, format);
+        if (!report) {
+            return res.status(404).json({ error: 'Report not found or not yet available.' });
+        }
+
+        if (format === 'json') {
+            res.json(report);
+        } else if (format === 'html') {
+            res.setHeader('Content-Type', 'text/html');
+            res.send(report);
+        } else {
+            return res.status(400).json({ error: 'Invalid report format.' });
+        }
+
+    } catch (error) {
+        console.error(`Get scan report error for scanId ${scanId}:`, error);
+        res.status(500).json({ error: 'Failed to get scan report.' });
+    }
+});
+
+// POST /api/v1/dast-scans/:scanId/cancel
+router.post('/:scanId/cancel', async (req, res) => {
+    const { scanId } = req.params;
+
+    try {
+        const scan = await DastService.getScan(scanId);
+        if (!scan) {
+            return res.status(404).json({ error: 'Scan not found.' });
+        }
+
+        // Authorization check
+        const canCancel = await checkPermission(req.user, ['ADMIN', 'EDITOR'], 'project', scan.projectId);
+        if (!canCancel) {
+            return res.status(403).json({ error: 'You do not have permission to cancel this scan.' });
+        }
+
+        const result = await DastService.cancelScan(scanId);
+        res.status(200).json(result);
+
+    } catch (error) {
+        console.error(`Cancel scan error for scanId ${scanId}:`, error);
+        res.status(500).json({ error: 'Failed to cancel scan.' });
+    }
 });
 
 export default router; 

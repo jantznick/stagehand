@@ -6,7 +6,7 @@ import { Router } from 'express';
 import { PrismaClient } from '@prisma/client';
 import { protect } from '../middleware/authMiddleware.js';
 import { getAncestors, getDescendants } from '../utils/hierarchy.js';
-import { getVisibleResourceIds, hasPermission } from '../utils/permissions.js';
+import { checkPermission } from '../utils/permissions.js';
 
 const prisma = new PrismaClient();
 const router = Router();
@@ -141,7 +141,7 @@ router.get('/:resourceType/:resourceId/projects', async (req, res) => {
     const { resourceType, resourceId } = req.params;
 
     // First, ensure the user has permission to view the parent resource
-    const canView = await hasPermission(req.user, ['ADMIN', 'EDITOR', 'READER'], resourceType, resourceId);
+    const canView = await checkPermission(req.user, ['ADMIN', 'EDITOR', 'READER'], resourceType, resourceId);
     if (!canView) {
         return res.status(403).json({ error: `You are not authorized to view this ${resourceType}.` });
     }

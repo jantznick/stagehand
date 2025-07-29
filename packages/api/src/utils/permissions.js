@@ -2,108 +2,138 @@ import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
-/**
- * Gets all IDs of a given resource type that a user can see.
- * @param {object} user - The user object from req.user
- * @param {('organization'|'company'|'team'|'project')} resourceType - The type of resource.
- * @returns {Promise<string[]>} - A promise that resolves to an array of resource IDs.
- */
-export async function getVisibleResourceIds(user, resourceType) {
-    if (!user || !user.memberships) return [];
+const ROLES = ['ADMIN', 'EDITOR', 'READER'];
 
-    const directIds = user.memberships
-        .filter(m => m[`${resourceType}Id`])
-        .map(m => m[`${resourceType}Id`]);
-
-    if (resourceType === 'organization') {
-        return directIds;
-    }
-
-    if (resourceType === 'company') {
-        const orgIds = await getVisibleResourceIds(user, 'organization');
-        const companiesInOrgs = await prisma.company.findMany({
-            where: { organizationId: { in: orgIds } },
-            select: { id: true }
-        });
-        return [...new Set([...directIds, ...companiesInOrgs.map(c => c.id)])];
-    }
-    
-    if (resourceType === 'team') {
-        const companyIds = await getVisibleResourceIds(user, 'company');
-        const teamsInCompanies = await prisma.team.findMany({
-            where: { companyId: { in: companyIds } },
-            select: { id: true }
-        });
-        return [...new Set([...directIds, ...teamsInCompanies.map(t => t.id)])];
-    }
-    
-    if (resourceType === 'project') {
-        const teamIds = await getVisibleResourceIds(user, 'team');
-        const projectsInTeams = await prisma.project.findMany({
-            where: { teamId: { in: teamIds } },
-            select: { id: true }
-        });
-        return [...new Set([...directIds, ...projectsInTeams.map(p => p.id)])];
-    }
-
-    return [];
-}
+const roleLevels = {
+  ADMIN: 3,
+  EDITOR: 2,
+  READER: 1,
+};
 
 /**
- * Checks if a user has a specific role on a resource or its parents.
+ * A new, more efficient and correct implementation of hasPermission.
+ * This function fetches the resource's ancestry and the user's memberships in a single query.
  * @param {object} user - The user object from req.user
- * @param {('ADMIN'|'EDITOR'|'READER')|('ADMIN'|'EDITOR'|'READER')[]} roles - The role(s) to check for.
+ * @param {('ADMIN'|'EDITOR'|'READER')|('ADMIN'|'EDITOR'|'READER')[]} requiredRoles - The role(s) to check for.
  * @param {('organization'|'company'|'team'|'project')} resourceType - The type of resource.
  * @param {string} resourceId - The ID of the resource.
  * @returns {Promise<boolean>} - A promise that resolves to true if the user has permission.
  */
-export async function hasPermission(user, roles, resourceType, resourceId) {
+export async function checkPermission(user, requiredRoles, resourceType, resourceId) {
     if (!user || !user.memberships) return false;
 
-    const requiredRoles = Array.isArray(roles) ? roles : [roles];
+    const requiredRoleLevel = Math.min(...(Array.isArray(requiredRoles) ? requiredRoles : [requiredRoles]).map(r => roleLevels[r]));
 
-    // Direct membership check
-    const hasDirectRole = user.memberships.some(m => 
-        m[`${resourceType}Id`] === resourceId && requiredRoles.includes(m.role)
-    );
-    if (hasDirectRole) return true;
+    let resourceWithAncestors;
+    try {
+        switch (resourceType) {
+            case 'project':
+                resourceWithAncestors = await prisma.project.findUnique({
+                    where: { id: resourceId },
+                    select: { team: { select: { id: true, company: { select: { id: true, organizationId: true } } } } }
+                });
+                break;
+            case 'team':
+                resourceWithAncestors = await prisma.team.findUnique({
+                    where: { id: resourceId },
+                    select: { company: { select: { id: true, organizationId: true } } }
+                });
+                break;
+            case 'company':
+                resourceWithAncestors = await prisma.company.findUnique({
+                    where: { id: resourceId },
+                    select: { organizationId: true }
+                });
+                break;
+            case 'organization':
+                resourceWithAncestors = { id: resourceId };
+                break;
+            default:
+                return false;
+        }
+    } catch (e) {
+        console.error(`Error fetching resource for permission check`, e);
+        return false;
+    }
 
-    // Check for ADMIN role on parent resources, which grants all permissions downwards.
-    const parentChecks = {
-        project: async () => {
-            const project = await prisma.project.findUnique({ where: { id: resourceId }, select: { teamId: true } });
-            return project ? await hasPermission(user, 'ADMIN', 'team', project.teamId) : false;
-        },
-        team: async () => {
-            const team = await prisma.team.findUnique({ where: { id: resourceId }, select: { companyId: true } });
-            return team ? await hasPermission(user, 'ADMIN', 'company', team.companyId) : false;
-        },
-        company: async () => {
-            const company = await prisma.company.findUnique({ where: { id: resourceId }, select: { organizationId: true } });
-            return company ? await hasPermission(user, 'ADMIN', 'organization', company.organizationId) : false;
-        },
-        organization: () => Promise.resolve(false) // No parent to check
+    if (!resourceWithAncestors) return false;
+
+    const resourceIds = {
+        projectId: null,
+        teamId: null,
+        companyId: null,
+        organizationId: null,
     };
-    
-    return await parentChecks[resourceType]();
+
+    if (resourceType === 'project') {
+        resourceIds.projectId = resourceId;
+        resourceIds.teamId = resourceWithAncestors.team?.id;
+        resourceIds.companyId = resourceWithAncestors.team?.company?.id;
+        resourceIds.organizationId = resourceWithAncestors.team?.company?.organizationId;
+    } else if (resourceType === 'team') {
+        resourceIds.teamId = resourceId;
+        resourceIds.companyId = resourceWithAncestors.company?.id;
+        resourceIds.organizationId = resourceWithAncestors.company?.organizationId;
+    } else if (resourceType === 'company') {
+        resourceIds.companyId = resourceId;
+        resourceIds.organizationId = resourceWithAncestors.organizationId;
+    } else if (resourceType === 'organization') {
+        resourceIds.organizationId = resourceId;
+    }
+
+    const relevantMemberships = user.memberships.filter(m => 
+        (m.projectId && m.projectId === resourceIds.projectId) ||
+        (m.teamId && m.teamId === resourceIds.teamId) ||
+        (m.companyId && m.companyId === resourceIds.companyId) ||
+        (m.organizationId && m.organizationId === resourceIds.organizationId)
+    );
+
+    if (relevantMemberships.length === 0) return false;
+
+    const highestRoleLevel = Math.max(...relevantMemberships.map(m => roleLevels[m.role]));
+
+    return highestRoleLevel >= requiredRoleLevel;
 }
 
 /**
- * Checks if a user is a member of a specific company, respecting hierarchy.
- * @param {string} userId - The ID of the user.
- * @param {string} companyId - The ID of the company.
- * @returns {Promise<boolean>} - True if the user has any role in the company, directly or implicitly.
+ * A more performant version of getVisibleResourceIds.
+ * @param {object} user - The user object from req.user
+ * @param {('organization'|'company'|'team'|'project')} resourceType - The type of resource.
+ * @returns {Promise<string[]>} - A promise that resolves to an array of resource IDs.
  */
-export async function isMemberOfCompany(userId, companyId) {
-    if (!userId || !companyId) return false;
+export async function getVisibleResourceIdsV2(user, resourceType) {
+    if (!user || !user.memberships) return [];
 
-    const user = await prisma.user.findUnique({
-        where: { id: userId },
-        include: { memberships: true },
+    // 1. Get all unique organization IDs the user is a member of.
+    const orgIds = [...new Set(user.memberships.filter(m => m.organizationId).map(m => m.organizationId))];
+    if (resourceType === 'organization') return orgIds;
+
+    // 2. Get all companies in those organizations, plus any companies the user is a direct member of.
+    const companiesInOrgs = await prisma.company.findMany({
+        where: { organizationId: { in: orgIds } },
+        select: { id: true }
     });
+    const directCompanyIds = user.memberships.filter(m => m.companyId).map(m => m.companyId);
+    const companyIds = [...new Set([...companiesInOrgs.map(c => c.id), ...directCompanyIds])];
+    if (resourceType === 'company') return companyIds;
 
-    if (!user) return false;
+    // 3. Get all teams in those companies, plus any teams the user is a direct member of.
+    const teamsInCompanies = await prisma.team.findMany({
+        where: { companyId: { in: companyIds } },
+        select: { id: true }
+    });
+    const directTeamIds = user.memberships.filter(m => m.teamId).map(m => m.teamId);
+    const teamIds = [...new Set([...teamsInCompanies.map(t => t.id), ...directTeamIds])];
+    if (resourceType === 'team') return teamIds;
 
-    const visibleCompanyIds = await getVisibleResourceIds(user, 'company');
-    return visibleCompanyIds.includes(companyId);
+    // 4. Get all projects in those teams, plus any projects the user is a direct member of.
+    const projectsInTeams = await prisma.project.findMany({
+        where: { teamId: { in: teamIds } },
+        select: { id: true }
+    });
+    const directProjectIds = user.memberships.filter(m => m.projectId).map(m => m.projectId);
+    const projectIds = [...new Set([...projectsInTeams.map(p => p.id), ...directProjectIds])];
+    if (resourceType === 'project') return projectIds;
+    
+    return [];
 } 

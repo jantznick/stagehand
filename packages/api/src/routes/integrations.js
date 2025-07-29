@@ -4,7 +4,7 @@ import { Router } from 'express';
 import { PrismaClient } from '@prisma/client';
 import jwt from 'jsonwebtoken';
 import { protect } from '../middleware/authMiddleware.js';
-import { hasPermission } from '../utils/permissions.js';
+import { checkPermission } from '../utils/permissions.js';
 import { encrypt, decrypt } from '../utils/crypto.js';
 import { syncGitHubFindings } from '../utils/findings.js';
 
@@ -29,10 +29,10 @@ router.post('/github/auth-start', async (req, res) => {
     return res.status(400).json({ error: 'resourceType and resourceId are required.' });
   }
 
-  // Ensure user has permission to add an integration to this resource
-  const canManage = await hasPermission(req.user, ['ADMIN', 'EDITOR'], resourceType, resourceId);
+  // Authorization: User must be an ADMIN or EDITOR of the resource to manage integrations.
+  const canManage = await checkPermission(req.user, ['ADMIN', 'EDITOR'], resourceType, resourceId);
   if (!canManage) {
-    return res.status(403).json({ error: 'You are not authorized to add integrations to this resource.' });
+    return res.status(403).json({ error: 'You are not authorized to manage integrations for this resource.' });
   }
 
   const statePayload = { userId, resourceType, resourceId };
@@ -182,9 +182,10 @@ router.get('/', async (req, res) => {
         return res.status(400).json({ error: 'resourceType and resourceId query parameters are required.' });
     }
 
-    const canView = await hasPermission(req.user, ['ADMIN', 'EDITOR', 'READER'], resourceType, resourceId);
+    // Authorization check: User must have at least reader access to the resource
+    const canView = await checkPermission(req.user, ['ADMIN', 'EDITOR', 'READER'], resourceType, resourceId);
     if (!canView) {
-        return res.status(403).json({ error: 'You are not authorized to view integrations for this resource.' });
+        return res.status(403).json({ error: 'You are not authorized to view these integrations.' });
     }
 
     try {
@@ -254,49 +255,51 @@ router.delete('/:integrationId', async (req, res) => {
  * @desc Trigger a sync for a specific SCM integration to fetch findings
  * @access Private
  */
-router.post('/:integrationId/sync', async (req, res) => {
-  const { integrationId } = req.params;
-  const { projectIds } = req.body; // Expect an array of project IDs to sync
+router.post('/sync/:integrationId', async (req, res) => {
+    const { integrationId } = req.params;
 
-  if (!projectIds || !Array.isArray(projectIds) || projectIds.length === 0) {
-    return res.status(400).json({ error: 'An array of projectIds is required.' });
-  }
+    try {
+        const integration = await prisma.sCMIntegration.findUnique({
+            where: { id: integrationId },
+        });
 
-  try {
-    const integration = await prisma.sCMIntegration.findUnique({
-      where: { id: integrationId },
-    });
-
-    if (!integration) {
-      return res.status(404).json({ error: 'Integration not found.' });
-    }
-
-    // A simple permission check: Can the user view the integration's parent resource?
-    const resourceType = integration.organizationId ? 'organization' : integration.companyId ? 'company' : 'team';
-    const resourceId = integration.organizationId || integration.companyId || integration.teamId;
-    
-    if (resourceId) {
-        const canView = await hasPermission(req.user, ['ADMIN', 'EDITOR', 'READER'], resourceType, resourceId);
-        if (!canView) {
-            return res.status(403).json({ error: 'You are not authorized to sync this integration.' });
+        if (!integration) {
+            return res.status(404).json({ error: 'Integration not found.' });
         }
-    } else {
-        // Handle direct project integrations if necessary, though the primary model is hierarchy-based
-        return res.status(403).json({ error: 'Sync is not supported for this integration type yet.' });
+        
+        let resourceType, resourceId;
+        if (integration.organizationId) {
+            resourceType = 'organization';
+            resourceId = integration.organizationId;
+        } else if (integration.companyId) {
+            resourceType = 'company';
+            resourceId = integration.companyId;
+        } else if (integration.teamId) {
+            resourceType = 'team';
+            resourceId = integration.teamId;
+        } else if (integration.projectId) {
+            resourceType = 'project';
+            resourceId = integration.projectId;
+        }
+
+        if (resourceType && resourceId) {
+            const canView = await checkPermission(req.user, ['ADMIN', 'EDITOR', 'READER'], resourceType, resourceId);
+            if (!canView) {
+                return res.status(403).json({ error: 'You are not authorized to sync this integration.' });
+            }
+        }
+        
+        // For now, we only support GitHub, so we'll hardcode the sync logic here.
+        if (integration.provider === 'GITHUB') {
+            await syncGitHubFindings(integrationId);
+        }
+
+        res.status(202).json({ message: 'Sync process initiated successfully.' });
+
+    } catch (error) {
+        console.error(`Error syncing integration ${integrationId}:`, error);
+        res.status(500).json({ error: 'An error occurred during the sync process.' });
     }
-
-    // Do not await this call. This allows us to send an immediate response to the client.
-    // The sync will run in the background.
-    syncGitHubFindings(integrationId, projectIds).catch(error => {
-      console.error(`[Background Sync Error] Failed to sync integration ${integrationId}:`, error);
-    });
-
-    res.status(202).json({ message: 'Sync process initiated successfully.' });
-
-  } catch (error) {
-    console.error(`Error syncing integration ${integrationId}:`, error);
-    res.status(500).json({ error: 'An error occurred during the sync process.' });
-  }
 });
 
 /**
@@ -308,7 +311,11 @@ router.get('/:integrationId/sync-logs', async (req, res) => {
     const { integrationId } = req.params;
 
     try {
-        // Basic permission check can be added here if needed
+        // Authorization check: User must have at least reader access to the resource
+        const canView = await checkPermission(req.user, ['ADMIN', 'EDITOR', 'READER'], 'scmIntegration', integrationId);
+        if (!canView) {
+            return res.status(403).json({ error: 'You are not authorized to view sync history.' });
+        }
         const logs = await prisma.integrationSyncLog.findMany({
             where: { scmIntegrationId: integrationId },
             orderBy: { startTime: 'desc' },
@@ -332,7 +339,7 @@ const canUserDeleteIntegration = async (user, integration) => {
     const resourceType = ['organization', 'company', 'team', 'project'].find(r => integration[`${r}Id`]);
     if (resourceType) {
         const resourceId = integration[`${resourceType}Id`];
-        return await hasPermission(user, ['ADMIN'], resourceType, resourceId);
+        return await checkPermission(user, ['ADMIN'], resourceType, resourceId);
     }
 
     return false;

@@ -3,7 +3,7 @@
 import { Router } from 'express';
 import { PrismaClient } from '@prisma/client';
 import { protect } from '../middleware/authMiddleware.js';
-import { hasPermission } from '../utils/permissions.js';
+import { checkPermission } from '../utils/permissions.js';
 import crypto from 'crypto';
 import { sendEmail } from '../utils/email.js';
 import React from 'react';
@@ -52,7 +52,7 @@ router.post('/resend', async (req, res) => {
         const resourceType = organizationId ? 'organization' : companyId ? 'company' : teamId ? 'team' : 'project';
         const resourceId = organizationId || companyId || teamId || projectId;
 
-        const canManage = await hasPermission(req.user, ['ADMIN', 'EDITOR', 'READER'], resourceType, resourceId);
+        const canManage = await checkPermission(req.user, ['ADMIN', 'EDITOR', 'READER'], resourceType, resourceId);
         if (!canManage) {
             return res.status(403).json({ error: 'You are not authorized to manage members for this resource.' });
         }

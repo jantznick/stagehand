@@ -77,6 +77,6 @@ Retrieves a flat list of all projects that exist under a given resource in the h
 *   **URL Params:**
     *   `:resourceType`: The type of the parent resource (`'organization'`, `'company'`, `'team'`).
     *   `:resourceId`: The ID of the parent resource.
-*   **Permissions:** Requires `READER`, `EDITOR`, or `ADMIN` role on the parent resource.
+*   **Permissions:** Requires read permission on the parent resource (e.g., `'company:read'`).
 *   **Success Response (`200`):** A flat array of `Project` objects, each containing `id`, `name`, and `repositoryUrl`.
 *   **Behavior:** Uses the `getDescendants` utility to efficiently find all project IDs under the given resource and then fetches their details. 

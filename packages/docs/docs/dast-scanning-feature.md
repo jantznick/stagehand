@@ -200,7 +200,7 @@ export class DastScannerBase {
 
 **POST /api/projects/:id/dast/scan**
 - Launch new DAST scan
-- Requires ADMIN or EDITOR permissions
+- Requires `'project:update'` permission.
 - Validates target URL and scan configuration
 - Returns scan execution ID and initial status
 
@@ -282,9 +282,9 @@ zap:
 ## Security Considerations
 
 ### Access Control
-- DAST scan launching requires ADMIN or EDITOR role
-- All users with project access can view scan results
-- Scan history is project-scoped and permission-controlled
+- DAST scan launching requires `'project:update'` permission.
+- All users with `'project:read'` permission can view scan results.
+- Scan history is project-scoped and permission-controlled.
 
 ### Data Handling
 - Scan results are automatically processed and stored

@@ -3,7 +3,7 @@
 import { Router } from 'express';
 import { PrismaClient } from '@prisma/client';
 import { protect } from '../middleware/authMiddleware.js';
-import { hasPermission } from '../utils/permissions.js';
+import { checkPermission } from '../utils/permissions.js';
 import crypto from 'crypto';
 import { sendEmail } from '../utils/email.js';
 import React from 'react';
@@ -28,18 +28,12 @@ router.post('/resend', async (req, res) => {
             include: { invitation: true }
         });
 
-        // Ensure the user exists and is actually pending by checking for a null password
-        console.log(user);
-		if (!user) {
+        // Ensure the user exists and is actually pending (has not set a password yet)
+        if (!user || user.password) {
             return res.status(404).json({ error: 'A pending invitation for this user was not found.' });
         }
-
-		if (user && user.emailVerified) {
-			return res.status(400).json({ error: 'This user has already been registered.' });
-		}
         
         // The user must have permission to manage the resource the user was invited to.
-        // This requires finding the user's membership.
         const membership = await prisma.membership.findFirst({
             where: { userId: user.id }
         });
@@ -52,7 +46,7 @@ router.post('/resend', async (req, res) => {
         const resourceType = organizationId ? 'organization' : companyId ? 'company' : teamId ? 'team' : 'project';
         const resourceId = organizationId || companyId || teamId || projectId;
 
-        const canManage = await hasPermission(req.user, ['ADMIN', 'EDITOR', 'READER'], resourceType, resourceId);
+        const canManage = await checkPermission(req.user, `${resourceType}:members:manage`, resourceType, resourceId);
         if (!canManage) {
             return res.status(403).json({ error: 'You are not authorized to manage members for this resource.' });
         }

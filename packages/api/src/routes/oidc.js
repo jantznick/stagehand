@@ -1,9 +1,9 @@
 // OIDC routes - OpenAPI documentation moved to packages/api/src/openapi/
 
 import { Router } from 'express';
-import { PrismaClient, Role } from '@prisma/client';
+import { PrismaClient } from '@prisma/client';
 import { protect } from '../middleware/authMiddleware.js';
-import { hasPermission } from '../utils/permissions.js';
+import { checkPermission } from '../utils/permissions.js';
 import { encrypt, decrypt } from '../utils/crypto.js';
 
 const prisma = new PrismaClient();
@@ -19,7 +19,7 @@ router.get('/organizations/:orgId/oidc', protect, async (req, res) => {
   const user = req.user;
 
   try {
-    const hasAccess = await hasPermission(user, 'ADMIN', 'organization', orgId);
+    const hasAccess = await checkPermission(user, 'organization:update', 'organization', orgId);
     if (!hasAccess) {
       return res.status(403).json({ error: 'You do not have permission to view this configuration.' });
     }
@@ -47,18 +47,14 @@ router.get('/organizations/:orgId/oidc', protect, async (req, res) => {
 router.post('/organizations/:orgId/oidc', protect, async (req, res) => {
   const { orgId } = req.params;
   const user = req.user;
-  const { isEnabled, issuer, clientId, clientSecret, authorizationUrl, tokenUrl, userInfoUrl, defaultRole, buttonText } = req.body;
+  const { isEnabled, issuer, clientId, clientSecret, authorizationUrl, tokenUrl, userInfoUrl, defaultRoleId, buttonText } = req.body;
 
   if (!issuer || !clientId || !clientSecret || !authorizationUrl || !tokenUrl || !userInfoUrl) {
     return res.status(400).json({ error: 'issuer, clientId, clientSecret, authorizationUrl, tokenUrl, and userInfoUrl are required.' });
   }
 
-  if (defaultRole && !Object.values(Role).includes(defaultRole)) {
-    return res.status(400).json({ error: 'Invalid defaultRole specified.' });
-  }
-
   try {
-    const hasAccess = await hasPermission(user, 'ADMIN', 'organization', orgId);
+    const hasAccess = await checkPermission(user, 'organization:update', 'organization', orgId);
     if (!hasAccess) {
       return res.status(403).json({ error: 'You do not have permission to modify this configuration.' });
     }
@@ -80,7 +76,7 @@ router.post('/organizations/:orgId/oidc', protect, async (req, res) => {
       authorizationUrl,
       tokenUrl,
       userInfoUrl,
-      defaultRole, // If not provided, prisma schema default is used
+      defaultRoleId,
       buttonText,
     };
 
@@ -101,14 +97,10 @@ router.post('/organizations/:orgId/oidc', protect, async (req, res) => {
 router.put('/organizations/:orgId/oidc', protect, async (req, res) => {
     const { orgId } = req.params;
     const user = req.user;
-    const { isEnabled, issuer, clientId, clientSecret, authorizationUrl, tokenUrl, userInfoUrl, defaultRole, buttonText } = req.body;
-
-    if (defaultRole && !Object.values(Role).includes(defaultRole)) {
-        return res.status(400).json({ error: 'Invalid defaultRole specified.' });
-    }
+    const { isEnabled, issuer, clientId, clientSecret, authorizationUrl, tokenUrl, userInfoUrl, defaultRoleId, buttonText } = req.body;
 
     try {
-        const hasAccess = await hasPermission(user, 'ADMIN', 'organization', orgId);
+        const hasAccess = await checkPermission(user, 'organization:update', 'organization', orgId);
         if (!hasAccess) {
             return res.status(403).json({ error: 'You do not have permission to modify this configuration.' });
         }
@@ -123,7 +115,7 @@ router.put('/organizations/:orgId/oidc', protect, async (req, res) => {
         if (authorizationUrl) dataToUpdate.authorizationUrl = authorizationUrl;
         if (tokenUrl) dataToUpdate.tokenUrl = tokenUrl;
         if (userInfoUrl) dataToUpdate.userInfoUrl = userInfoUrl;
-        if (defaultRole) dataToUpdate.defaultRole = defaultRole;
+        if (defaultRoleId) dataToUpdate.defaultRoleId = defaultRoleId;
         if (buttonText !== undefined) dataToUpdate.buttonText = buttonText;
 
         const updatedConfig = await prisma.oIDCConfiguration.update({
@@ -150,7 +142,7 @@ router.delete('/organizations/:orgId/oidc', protect, async (req, res) => {
   const user = req.user;
 
   try {
-    const hasAccess = await hasPermission(user, 'ADMIN', 'organization', orgId);
+    const hasAccess = await checkPermission(user, 'organization:update', 'organization', orgId);
     if (!hasAccess) {
       return res.status(403).json({ error: 'You do not have permission to delete this configuration.' });
     }

@@ -15,7 +15,7 @@ Manages top-level organizations, which represent the highest level of tenancy in
 
 ## Permissions Helper
 
-*   `hasPermission(user, requiredRoles, entityType, entityId)`: A crucial utility function from `src/utils/permissions.js`. It checks if the `user` has one of the `requiredRoles` (e.g., `'ADMIN'`, `'EDITOR'`) on the specified `entityType` (e.g., `'organization'`) for the given `entityId`. This is the primary mechanism for authorization throughout the API.
+*   `checkPermission(user, permissionString, resourceType, resourceId)`: A utility from `src/utils/permissions.js` that dynamically checks if a user has the required permission on a specific resource. It handles permissions inherited from parent resources, as well as those granted to the user's teams.
 
 ---
 
@@ -25,7 +25,7 @@ Manages top-level organizations, which represent the highest level of tenancy in
 
 Retrieves a single organization by its ID.
 
-*   **Permissions:** Requires the user to have a `READER`, `EDITOR`, or `ADMIN` role on the organization.
+*   **Permissions:** Requires `'organization:read'` permission on the organization.
 *   **Success Response (`200`):** The full organization object.
 *   **Error Response (`403`):** If the user is not authorized.
 *   **Error Response (`404`):** If the organization is not found.
@@ -36,7 +36,7 @@ Retrieves a single organization by its ID.
 
 Updates an organization's details.
 
-*   **Permissions:** Requires the user to have an `ADMIN` role on the organization.
+*   **Permissions:** Requires `'organization:update'` permission on the organization.
 *   **Body (`application/json`):**
     *   `name` (string, optional): The new name for the organization.
     *   `description` (string, optional): The new description.
@@ -59,7 +59,7 @@ These endpoints manage the email domains that are allowed to automatically join 
 
 Retrieves all auto-join domains configured for a specific organization.
 
-*   **Permissions:** Requires the user to be a member of the organization at any level.
+*   **Permissions:** Requires `'organization:update'` permission.
 *   **Success Response (`200`):** An array of auto-join domain objects.
 
 ---
@@ -68,10 +68,10 @@ Retrieves all auto-join domains configured for a specific organization.
 
 Adds a new domain for auto-join.
 
-*   **Permissions:** Requires `ADMIN` role on the organization.
+*   **Permissions:** Requires `'organization:update'` permission.
 *   **Body (`application/json`):**
     *   `domain` (string, required): The domain to add (e.g., `mycompany.com`).
-    *   `role` (string, required): The default role to assign to new users from this domain (e.g., `'READER'`, `'EDITOR'`).
+    *   `roleId` (string, required): The ID of the default `Role` to assign to new users from this domain.
 *   **Success Response (`201`):** The newly created auto-join domain object, which includes a unique `verificationCode`.
 *   **Error Response (`400`):** If a public email domain (e.g., `gmail.com`) is provided.
 
@@ -84,7 +84,7 @@ Adds a new domain for auto-join.
 
 Verifies ownership of a domain by checking for a specific DNS TXT record.
 
-*   **Permissions:** Requires `ADMIN` role on the organization.
+*   **Permissions:** Requires `'organization:update'` permission.
 *   **URL Params:**
     *   `:id`: The organization ID.
     *   `:domainMappingId`: The ID of the `AutoJoinDomain` record.
@@ -103,7 +103,7 @@ Verifies ownership of a domain by checking for a specific DNS TXT record.
 
 Deletes an auto-join domain configuration.
 
-*   **Permissions:** Requires `ADMIN` role on the organization.
+*   **Permissions:** Requires `'organization:update'` permission.
 *   **URL Params:**
     *   `:id`: The organization ID.
     *   `:domainMappingId`: The ID of the `AutoJoinDomain` record to delete.

@@ -3,7 +3,7 @@
 import { Router } from 'express';
 import { PrismaClient } from '@prisma/client';
 import { protect } from '../middleware/authMiddleware.js';
-import { hasPermission } from '../utils/permissions.js';
+import { checkPermission } from '../utils/permissions.js';
 import { processDastScan, cancelDastScan, getDastScanStatus } from '../utils/scanProcessor.js';
 import { getSupportedProviders, createDastScanner } from '../utils/dastService.js';
 import { progressCache } from '../utils/progressCache.js';
@@ -98,8 +98,8 @@ router.post('/:projectId/dast/scan', async (req, res) => {
       return res.status(404).json({ error: 'Project not found' });
     }
 
-    // Check permissions - requires ADMIN or EDITOR role
-    const canLaunchScan = await hasPermission(req.user, ['ADMIN', 'EDITOR'], 'project', projectId);
+    // Check permissions - requires project:update permission to launch a scan
+    const canLaunchScan = await checkPermission(req.user, 'project:update', 'project', projectId);
     if (!canLaunchScan) {
       return res.status(403).json({ error: 'Insufficient permissions to launch scans' });
     }
@@ -202,7 +202,7 @@ router.get('/:projectId/dast/scans', async (req, res) => {
     }
 
     // Check permissions - any role can view scans
-    const canView = await hasPermission(req.user, ['READER', 'EDITOR', 'ADMIN'], 'project', projectId);
+    const canView = await checkPermission(req.user, 'project:read', 'project', projectId);
     if (!canView) {
       return res.status(403).json({ error: 'Insufficient permissions to view scans' });
     }
@@ -295,7 +295,7 @@ router.get('/:projectId/dast/scans/:scanId', async (req, res) => {
 
   try {
     // Check permissions
-    const canView = await hasPermission(req.user, ['READER', 'EDITOR', 'ADMIN'], 'project', projectId);
+    const canView = await checkPermission(req.user, 'project:read', 'project', projectId);
     if (!canView) {
       return res.status(403).json({ error: 'Insufficient permissions to view scan details' });
     }
@@ -389,7 +389,7 @@ router.get('/:projectId/dast/scans/:scanId/details', async (req, res) => {
 
   try {
     // Check permissions
-    const canView = await hasPermission(req.user, ['READER', 'EDITOR', 'ADMIN'], 'project', projectId);
+    const canView = await checkPermission(req.user, 'project:read', 'project', projectId);
     if (!canView) {
       return res.status(403).json({ error: 'Insufficient permissions to view scan details' });
     }
@@ -506,7 +506,7 @@ router.get('/:projectId/dast/scans/:scanId/progress', async (req, res) => {
 
   try {
     // Check permissions
-    const canView = await hasPermission(req.user, ['READER', 'EDITOR', 'ADMIN'], 'project', projectId);
+    const canView = await checkPermission(req.user, 'project:read', 'project', projectId);
     if (!canView) {
       return res.status(403).json({ error: 'Insufficient permissions to view scan progress' });
     }
@@ -658,8 +658,8 @@ router.delete('/:projectId/dast/scans/:scanId', async (req, res) => {
   const { projectId, scanId } = req.params;
 
   try {
-    // Check permissions - any role can cancel scans
-    const canCancel = await hasPermission(req.user, ['READER', 'EDITOR', 'ADMIN'], 'project', projectId);
+    // Check permissions - requires project:update permission to cancel a scan
+    const canCancel = await checkPermission(req.user, 'project:update', 'project', projectId);
     if (!canCancel) {
       return res.status(403).json({ error: 'Insufficient permissions to cancel scans' });
     }

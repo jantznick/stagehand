@@ -62,13 +62,14 @@ packages/api/
 *   **Authentication:** The API uses a stateful, session-based authentication model.
     *   Upon successful login, a session is created in the `Session` table in the database.
     *   A secure cookie containing the session ID is sent to the client.
-    *   On subsequent requests, `passport.deserializeUser` uses the session ID to fetch the user's data, including their roles and memberships.
+    *   On subsequent requests, `passport.deserializeUser` uses the session ID to fetch the user's data, including their direct memberships and their team memberships.
 *   **OIDC:** The primary authentication strategy is OpenID Connect (OIDC), implemented in `src/utils/passport.js`. The configuration is dynamic, allowing different organizations to configure their own IdPs.
 *   **Authorization (Permissions):**
-    *   Authorization logic should be handled within the route handlers.
-    *   The deserialized `req.user` object contains the user's memberships and roles.
-    *   Before performing an action, check if the user's role grants them permission to access or modify the requested resource.
-    *   Example: Check if `req.user.memberships` includes a role that permits the action on the target `organizationId` or `companyId`.
+    *   Authorization logic is handled within the route handlers using the `checkPermission` utility from `src/utils/permissions.js`.
+    *   The deserialized `req.user` object contains all the memberships needed to evaluate permissions.
+    *   The `checkPermission` function takes the user, a required permission string (e.g., `'project:read'`), and the resource being accessed. It returns `true` or `false`.
+    *   This function dynamically checks for permissions granted directly to the user, inherited from the user's teams, or inherited from parent resources in the hierarchy.
+    *   Example: `const canView = await checkPermission(req.user, 'project:read', 'project', projectId);`
 
 ### 5. Security
 

@@ -13,7 +13,7 @@ Manages the relationships (dependencies) between different projects. These relat
 
 **Middleware:** All routes in this file are protected by a custom middleware `canEditCompanyResources`. This middleware ensures that:
 1.  A `companyId` is provided as a query parameter for all requests.
-2.  The authenticated user has `ADMIN` or `EDITOR` permissions on that company.
+2.  The authenticated user has `'project:update'` permission on that company.
 
 ---
 

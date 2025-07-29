@@ -26,7 +26,7 @@ The creation of findings is handled by the background synchronization jobs initi
 Retrieves all findings for a specific project.
 
 *   **URL:** `/api/v1/projects/:projectId/findings`
-*   **Permissions:** Requires `READER`, `EDITOR`, or `ADMIN` role on the parent project.
+*   **Permissions:** Requires `'project:read'` permission on the parent project.
 *   **Success Response (`200`):** An array of `Finding` objects.
 *   **Behavior:**
     1.  Checks if the user has permission to view the specified `projectId`.

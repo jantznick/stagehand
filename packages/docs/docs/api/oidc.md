@@ -17,7 +17,7 @@ Provides full CRUD (Create, Read, Update, Delete) functionality for managing an 
 
 ## Security
 
-*   **Permissions:** All endpoints require the authenticated user to have an `ADMIN` role on the target organization.
+*   **Permissions:** All endpoints require the authenticated user to have the `'organization:update'` permission on the target organization.
 *   **Client Secret:** The `clientSecret` is a sensitive credential. It is encrypted before being stored in the database and is **never** sent back to the client in API responses.
 
 ---
@@ -47,7 +47,7 @@ Creates a new OIDC configuration for an organization.
     *   `authorizationUrl` (string, required)
     *   `tokenUrl` (string, required)
     *   `userInfoUrl` (string, required)
-    *   `defaultRole` (enum, optional): The role assigned to new users signing up via OIDC (e.g., `'READER'`). Defaults to the Prisma schema default.
+    *   `defaultRoleId` (string, optional): The ID of the role assigned to new users signing up via OIDC.
     *   `buttonText` (string, optional): Custom text for the SSO login button.
 *   **Success Response (`201`):** The newly created `OIDCConfiguration` object, with the `clientSecret` field removed.
 *   **Error Response (`409`):** If a configuration already exists for this organization.

@@ -1,19 +1,11 @@
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
-  //  url      = "postgresql://admin:password@localhost:5432/stagehand?schema=public"
 }
 
 generator client {
   provider      = "prisma-client-js"
   binaryTargets = ["native", "linux-musl-arm64-openssl-1.1.x", "linux-musl-arm64-openssl-3.0.x"]
-}
-
-// Hierarchical Role Definition
-enum Role {
-  ADMIN
-  EDITOR
-  READER
 }
 
 enum VerificationStatus {
@@ -100,7 +92,7 @@ enum ScanStatus {
 model User {
   id        String   @id @default(cuid())
   email     String   @unique
-  password  String? // Hashed password, optional for invited users
+  password  String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -112,6 +104,7 @@ model User {
   invitation         Invitation?
   passwordResetToken PasswordResetToken?
   loginTokens        LoginToken[]
+  teamMemberships    TeamMember[]
 
   contacts                 Contact[]
   scmIntegrations          SCMIntegration[]
@@ -135,7 +128,7 @@ model Organization {
   id                    String   @id @default(cuid())
   name                  String
   description           String?
-  accountType           String   @default("STANDARD") // STANDARD or ENTERPRISE
+  accountType           String   @default("STANDARD")
   hierarchyDisplayNames Json?
   createdAt             DateTime @default(now())
   updatedAt             DateTime @updatedAt
@@ -147,6 +140,7 @@ model Organization {
   oidcConfiguration        OIDCConfiguration?
   integrations             SCMIntegration[]
   securityToolIntegrations SecurityToolIntegration[]
+  roles                    Role[]
 }
 
 model Company {
@@ -178,6 +172,7 @@ model Team {
 
   projects                 Project[]
   memberships              Membership[]
+  members                  TeamMember[]
   integrations             SCMIntegration[]
   securityToolIntegrations SecurityToolIntegration[]
 }
@@ -194,24 +189,17 @@ model Project {
 
   memberships Membership[]
 
-  // --- Stagehand Fields ---
-  /// Primary URL for the deployed application
   applicationUrl   String?
-  /// Current public version, e.g., 2.1.4
   version          String?
   deploymentStatus DeploymentStatus @default(IN_DEVELOPMENT)
 
-  // --- DAST Scanning Fields ---
   dastScanEnabled  Boolean? @default(false)
   lastDastScanDate DateTime?
-  dastScanSettings Json? // Store tool-agnostic scan configuration
+  dastScanSettings Json?
 
-  /// Link to the source code repository (e.g., GitHub)
   repositoryUrl   String?
-  /// Link to the CI/CD pipeline (e.g., Jenkins, GitHub Actions)
   ciCdPipelineUrl String?
 
-  /// Timestamp of the last successful scan by any integrated tool
   lastScanDate DateTime?
 
   projectType            ProjectType?
@@ -219,14 +207,13 @@ model Project {
   applicationCriticality ApplicationCriticality?
   isExternallyExposed    Boolean?                @default(false)
 
-  communicationChannel String? // e.g., Slack channel link
-  documentationUrl     String? // Link to general project documentation (e.g., Confluence)
-  apiReferenceUrl      String? // Link to API documentation (e.g., Swagger, OpenAPI)
-  runbookUrl           String? // Link to operational runbooks for on-call
-  threatModelUrl       String? // Link to threat model document
-  lastSecurityReview   DateTime? // Date of last manual security review
+  communicationChannel String?
+  documentationUrl     String?
+  apiReferenceUrl      String?
+  runbookUrl           String?
+  threatModelUrl       String?
+  lastSecurityReview   DateTime?
 
-  /// Points of contact for this application
   contacts     ProjectContact[]
   technologies ProjectTechnology[]
   dependencies ProjectDependency[]
@@ -242,7 +229,6 @@ model Project {
   securityToolIntegrationId String?
   securityToolIntegration   SecurityToolIntegration? @relation("ProjectSecurityToolLink", fields: [securityToolIntegrationId], references: [id], onDelete: SetNull)
 
-  // Flexible JSON object for tool-specific IDs
   toolSpecificIds Json? @default("{}")
 
   findings       Finding[]
@@ -252,18 +238,14 @@ model Project {
 model ProjectRelationship {
   id          String  @id @default(cuid())
   description String?
-  // Type of relationship, e.g., 'API', 'DATABASE', 'MESSAGE_QUEUE', 'DIRECT_DEPENDENCY'
   type        String
 
-  // The project that has the dependency (the source of the connection)
   sourceProjectId String
   sourceProject   Project @relation("outboundDependencies", fields: [sourceProjectId], references: [id], onDelete: Cascade)
 
-  // The project that is the dependency (the target of the connection)
   targetProjectId String
   targetProject   Project @relation("inboundDependencies", fields: [targetProjectId], references: [id], onDelete: Cascade)
 
-  // A relationship of a certain type between two projects must be unique
   @@unique([sourceProjectId, targetProjectId, type])
 }
 
@@ -282,36 +264,64 @@ model Invitation {
 }
 
 model Membership {
-  id     String @id @default(cuid())
-  role   Role
-  userId String
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-
+  id             String        @id @default(cuid())
+  roleId         String
+  role           Role          @relation(fields: [roleId], references: [id])
+  userId         String?
+  user           User?         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  teamId         String?
+  team           Team?         @relation(fields: [teamId], references: [id], onDelete: Cascade)
   organizationId String?
   organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-
-  companyId String?
-  company   Company? @relation(fields: [companyId], references: [id], onDelete: Cascade)
-
-  teamId String?
-  team   Team?   @relation(fields: [teamId], references: [id], onDelete: Cascade)
-
-  projectId String?
-  project   Project? @relation(fields: [projectId], references: [id], onDelete: Cascade)
-
-  createdAt DateTime @default(now())
+  companyId      String?
+  company        Company?      @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  projectId      String?
+  project        Project?      @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  createdAt      DateTime      @default(now())
 
   @@unique([userId, organizationId])
   @@unique([userId, companyId])
-  @@unique([userId, teamId])
   @@unique([userId, projectId])
+  @@unique([teamId, organizationId])
+  @@unique([teamId, companyId])
+  @@unique([teamId, projectId])
+}
+
+model Role {
+  id             String       @id @default(cuid())
+  name           String
+  description    String?
+  isEditable     Boolean      @default(true)
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  permissions    Permission[]
+  memberships    Membership[]
+}
+
+model Permission {
+  id           String @id @default(cuid())
+  action       String
+  resourceType String
+  description  String?
+  roles        Role[]
+
+  @@unique([action, resourceType])
+}
+
+model TeamMember {
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+  teamId String
+  team   Team   @relation(fields: [teamId], references: [id])
+
+  @@unique([userId, teamId])
 }
 
 model Contact {
   id    String  @id @default(cuid())
   name  String
   email String  @unique
-  /// e.g., Engineering Manager, External Consultant
   role  String?
 
   userId String? @unique
@@ -327,7 +337,6 @@ model ProjectContact {
   contactId String
   contact   Contact @relation(fields: [contactId], references: [id])
 
-  /// e.g., 'Primary Owner', 'Technical Lead', 'Product Manager'
   contactType String
 
   @@id([projectId, contactId, contactType])
@@ -335,8 +344,8 @@ model ProjectContact {
 
 model Technology {
   id   String         @id @default(cuid())
-  name String // e.g., "React", "Snyk", "Jira", "Python"
-  type TechnologyType // To categorize the technology
+  name String
+  type TechnologyType
 
   applications ProjectTechnology[]
   dependencies ProjectDependency[]
@@ -352,9 +361,7 @@ model ProjectTechnology {
   technologyId String
   technology   Technology @relation(fields: [technologyId], references: [id])
 
-  /// e.g., 18.2.0 for React
   version String?
-  /// How was this discovered? e.g., 'user-entered' or 'Discovered by Snyk'
   source  String
 
   @@unique([projectId, technologyId, version])
@@ -362,9 +369,9 @@ model ProjectTechnology {
 
 model ProjectDependency {
   id      String @id @default(cuid())
-  name    String // e.g., "express"
-  version String // e.g., "4.17.1"
-  type    String // e.g., "npm", "maven"
+  name    String
+  version String
+  type    String
 
   projectId String
   project   Project @relation(fields: [projectId], references: [id])
@@ -373,14 +380,14 @@ model ProjectDependency {
   technology   Technology? @relation(fields: [technologyId], references: [id])
 
   @@unique([projectId, name, version])
-  @@index([name]) // Index for fast lookups by dependency name
-  @@index([name, version]) // Index for fast lookups by name and version
+  @@index([name])
+  @@index([name, version])
 }
 
 model AutoJoinDomain {
   id               String             @id @default(cuid())
   domain           String
-  role             Role
+  roleId           String?
   status           VerificationStatus @default(PENDING)
   verificationCode String             @unique
 
@@ -408,7 +415,7 @@ model OIDCConfiguration {
   authorizationUrl String
   tokenUrl         String
   userInfoUrl      String
-  defaultRole      Role    @default(READER)
+  defaultRoleId    String?
   buttonText       String?
 
   organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
@@ -473,15 +480,13 @@ model SCMIntegration {
 
 model SecurityToolIntegration {
   id        String           @id @default(cuid())
-  provider  String // e.g., "Snyk", "Dependabot"
-  type      SecurityToolType // e.g., "SAST", "SCA"
+  provider  String
+  type      SecurityToolType
   createdAt DateTime         @default(now())
   updatedAt DateTime         @updatedAt
 
-  // Flexible, encrypted credentials
   encryptedCredentials Json
 
-  // Relationships to hierarchical entities
   createdById String
   createdBy   User   @relation(fields: [createdById], references: [id], onDelete: Cascade)
 
@@ -492,7 +497,6 @@ model SecurityToolIntegration {
   teamId         String?
   team           Team?         @relation(fields: [teamId], references: [id], onDelete: Cascade)
 
-  // A security tool integration can be directly linked to multiple projects
   directProjectLinks Project[] @relation("DirectProjectSecurityToolIntegrations")
   linkedProjects     Project[] @relation("ProjectSecurityToolLink")
 
@@ -504,7 +508,7 @@ model SecurityToolIntegration {
 
 model IntegrationSyncLog {
   id              String    @id @default(cuid())
-  status          String // 'SUCCESS', 'FAILURE', 'IN_PROGRESS'
+  status          String
   startTime       DateTime
   endTime         DateTime?
   errorMessage    String?   @db.Text
@@ -532,17 +536,16 @@ enum FindingStatus {
 
 model Vulnerability {
   id              String              @id @default(cuid())
-  // Canonical ID from the source, e.g., 'CVE-2023-1234' or 'GHSA-...'
   vulnerabilityId String
-  source          String              // Descriptive source string like "Stagehand DAST (OWASP ZAP)"
-  type            SecurityToolType?   // DAST, SAST, SCA, APISEC
+  source          String
+  type            SecurityToolType?
 
   title       String
   description String  @db.Text
-  severity    String // e.g., 'CRITICAL', 'HIGH', 'MEDIUM', 'LOW'
+  severity    String
   cvssScore   Float?
   remediation String? @db.Text
-  references  Json? // List of URLs to advisories
+  references  Json?
 
   findings Finding[]
 
@@ -560,13 +563,11 @@ model Finding {
   project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
 
   vulnerabilityId String
-  source          String        // To satisfy the compound key of Vulnerability
+  source          String
   vulnerability   Vulnerability @relation(fields: [vulnerabilityId, source], references: [vulnerabilityId, source])
 
-  // URL where the vulnerability was found (specific URL or fallback to scan target)
   url String?
 
-  // Source-specific details, e.g., { "dependencyName": "lodash", "filePath": "package-lock.json" }
   metadata Json?
 
   firstSeenAt DateTime  @default(now())
@@ -583,26 +584,21 @@ model ScanExecution {
   projectId String
   project   Project     @relation(fields: [projectId], references: [id], onDelete: Cascade)
 
-  // Tool identification
-  provider    String      // "OWASP_ZAP", "BURP_SUITE", etc.
-  toolVersion String?     // Version of the scanning tool used
+  provider    String
+  toolVersion String?
 
-  // Scan configuration
-  targetUrl String       // The URL that was scanned
+  targetUrl String
   scanType  DastScanType @default(ACTIVE)
   status    ScanStatus
 
-  // Timing (optional for imported scans)
-  queuedAt    DateTime? // When scan was queued
-  startedAt   DateTime? // When scan actually started
-  completedAt DateTime? // When scan finished
-  duration    Int?      // Scan duration in seconds
+  queuedAt    DateTime?
+  startedAt   DateTime?
+  completedAt DateTime?
+  duration    Int?
 
-  // Error handling
   errorMessage String? @db.Text
-  errorCode    String? // Tool-specific error codes
+  errorCode    String?
 
-  // Results summary
   findingsCount Int @default(0)
   criticalCount Int @default(0)
   highCount     Int @default(0)
@@ -610,22 +606,18 @@ model ScanExecution {
   lowCount      Int @default(0)
   infoCount     Int @default(0)
 
-  // Tool-specific configuration and metadata
-  toolConfig   Json? // Scan parameters (policies, depth, etc.)
-  toolMetadata Json? // Tool-specific data (scan ID, report URLs, etc.)
+  toolConfig   Json?
+  toolMetadata Json?
 
-  // External scan tracking (for future use)
-  externalScanId    String?  // ID from external tool
-  externalReportUrl String?  // Link to external report
-  isExternalScan    Boolean  @default(false) // Whether this was run externally
+  externalScanId    String?
+  externalReportUrl String?
+  isExternalScan    Boolean  @default(false)
 
-  // Integration tracking
   securityToolIntegrationId String?
   securityToolIntegration   SecurityToolIntegration? @relation(fields: [securityToolIntegrationId], references: [id])
   syncLogId                 String?
   syncLog                   IntegrationSyncLog?      @relation(fields: [syncLogId], references: [id])
 
-  // User who initiated (optional for imported scans)
   initiatedById String?
   initiatedBy   User?   @relation(fields: [initiatedById], references: [id])
 

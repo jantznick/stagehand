@@ -5,6 +5,13 @@ import session from 'express-session';
 import passport from 'passport';
 import { PrismaSessionStore } from '@quixo3/prisma-session-store';
 import { PrismaClient } from '@prisma/client';
+import { readFileSync } from 'fs';
+import { join, dirname } from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
 import swaggerUi from 'swagger-ui-express';
 import configurePassport from './utils/passport.js';
 import authRoutes from './routes/auth.js';

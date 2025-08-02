@@ -1,5 +1,5 @@
-const { decrypt } = require('./crypto');
-const { addTechnologyToProject } = require('./technologies');
+import { decrypt } from './crypto.js';
+import { addTechnologyToProject } from './technologies.js';
 
 /**
  * Fetches the content of a file from a GitHub repository.
@@ -83,7 +83,7 @@ async function processPackageJson(projectId, content) {
  * @param {string} repositoryUrl - The URL of the GitHub repository.
  * @param {object} integration - The SCM integration object.
  */
-async function scanRepositoryForTechnologies(projectId, repositoryUrl, integration) {
+export async function scanRepositoryForTechnologies(projectId, repositoryUrl, integration) {
     if (!repositoryUrl || !integration) {
         console.warn(`Skipping technology scan for project ${projectId} due to missing repository URL or integration.`);
         return;
@@ -119,4 +119,4 @@ async function scanRepositoryForTechnologies(projectId, repositoryUrl, integrati
     }
 }
 
-module.exports = { scanRepositoryForTechnologies, getFileContent, processPackageJson };
+

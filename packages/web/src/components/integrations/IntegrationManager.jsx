@@ -4,7 +4,7 @@ import { Github, Trash2, Link, ShieldCheck, History } from 'lucide-react';
 import { DiBitbucket } from "react-icons/di";
 import AddIntegrationModal from './AddIntegrationModal';
 import ConfirmationModal from '../ConfirmationModal';
-import LinkRepositoriesModal from './LinkRepositoriesModal';
+import SelectRepositoryModal from '../applications/SelectRepositoryModal';
 import LinkSecurityToolProjectsModal from './LinkSecurityToolProjectsModal';
 import SyncHistoryModal from './SyncHistoryModal';
 import {
@@ -220,7 +220,7 @@ const IntegrationManager = ({ resourceType, resourceId }) => {
         />
         
         {selectedIntegration && (
-            <LinkRepositoriesModal
+            <SelectRepositoryModal
                 isOpen={isLinkRepoModalOpen}
                 onClose={() => setIsLinkRepoModalOpen(false)}
                 integration={selectedIntegration}

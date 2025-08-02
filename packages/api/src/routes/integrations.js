@@ -62,6 +62,14 @@ router.get('/github/callback', async (req, res) => {
         const decodedState = jwt.verify(state, process.env.JWT_SECRET);
         const { userId, resourceType, resourceId } = decodedState;
 
+        // --- Environment Variable Check ---
+        if (!process.env.GITHUB_APP_ID || !process.env.GITHUB_PRIVATE_KEY) {
+            console.error('FATAL: GITHUB_APP_ID or GITHUB_PRIVATE_KEY is not set in the environment.');
+            return res.status(500).json({ error: 'Server configuration error: Missing GitHub App credentials.' });
+        }
+
+        const privateKey = process.env.GITHUB_PRIVATE_KEY.replace(/\\n/g, '\n');
+
         const now = Math.floor(Date.now() / 1000);
         const appJwt = jwt.sign(
             {
@@ -69,7 +77,7 @@ router.get('/github/callback', async (req, res) => {
                 exp: now + (10 * 60),
                 iss: process.env.GITHUB_APP_ID,
             },
-            process.env.GITHUB_PRIVATE_KEY,
+            privateKey,
             {
                 algorithm: 'RS256',
             }
@@ -111,6 +119,13 @@ router.get('/github/callback', async (req, res) => {
                 [`${resourceType}Id`]: resourceId,
             }
         });
+
+        if (!process.env.WEB_URL) {
+            console.error('FATAL: WEB_URL is not set in the environment. Cannot redirect.');
+            // We can't redirect, but the integration was successful.
+            // Send a success response instead of leaving the user hanging.
+            return res.status(200).json({ message: 'GitHub integration successful, but redirect failed due to server configuration.' });
+        }
 
         const redirectUrl = new URL(`${process.env.WEB_URL}/settings/${resourceType}/${resourceId}`);
         redirectUrl.searchParams.set('integration_success', 'true');

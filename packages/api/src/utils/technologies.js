@@ -1,4 +1,5 @@
-const { prisma } = require("../../../prisma/client");
+import { PrismaClient } from '@prisma/client';
+const prisma = new PrismaClient();
 
 /**
  * Adds a technology to a project. It handles both creating a new technology
@@ -12,7 +13,7 @@ const { prisma } = require("../../../prisma/client");
  * @param {string} [techData.source] - The source of the technology information.
  * @returns {Promise<object>} The new project-technology association.
  */
-async function addTechnologyToProject(projectId, { technologyId, name, type, version, source = 'user-entered' }) {
+export async function addTechnologyToProject(projectId, { technologyId, name, type, version, source = 'user-entered' }) {
     if (!projectId) {
         throw new Error('Project ID is required.');
     }
@@ -66,4 +67,4 @@ async function addTechnologyToProject(projectId, { technologyId, name, type, ver
     return newProjectTechnology;
 }
 
-module.exports = { addTechnologyToProject };
+

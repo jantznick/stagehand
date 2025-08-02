@@ -11,6 +11,8 @@ import { getVisibleResourceIds, hasPermission, isMemberOfCompany } from '../util
 import { getDescendants } from '../utils/hierarchy.js';
 import { decrypt } from '../utils/crypto.js';
 import { syncGitHubFindings } from '../utils/findings.js';
+import { scanRepositoryForTechnologies } from '../utils/repositoryScanner.js';
+import { addTechnologyToProject } from '../utils/technologies.js';
 
 const prisma = new PrismaClient();
 const router = Router();
@@ -458,59 +460,23 @@ router.get('/:id/technologies', async (req, res) => {
 // POST /api/v1/projects/:id/technologies - Add a technology to a project
 router.post('/:id/technologies', async (req, res) => {
     const { id: projectId } = req.params;
-    const { name, type, version, technologyId, source } = req.body;
-
-    if ((!name || !type) && !technologyId) {
-        return res.status(400).json({ error: 'Technology name and type are required.' });
-    }
-
+    
     const canUpdate = await hasPermission(req.user, ['ADMIN', 'EDITOR'], 'project', projectId);
     if (!canUpdate) {
         return res.status(403).json({ error: 'You are not authorized to add technologies to this project.' });
     }
 
-    let technology; // Define here to be available in the catch block
-
     try {
-        if (technologyId) {
-            // Case 1: Adding a new version to an existing technology
-            technology = await prisma.technology.findUnique({ where: { id: technologyId } });
-            if (!technology) {
-                return res.status(404).json({ error: 'The specified technology does not exist.' });
-            }
-        } else if (name && type) {
-            // Case 2: Adding a new technology or a version of a potentially existing one
-            // Upsert the technology: find it by name/type or create it if it doesn't exist
-            technology = await prisma.technology.upsert({
-                where: { name_type: { name, type } },
-                update: {},
-                create: { name, type },
-            });
-        } else {
-            // If neither technologyId nor name/type is provided
-            return res.status(400).json({ error: 'Either technologyId or both name and type are required.' });
-        }
-        
-        // Now, create the link between the project and the technology
-        const newProjectTechnology = await prisma.projectTechnology.create({
-            data: {
-                projectId,
-                technologyId: technology.id,
-                version,
-                source: source || 'user-entered',
-            },
-            include: {
-                technology: true, // Include the full technology details in the response
-            },
-        });
-
+        const newProjectTechnology = await addTechnologyToProject(projectId, req.body);
         res.status(201).json(newProjectTechnology);
     } catch (error) {
-        if (error.code === 'P2002' && technology) {
-            // Unique constraint violation
-             return res.status(409).json({ error: `This project already has a record for technology '${technology.name}' (${technology.type}) with version '${version}'.` });
-        }
         console.error(`Error adding technology to project ${projectId}:`, error);
+        if (error.message.includes('already exists')) {
+            return res.status(409).json({ error: error.message });
+        }
+        if (error.message.includes('not exist')) {
+            return res.status(404).json({ error: error.message });
+        }
         res.status(500).json({ error: 'Failed to add technology.' });
     }
 });
@@ -760,6 +726,14 @@ router.post('/:id/link-repo', async (req, res) => {
     }
 
     try {
+        const integration = await prisma.sCMIntegration.findUnique({
+            where: { id: scmIntegrationId },
+        });
+
+        if (!integration) {
+            return res.status(404).json({ error: 'SCM integration not found.' });
+        }
+        
         const updatedProject = await prisma.project.update({
             where: { id },
             data: { 
@@ -767,6 +741,9 @@ router.post('/:id/link-repo', async (req, res) => {
                 scmIntegrationId,
             }
         });
+
+        // Asynchronously scan the repository for technologies without blocking the response
+        scanRepositoryForTechnologies(id, repositoryUrl, integration);
 
         res.status(200).json(updatedProject);
 

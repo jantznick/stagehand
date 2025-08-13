@@ -534,8 +534,6 @@ model Vulnerability {
   id              String              @id @default(cuid())
   // Canonical ID from the source, e.g., 'CVE-2023-1234' or 'GHSA-...'
   vulnerabilityId String
-  source          String              // Descriptive source string like "Stagehand DAST (OWASP ZAP)"
-  type            SecurityToolType?   // DAST, SAST, SCA, APISEC
 
   title       String
   description String  @db.Text
@@ -559,8 +557,10 @@ model Finding {
   projectId String
   project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
 
+  source          String              // Descriptive source string like "Stagehand DAST (OWASP ZAP)"
+  type            SecurityToolType?   // DAST, SAST, SCA, APISEC
+
   vulnerabilityId String
-  source          String        // To satisfy the compound key of Vulnerability
   vulnerability   Vulnerability @relation(fields: [vulnerabilityId, source], references: [vulnerabilityId, source])
 
   // URL where the vulnerability was found (specific URL or fallback to scan target)

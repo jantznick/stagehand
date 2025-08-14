@@ -29,6 +29,7 @@ import integrationRoutes from './routes/integrations.js';
 import securityToolRoutes from './routes/securityTools.js';
 import findingsRoutes from './routes/findings.js';
 import dastScanRoutes from './routes/dastScans.js';
+import vulnerabilitiesRoutes from './routes/vulnerabilities.js';
 
 const app = express();
 const port = process.env.PORT || 3001;
@@ -94,6 +95,7 @@ app.use('/api/v1/integrations', integrationRoutes);
 app.use('/api/v1/security-tools', securityToolRoutes);
 app.use('/api/v1/projects', findingsRoutes);
 app.use('/api/v1/projects', dastScanRoutes);
+app.use('/api/v1', vulnerabilitiesRoutes);
 
 app.listen(port, () => {
   console.log(`API server listening on port ${port}`);

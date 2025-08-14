@@ -43,6 +43,7 @@ This feature allows users to manually add security findings to projects, serving
 Create a new vulnerability search endpoint that:
 - Searches existing vulnerabilities in the database by title/ID
 - Integrates with external vulnerability databases (NVD, MITRE)
+  - Use built in fetch for this
 - Returns standardized vulnerability data format
 - Handles CVE, GHSA, and custom vulnerability IDs
 
@@ -134,6 +135,7 @@ Create service for external vulnerability database integration:
 Create modal component with:
 - **Vulnerability Search Section**:
   - Debounced search input (300ms delay)
+    - Use existing debounce util for this
   - Dropdown showing existing vulnerabilities from internal database
   - Search results with vulnerability preview (title, severity, description excerpt)
   

@@ -32,6 +32,9 @@ CREATE TYPE "DastScanType" AS ENUM ('ACTIVE', 'PASSIVE', 'BASELINE', 'FULL', 'CU
 CREATE TYPE "ScanStatus" AS ENUM ('PENDING', 'QUEUED', 'RUNNING', 'COMPLETED', 'FAILED', 'CANCELLED', 'IMPORTED');
 
 -- CreateEnum
+CREATE TYPE "JobStatus" AS ENUM ('PENDING', 'PROCESSING', 'COMPLETED', 'FAILED');
+
+-- CreateEnum
 CREATE TYPE "FindingStatus" AS ENUM ('NEW', 'TRIAGED', 'IN_PROGRESS', 'RESOLVED', 'IGNORED');
 
 -- CreateTable
@@ -338,8 +341,7 @@ CREATE TABLE "IntegrationSyncLog" (
 CREATE TABLE "Vulnerability" (
     "id" TEXT NOT NULL,
     "vulnerabilityId" TEXT NOT NULL,
-    "source" TEXT NOT NULL,
-    "type" "SecurityToolType",
+    "type" TEXT,
     "title" TEXT NOT NULL,
     "description" TEXT NOT NULL,
     "severity" TEXT NOT NULL,
@@ -357,8 +359,10 @@ CREATE TABLE "Finding" (
     "id" TEXT NOT NULL,
     "status" "FindingStatus" NOT NULL DEFAULT 'NEW',
     "projectId" TEXT NOT NULL,
-    "vulnerabilityId" TEXT NOT NULL,
     "source" TEXT NOT NULL,
+    "type" "SecurityToolType",
+    "vulnerabilityId" TEXT NOT NULL,
+    "url" TEXT,
     "metadata" JSONB,
     "firstSeenAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "lastSeenAt" TIMESTAMP(3) NOT NULL,
@@ -400,6 +404,26 @@ CREATE TABLE "ScanExecution" (
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
     CONSTRAINT "ScanExecution_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "BulkUploadJob" (
+    "id" TEXT NOT NULL,
+    "status" "JobStatus" NOT NULL DEFAULT 'PENDING',
+    "originalFilename" TEXT NOT NULL,
+    "storedFilepath" TEXT NOT NULL,
+    "errorReportPath" TEXT,
+    "totalRows" INTEGER NOT NULL DEFAULT 0,
+    "processedRows" INTEGER NOT NULL DEFAULT 0,
+    "failedRows" INTEGER NOT NULL DEFAULT 0,
+    "errorMessage" TEXT,
+    "projectId" TEXT NOT NULL,
+    "initiatedById" TEXT NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+    "completedAt" TIMESTAMP(3),
+
+    CONSTRAINT "BulkUploadJob_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -492,10 +516,13 @@ CREATE INDEX "IntegrationSyncLog_scmIntegrationId_idx" ON "IntegrationSyncLog"("
 CREATE INDEX "IntegrationSyncLog_securityToolIntegrationId_idx" ON "IntegrationSyncLog"("securityToolIntegrationId");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "Vulnerability_vulnerabilityId_source_key" ON "Vulnerability"("vulnerabilityId", "source");
+CREATE UNIQUE INDEX "Vulnerability_vulnerabilityId_key" ON "Vulnerability"("vulnerabilityId");
 
 -- CreateIndex
 CREATE INDEX "Finding_projectId_idx" ON "Finding"("projectId");
+
+-- CreateIndex
+CREATE INDEX "Finding_url_idx" ON "Finding"("url");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "Finding_projectId_vulnerabilityId_source_key" ON "Finding"("projectId", "vulnerabilityId", "source");
@@ -511,6 +538,12 @@ CREATE INDEX "ScanExecution_provider_idx" ON "ScanExecution"("provider");
 
 -- CreateIndex
 CREATE INDEX "ScanExecution_targetUrl_idx" ON "ScanExecution"("targetUrl");
+
+-- CreateIndex
+CREATE INDEX "BulkUploadJob_projectId_idx" ON "BulkUploadJob"("projectId");
+
+-- CreateIndex
+CREATE INDEX "BulkUploadJob_status_idx" ON "BulkUploadJob"("status");
 
 -- CreateIndex
 CREATE INDEX "_DirectProjectSecurityToolIntegrations_B_index" ON "_DirectProjectSecurityToolIntegrations"("B");
@@ -639,7 +672,7 @@ ALTER TABLE "IntegrationSyncLog" ADD CONSTRAINT "IntegrationSyncLog_securityTool
 ALTER TABLE "Finding" ADD CONSTRAINT "Finding_projectId_fkey" FOREIGN KEY ("projectId") REFERENCES "Project"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Finding" ADD CONSTRAINT "Finding_vulnerabilityId_source_fkey" FOREIGN KEY ("vulnerabilityId", "source") REFERENCES "Vulnerability"("vulnerabilityId", "source") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "Finding" ADD CONSTRAINT "Finding_vulnerabilityId_fkey" FOREIGN KEY ("vulnerabilityId") REFERENCES "Vulnerability"("vulnerabilityId") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "ScanExecution" ADD CONSTRAINT "ScanExecution_projectId_fkey" FOREIGN KEY ("projectId") REFERENCES "Project"("id") ON DELETE CASCADE ON UPDATE CASCADE;
@@ -652,6 +685,12 @@ ALTER TABLE "ScanExecution" ADD CONSTRAINT "ScanExecution_syncLogId_fkey" FOREIG
 
 -- AddForeignKey
 ALTER TABLE "ScanExecution" ADD CONSTRAINT "ScanExecution_initiatedById_fkey" FOREIGN KEY ("initiatedById") REFERENCES "User"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "BulkUploadJob" ADD CONSTRAINT "BulkUploadJob_projectId_fkey" FOREIGN KEY ("projectId") REFERENCES "Project"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "BulkUploadJob" ADD CONSTRAINT "BulkUploadJob_initiatedById_fkey" FOREIGN KEY ("initiatedById") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "_DirectProjectSecurityToolIntegrations" ADD CONSTRAINT "_DirectProjectSecurityToolIntegrations_A_fkey" FOREIGN KEY ("A") REFERENCES "Project"("id") ON DELETE CASCADE ON UPDATE CASCADE;

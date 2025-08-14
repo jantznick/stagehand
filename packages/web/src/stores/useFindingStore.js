@@ -11,11 +11,13 @@ const useFindingStore = create(
     isLoading: false,
     isSearching: false,
     isCreating: false,
+    isUploading: false,
 
     // Error states
     error: null,
     searchError: null,
     createError: null,
+    uploadError: null,
 
     // Search state
     searchResults: [],
@@ -205,8 +207,72 @@ const useFindingStore = create(
         state.searchError = null;
         state.isSearching = false;
       });
-    }
+    },
+
+    bulkUploadFindings: async (projectId, file) => {
+      if (!projectId || !file) return null;
+
+      set((state) => {
+        state.isUploading = true;
+        state.uploadError = null;
+      });
+
+      try {
+        const formData = new FormData();
+        formData.append('file', file);
+
+        const response = await fetch(`/api/v1/projects/${projectId}/findings/bulk-upload`, {
+          method: 'POST',
+          body: formData,
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error || 'Failed to upload file');
+        }
+
+        const result = await response.json();
+
+        set((state) => {
+          state.isUploading = false;
+        });
+
+        return result;
+      } catch (error) {
+        set((state) => {
+          state.uploadError = error.message;
+          state.isUploading = false;
+        });
+        console.error('Error uploading file:', error);
+        return null;
+      }
+    },
+
+    getBulkUploadJobStatus: async (jobId) => {
+      if (!jobId) return null;
+
+      try {
+        const response = await fetch(`/api/v1/projects/findings/bulk-upload/${jobId}`);
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error || 'Failed to get job status');
+        }
+
+        const job = await response.json();
+        return job;
+      } catch (error) {
+        console.error('Error getting job status:', error);
+        return null;
+      }
+    },
+
+    refreshFindings: async (projectId) => {
+      // This is just an alias for fetchFindings to be used for explicit refreshes.
+      const { fetchFindings } = useFindingStore.getState();
+      await fetchFindings(projectId);
+    },
   }))
 );
 
-export default useFindingStore; 
+export default useFindingStore;

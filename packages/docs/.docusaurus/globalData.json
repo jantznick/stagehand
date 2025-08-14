@@ -96,6 +96,10 @@
               "sidebar": "docsSidebar"
             },
             {
+              "id": "bulk-finding-upload-feature",
+              "path": "/bulk-finding-upload-feature"
+            },
+            {
               "id": "dast-implementation-changelog",
               "path": "/dast-implementation-changelog",
               "sidebar": "docsSidebar"

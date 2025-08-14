@@ -1,0 +1,3 @@
+title,description,severity,cveId
+SQL Injection,A SQL injection vulnerability was found in the login form.,HIGH,CVE-2021-12345
+Cross-Site Scripting (XSS),A reflected XSS vulnerability exists on the search results page.,MEDIUM,CVE-2022-67890

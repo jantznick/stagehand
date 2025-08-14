@@ -29,8 +29,6 @@ export default function AddFindingModal({ isOpen, onClose, projectId }) {
   const [status, setStatus] = useState('NEW');
   const [notes, setNotes] = useState('');
   const [component, setComponent] = useState('');
-  const [jobId, setJobId] = useState(null);
-  const [jobStatus, setJobStatus] = useState(null);
 
   const { user } = useAuthStore();
   const {
@@ -41,11 +39,16 @@ export default function AddFindingModal({ isOpen, onClose, projectId }) {
     isSearching,
     searchError,
     isCreating,
-    createError
+    createError,
+    isUploading,
+    bulkUploadFindings,
+    jobStatus,
+    jobErrorFile,
   } = useFindingStore();
 
   const projectMembership = user?.memberships?.find(m => m.projectId === projectId);
-  const canBulkUpload = projectMembership?.role === 'ADMIN' || projectMembership?.role === 'EDITOR';
+  // const canBulkUpload = projectMembership?.role === 'ADMIN' || projectMembership?.role === 'EDITOR';
+  const canBulkUpload = true;
 
   const handleExternalLookup = async (externalId) => {
     const vulnerability = await lookupExternalVulnerability(externalId);
@@ -74,46 +77,9 @@ export default function AddFindingModal({ isOpen, onClose, projectId }) {
     }
   };
 
-  const handleUpload = async (file) => {
-    toast.loading('Uploading file...', { id: 'bulk-upload' });
-    const result = await useFindingStore.getState().bulkUploadFindings(projectId, file);
-    if (result) {
-      setJobId(result.jobId);
-      toast.loading('Processing file...', { id: result.jobId });
-      toast.dismiss('bulk-upload');
-    } else {
-      toast.error('Failed to start upload.', { id: 'bulk-upload' });
-    }
+  const handleUpload = (file) => {
+    bulkUploadFindings(projectId, file);
   };
-
-  useEffect(() => {
-    if (!jobId) return;
-
-    const interval = setInterval(async () => {
-      const job = await useFindingStore.getState().getBulkUploadJobStatus(jobId);
-      if (job) {
-        setJobStatus(job.status);
-        if (['COMPLETED', 'COMPLETED_WITH_ERRORS', 'FAILED'].includes(job.status)) {
-          clearInterval(interval);
-          switch (job.status) {
-            case 'COMPLETED':
-              toast.success('Bulk upload completed successfully.', { id: jobId });
-              useFindingStore.getState().refreshFindings(projectId);
-              break;
-            case 'COMPLETED_WITH_ERRORS':
-              toast.error('Bulk upload completed with errors.', { id: jobId });
-              useFindingStore.getState().refreshFindings(projectId);
-              break;
-            case 'FAILED':
-              toast.error('Bulk upload failed.', { id: jobId });
-              break;
-          }
-        }
-      }
-    }, 3000);
-
-    return () => clearInterval(interval);
-  }, [jobId]);
 
   if (!isOpen) return null;
 
@@ -295,12 +261,29 @@ export default function AddFindingModal({ isOpen, onClose, projectId }) {
                 </button>
               </div>
               <div className="p-4">
-                {!jobId ? (
-                  <BulkUploadForm onUpload={handleUpload} />
-                ) : (
-                  <div>
-                    <p className="text-white">Upload in progress...</p>
-                    <p className="text-white">Status: {jobStatus}</p>
+                <BulkUploadForm onUpload={handleUpload} isUploading={isUploading} />
+                {jobStatus && isUploading && (
+                  <div className="mt-4 p-4 bg-gray-800 rounded-lg">
+                    <div className="flex items-center gap-3">
+                      <Loader2 size={20} className="animate-spin text-blue-400" />
+                      <div>
+                        <p className="font-medium text-white">Upload in Progress</p>
+                        <p className="text-sm text-gray-400">Status: {jobStatus}</p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+                {jobStatus === 'COMPLETED_WITH_ERRORS' && jobErrorFile && (
+                  <div className="mt-4 p-4 bg-yellow-500/10 rounded-lg text-yellow-400">
+                     <div className="flex items-center gap-3">
+                        <AlertCircle size={20} />
+                        <div>
+                          <p className="font-medium">Upload completed with errors.</p>
+                          <a href={`/api/v1/uploads/errors/${jobErrorFile}`} download className="text-sm underline hover:text-yellow-300">
+                            Download error report
+                          </a>
+                        </div>
+                      </div>
                   </div>
                 )}
               </div>

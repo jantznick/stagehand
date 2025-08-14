@@ -1,8 +1,9 @@
 import { create } from 'zustand';
 import { immer } from 'zustand/middleware/immer';
+import toast from 'react-hot-toast';
 
 const useFindingStore = create(
-  immer((set) => ({
+  immer((set, get) => ({
     // Findings state
     findings: {}, // Store findings per project
     lastFetched: {}, // Store timestamps per project
@@ -21,6 +22,10 @@ const useFindingStore = create(
 
     // Search state
     searchResults: [],
+
+    // Bulk upload state
+    jobStatus: null,
+    jobErrorFile: null,
 
     fetchFindings: async (projectId) => {
       if (!projectId) return;
@@ -210,12 +215,10 @@ const useFindingStore = create(
     },
 
     bulkUploadFindings: async (projectId, file) => {
-      if (!projectId || !file) return null;
+      if (!projectId || !file) return;
 
-      set((state) => {
-        state.isUploading = true;
-        state.uploadError = null;
-      });
+      set({ isUploading: true, uploadError: null, jobStatus: 'UPLOADING', jobErrorFile: null });
+      toast.loading('Uploading file...', { id: 'bulk-upload' });
 
       try {
         const formData = new FormData();
@@ -228,22 +231,47 @@ const useFindingStore = create(
 
         if (!response.ok) {
           const errorData = await response.json();
-          throw new Error(errorData.error || 'Failed to upload file');
+          throw new Error(errorData.error || 'Failed to start upload');
         }
 
         const result = await response.json();
+        const { jobId } = result;
 
-        set((state) => {
-          state.isUploading = false;
-        });
+        toast.loading('Processing file...', { id: jobId });
+        toast.dismiss('bulk-upload');
+        set({ jobStatus: 'PROCESSING' });
 
+        const poll = async () => {
+          const job = await get().getBulkUploadJobStatus(jobId);
+          if (job) {
+            if (['COMPLETED', 'COMPLETED_WITH_ERRORS', 'FAILED'].includes(job.status)) {
+              set({ isUploading: false, jobStatus: job.status, jobErrorFile: job.result?.errorFile || null });
+              switch (job.status) {
+                case 'COMPLETED':
+                  toast.success('Bulk upload completed successfully.', { id: jobId });
+                  get().refreshFindings(projectId);
+                  break;
+                case 'COMPLETED_WITH_ERRORS':
+                  toast.error('Bulk upload completed with errors.', { id: jobId, duration: 5000 });
+                  get().refreshFindings(projectId);
+                  break;
+                case 'FAILED':
+                  toast.error(`Bulk upload failed: ${job.result?.message || 'Unknown error'}`, { id: jobId, duration: 5000 });
+                  break;
+              }
+            } else {
+              setTimeout(poll, 3000);
+            }
+          } else {
+            toast.error('Could not retrieve upload status.', { id: jobId });
+            set({ isUploading: false, uploadError: 'Could not retrieve upload status.' });
+          }
+        };
+        setTimeout(poll, 3000);
         return result;
       } catch (error) {
-        set((state) => {
-          state.uploadError = error.message;
-          state.isUploading = false;
-        });
-        console.error('Error uploading file:', error);
+        toast.error(error.message, { id: 'bulk-upload' });
+        set({ uploadError: error.message, isUploading: false, jobStatus: 'FAILED' });
         return null;
       }
     },
@@ -272,7 +300,7 @@ const useFindingStore = create(
       const { fetchFindings } = useFindingStore.getState();
       await fetchFindings(projectId);
     },
-  }))
+  })),
 );
 
 export default useFindingStore;

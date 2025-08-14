@@ -70,10 +70,22 @@ router.post('/:projectId/findings', protect, async (req, res) => {
     // If it's a CVE/GHSA ID, fetch from external source if not in database
     if (validateVulnerabilityId(vulnerabilityId)) {
       // Check if vulnerability exists in database
-      vulnerability = await prisma.vulnerability.findFirst({
+      vulnerability = await prisma.vulnerability.findUnique({
         where: {
-          vulnerabilityId,
-          source
+          vulnerabilityId
+        },
+        select: {
+          id: true,
+          vulnerabilityId: true,
+          title: true,
+          description: true,
+          type: true,
+          severity: true,
+          cvssScore: true,
+          remediation: true,
+          references: true,
+          createdAt: true,
+          updatedAt: true
         }
       });
 
@@ -86,10 +98,11 @@ router.post('/:projectId/findings', protect, async (req, res) => {
       }
     } else {
       // For non-CVE/GHSA IDs, vulnerability must already exist in database
-      vulnerability = await prisma.vulnerability.findFirst({
+      // For non-CVE/GHSA IDs, the vulnerability must already exist in the database.
+      // We find it by its unique vulnerabilityId.
+      vulnerability = await prisma.vulnerability.findUnique({
         where: {
-          vulnerabilityId,
-          source
+          vulnerabilityId
         }
       });
 

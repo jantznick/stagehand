@@ -1,7 +1,7 @@
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
-  //  url      = "postgresql://admin:password@localhost:5432/stagehand?schema=public"
+  //url      = "postgresql://admin:password@localhost:5432/stagehand?schema=public"
 }
 
 generator client {
@@ -533,21 +533,19 @@ enum FindingStatus {
 model Vulnerability {
   id              String              @id @default(cuid())
   // Canonical ID from the source, e.g., 'CVE-2023-1234' or 'GHSA-...'
-  vulnerabilityId String
-
-  title       String
-  description String  @db.Text
-  severity    String // e.g., 'CRITICAL', 'HIGH', 'MEDIUM', 'LOW'
-  cvssScore   Float?
-  remediation String? @db.Text
-  references  Json? // List of URLs to advisories
+  vulnerabilityId String    @unique
+  type            String? // e.g., 'CVE', 'GHSA'
+  title           String
+  description     String    @db.Text
+  severity        String // e.g., 'CRITICAL', 'HIGH', 'MEDIUM', 'LOW'
+  cvssScore       Float?
+  remediation     String? @db.Text
+  references      Json? // List of URLs to advisories
 
   findings Finding[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-
-  @@unique([vulnerabilityId, source])
 }
 
 model Finding {
@@ -561,7 +559,7 @@ model Finding {
   type            SecurityToolType?   // DAST, SAST, SCA, APISEC
 
   vulnerabilityId String
-  vulnerability   Vulnerability @relation(fields: [vulnerabilityId, source], references: [vulnerabilityId, source])
+  vulnerability   Vulnerability @relation(fields: [vulnerabilityId], references: [vulnerabilityId])
 
   // URL where the vulnerability was found (specific URL or fallback to scan target)
   url String?

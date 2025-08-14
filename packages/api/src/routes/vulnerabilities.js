@@ -30,8 +30,22 @@ router.get('/search', protect, async (req, res) => {
           { description: { contains: query, mode: 'insensitive' } }
         ]
       },
+      select: {
+        id: true,
+        vulnerabilityId: true,
+        title: true,
+        description: true,
+        type: true,
+        severity: true,
+        cvssScore: true,
+        remediation: true,
+        references: true,
+        createdAt: true,
+        updatedAt: true
+      },
       take: 10
     });
+    console.log('Found vulnerabilities in DB:', dbVulnerabilities);
 
     // If we have enough results from DB, return them
     if (dbVulnerabilities.length >= 5) {
@@ -41,6 +55,7 @@ router.get('/search', protect, async (req, res) => {
     // Otherwise, also search external sources
     const externalVulnerabilities = await searchVulnerabilities(query);
     
+    console.log('Found vulnerabilities in external sources:', externalVulnerabilities);
     // Combine and deduplicate results
     const allVulnerabilities = [...dbVulnerabilities];
     for (const extVuln of externalVulnerabilities) {
@@ -77,7 +92,7 @@ router.get('/external/:id', protect, async (req, res) => {
 
   try {
     // Check if vulnerability already exists in database
-    const existingVuln = await prisma.vulnerability.findFirst({
+    const existingVuln = await prisma.vulnerability.findUnique({
       where: {
         vulnerabilityId: id
       }

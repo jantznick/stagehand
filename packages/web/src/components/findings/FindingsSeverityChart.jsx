@@ -43,10 +43,10 @@ const CustomTooltip = ({ active, payload, label }) => {
 
 const FindingsSeverityChart = ({ project }) => {
   const { findings, isLoading, error, lastFetched } = useFindingStore(state => ({
-    findings: project ? state.findings[project.id] || [] : [],
+    findings: project && state.findings ? state.findings[project.id] || [] : [],
     isLoading: state.isLoading,
     error: state.error,
-    lastFetched: project ? state.lastFetched[project.id] : null,
+    lastFetched: project && state.lastFetched ? state.lastFetched[project.id] || null : null,
   }));
 
   const chartData = useMemo(() => {
@@ -108,4 +108,4 @@ const FindingsSeverityChart = ({ project }) => {
   );
 };
 
-export default FindingsSeverityChart; 
+export default FindingsSeverityChart;

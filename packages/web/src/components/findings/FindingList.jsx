@@ -7,7 +7,7 @@ import {
   getSortedRowModel,
   useReactTable,
 } from '@tanstack/react-table';
-import { ChevronUp, ChevronDown } from 'lucide-react';
+import { ChevronUp, ChevronDown, Plus } from 'lucide-react';
 import FindingDetailsModal from './FindingDetailsModal';
 
 const SEVERITY_STYLES = {
@@ -207,28 +207,31 @@ const FindingList = (props) => {
   return (
     <div className="space-y-4">
         <div className="flex items-center justify-between gap-4">
-            <input
-                type="text"
-                placeholder="Filter vulnerabilities..."
-                className="w-full md:w-1/3 bg-black/20 border border-white/10 rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                value={table.getColumn('vulnerability.title')?.getFilterValue() ?? ''}
-                onChange={e =>
-                    table.getColumn('vulnerability.title')?.setFilterValue(e.target.value)
-                }
-            />
-            <select
-                className="bg-black/20 border border-white/10 rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                value={table.getColumn('vulnerability.severity')?.getFilterValue() ?? ''}
-                onChange={e =>
-                    table.getColumn('vulnerability.severity')?.setFilterValue(e.target.value)
-                }
-            >
-                <option value="">All Severities</option>
-                <option value="CRITICAL">Critical</option>
-                <option value="HIGH">High</option>
-                <option value="MEDIUM">Medium</option>
-                <option value="LOW">Low</option>
-            </select>
+            <div className="flex items-center gap-4 flex-1">
+              <input
+                  type="text"
+                  placeholder="Filter vulnerabilities..."
+                  className="w-full md:w-1/3 bg-black/20 border border-white/10 rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  value={table.getColumn('vulnerability.title')?.getFilterValue() ?? ''}
+                  onChange={e =>
+                      table.getColumn('vulnerability.title')?.setFilterValue(e.target.value)
+                  }
+              />
+              <select
+                  className="bg-black/20 border border-white/10 rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  value={table.getColumn('vulnerability.severity')?.getFilterValue() ?? ''}
+                  onChange={e =>
+                      table.getColumn('vulnerability.severity')?.setFilterValue(e.target.value)
+                  }
+              >
+                  <option value="">All Severities</option>
+                  <option value="CRITICAL">Critical</option>
+                  <option value="HIGH">High</option>
+                  <option value="MEDIUM">Medium</option>
+                  <option value="LOW">Low</option>
+              </select>
+            </div>
+            
         </div>
         <div className="overflow-x-auto bg-black/20 rounded-lg border border-white/10">
             <table className="min-w-full divide-y divide-white/10">

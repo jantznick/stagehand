@@ -5,7 +5,8 @@ import { PrismaClient } from '@prisma/client';
 import { protect } from '../middleware/authMiddleware.js';
 import { hasPermission } from '../utils/permissions.js';
 import { encrypt, decrypt } from '../utils/crypto.js';
-import { syncSnykFindings } from '../utils/findings.js';
+import { syncSnykFindings, syncTraceableFindings } from '../utils/findings.js';
+import { getTraceableServices } from '../utils/traceable.js';
 
 const prisma = new PrismaClient();
 const router = Router();
@@ -173,6 +174,38 @@ router.get('/:integrationId/snyk/projects', async (req, res) => {
 });
 
 
+router.get('/:integrationId/traceable/services', async (req, res) => {
+    const { integrationId } = req.params;
+
+    try {
+        const integration = await prisma.securityToolIntegration.findUnique({
+            where: { id: integrationId }
+        });
+
+        if (!integration || integration.provider !== 'Traceable') {
+            return res.status(404).json({ error: 'Traceable integration not found.' });
+        }
+
+        const canManage = await hasPermission(req.user, ['ADMIN', 'EDITOR'], 'organization', req.user.memberships[0].organizationId);
+        if (!canManage) {
+            return res.status(403).json({ error: 'You are not authorized to access this integration.' });
+        }
+
+        const credentials = JSON.parse(decrypt(integration.encryptedCredentials));
+        if (!credentials.apiToken) {
+            return res.status(400).json({ error: 'Integration is missing Traceable API token.' });
+        }
+
+        const services = await getTraceableServices(credentials);
+        res.status(200).json(services);
+
+    } catch (error) {
+        console.error(`Failed to fetch Traceable services for integration ${integrationId}:`, error);
+        res.status(500).json({ error: 'An internal server error occurred.' });
+    }
+});
+
+
 router.post('/:integrationId/sync', async (req, res) => {
     const { integrationId } = req.params;
     const { projectIds } = req.body; // Expect an array of project IDs to sync
@@ -197,6 +230,10 @@ router.post('/:integrationId/sync', async (req, res) => {
         if (integration.provider === 'Snyk') {
             syncSnykFindings(integrationId, projectIds).catch(error => {
                 console.error(`[Background Sync Error] Failed to sync Snyk integration ${integrationId}:`, error);
+            });
+        } else if (integration.provider === 'Traceable') {
+            syncTraceableFindings(integrationId, projectIds).catch(error => {
+                console.error(`[Background Sync Error] Failed to sync Traceable integration ${integrationId}:`, error);
             });
         } else {
             return res.status(400).json({ error: `Sync not supported for provider: ${integration.provider}` });
@@ -228,4 +265,4 @@ router.get('/:integrationId/sync-logs', async (req, res) => {
     }
 });
 
-export default router; 
+export default router;

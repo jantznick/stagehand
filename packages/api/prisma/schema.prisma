@@ -533,7 +533,8 @@ enum FindingStatus {
 model Vulnerability {
   id              String              @id @default(cuid())
   // Canonical ID from the source, e.g., 'CVE-2023-1234' or 'GHSA-...'
-  vulnerabilityId String    @unique
+  vulnerabilityId String
+  source          String // e.g., 'SNYK', 'GITHUB', 'TRACEABLE'
   type            String? // e.g., 'CVE', 'GHSA'
   title           String
   description     String    @db.Text
@@ -546,6 +547,8 @@ model Vulnerability {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  @@unique([vulnerabilityId, source])
 }
 
 model Finding {
@@ -555,11 +558,11 @@ model Finding {
   projectId String
   project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
 
-  source          String              // Descriptive source string like "Stagehand DAST (OWASP ZAP)"
+  source          String              // Descriptive source string like "SNYK", "TRACEABLE"
   type            SecurityToolType?   // DAST, SAST, SCA, APISEC
 
   vulnerabilityId String
-  vulnerability   Vulnerability @relation(fields: [vulnerabilityId], references: [vulnerabilityId])
+  vulnerability   Vulnerability @relation(fields: [vulnerabilityId, source], references: [vulnerabilityId, source])
 
   // URL where the vulnerability was found (specific URL or fallback to scan target)
   url String?

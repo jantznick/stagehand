@@ -4,156 +4,109 @@ import { Router } from 'express';
 import { PrismaClient } from '@prisma/client';
 import { protect } from '../middleware/authMiddleware.js';
 import { hasPermission } from '../utils/permissions.js';
-import { lookupVulnerability, validateVulnerabilityId } from '../utils/vulnerabilityLookup.js';
-import { API_ERROR_MESSAGES } from '../config/vulnerability-apis.js';
+import { lookupExternalVulnerability } from '../utils/vulnerabilityLookup.js';
 
 const prisma = new PrismaClient();
 const router = Router();
 
-// GET /api/v1/projects/:projectId/findings
-// Fetches all findings for a specific project
-router.get('/:projectId/findings', protect, async (req, res) => {
-  const { projectId } = req.params;
-  const userId = req.user.id;
+// All routes in this file are protected and scoped to a project
+router.use(protect);
 
-  try {
-    // Verify the user has at least READER permission on the project or its parents.
-    const canView = await hasPermission(req.user, ['ADMIN', 'EDITOR', 'READER'], 'project', projectId);
+/**
+ * GET /api/v1/projects/:projectId/findings
+ * Fetches all findings for a specific project.
+ */
+router.get('/:projectId/findings', async (req, res) => {
+    const { projectId } = req.params;
 
-    if (!canView) {
-      return res.status(403).json({ error: 'Access denied. You do not have permission to view findings for this project.' });
+    try {
+        const canView = await hasPermission(req.user, ['ADMIN', 'EDITOR', 'READER'], 'project', projectId);
+        if (!canView) {
+            return res.status(403).json({ error: 'You are not authorized to view findings for this project.' });
+        }
+
+        const findings = await prisma.finding.findMany({
+            where: { projectId },
+            include: {
+                vulnerability: true, // Include the full vulnerability details
+            },
+            orderBy: {
+                lastSeenAt: 'desc',
+            },
+        });
+
+        res.status(200).json(findings);
+    } catch (error) {
+        console.error(`Failed to fetch findings for project ${projectId}:`, error);
+        res.status(500).json({ error: 'An internal server error occurred.' });
     }
-
-    const findings = await prisma.finding.findMany({
-      where: {
-        projectId: projectId,
-      },
-      include: {
-        vulnerability: true, // Include details of the associated vulnerability
-      },
-      orderBy: {
-        lastSeenAt: 'desc',
-      },
-    });
-
-    res.json(findings);
-  } catch (error) {
-    console.error(`Error fetching findings for project ${projectId}:`, error);
-    // Check if the error is due to the project not being found in the permissions check
-    if (error.message.includes('not found')) {
-        return res.status(404).json({ error: 'Project not found.' });
-    }
-    res.status(500).json({ error: 'An error occurred while fetching findings.' });
-  }
 });
 
 /**
  * POST /api/v1/projects/:projectId/findings
- * Create a manual finding for a project
+ * Creates a new manual finding for a project.
  */
-router.post('/:projectId/findings', protect, async (req, res) => {
-  const { projectId } = req.params;
-  const { vulnerabilityId, source = 'Manual Entry', status = 'NEW', metadata = {} } = req.body;
+router.post('/:projectId/findings', async (req, res) => {
+    const { projectId } = req.params;
+    const { vulnerabilityId, title, severity, description, remediation } = req.body;
 
-  try {
-    // Verify the user has ADMIN or EDITOR permission
-    const canEdit = await hasPermission(req.user, ['ADMIN', 'EDITOR'], 'project', projectId);
-
-    if (!canEdit) {
-      return res.status(403).json({
-        error: 'Access denied. You must be an ADMIN or EDITOR to create findings.'
-      });
+    if (!vulnerabilityId || !title || !severity) {
+        return res.status(400).json({ error: 'Missing required fields: vulnerabilityId, title, and severity are required.' });
     }
 
-    let vulnerability;
-
-    // If it's a CVE/GHSA ID, fetch from external source if not in database
-    if (validateVulnerabilityId(vulnerabilityId)) {
-      // Check if vulnerability exists in database
-      vulnerability = await prisma.vulnerability.findUnique({
-        where: {
-          vulnerabilityId
-        },
-        select: {
-          id: true,
-          vulnerabilityId: true,
-          title: true,
-          description: true,
-          type: true,
-          severity: true,
-          cvssScore: true,
-          remediation: true,
-          references: true,
-          createdAt: true,
-          updatedAt: true
+    try {
+        const canCreate = await hasPermission(req.user, ['ADMIN', 'EDITOR'], 'project', projectId);
+        if (!canCreate) {
+            return res.status(403).json({ error: 'You are not authorized to create findings for this project.' });
         }
-      });
 
-      if (!vulnerability) {
-        // Lookup from external source and create in database
-        const vulnData = await lookupVulnerability(vulnerabilityId);
-        vulnerability = await prisma.vulnerability.create({
-          data: vulnData
+        const source = 'MANUAL';
+
+        // Upsert the vulnerability. This ensures we have a canonical record for this manual entry.
+        const vulnerability = await prisma.vulnerability.upsert({
+            where: {
+                vulnerabilityId_source: { vulnerabilityId, source },
+            },
+            update: {
+                title,
+                description: description || 'No description provided.',
+                severity: severity.toUpperCase(),
+                remediation,
+            },
+            create: {
+                vulnerabilityId,
+                source,
+                title,
+                description: description || 'No description provided.',
+                severity: severity.toUpperCase(),
+                remediation,
+                type: vulnerabilityId.startsWith('CVE-') ? 'CVE' : 'CUSTOM',
+            },
         });
-      }
-    } else {
-      // For non-CVE/GHSA IDs, vulnerability must already exist in database
-      // For non-CVE/GHSA IDs, the vulnerability must already exist in the database.
-      // We find it by its unique vulnerabilityId.
-      vulnerability = await prisma.vulnerability.findUnique({
-        where: {
-          vulnerabilityId
-        }
-      });
 
-      if (!vulnerability) {
-        return res.status(404).json({
-          error: 'Vulnerability not found. For manual entries, vulnerability must exist in database.'
+        // Create the finding, linking the vulnerability to the project.
+        const newFinding = await prisma.finding.create({
+            data: {
+                projectId,
+                vulnerabilityId: vulnerability.vulnerabilityId,
+                source,
+                type: 'SCA', // Defaulting to SCA for manual, can be adjusted
+                status: 'NEW',
+                metadata: {
+                    enteredBy: req.user.id,
+                    entryDate: new Date().toISOString(),
+                },
+            },
+            include: {
+                vulnerability: true,
+            },
         });
-      }
+
+        res.status(201).json(newFinding);
+    } catch (error) {
+        console.error(`Failed to create manual finding for project ${projectId}:`, error);
+        res.status(500).json({ error: 'An internal server error occurred.' });
     }
-
-    // Create the finding
-    const finding = await prisma.finding.create({
-      data: {
-        projectId,
-        source,
-        status,
-        vulnerabilityId: vulnerability.vulnerabilityId,
-        metadata: {
-          ...metadata,
-          enteredBy: req.user.id,
-          entryDate: new Date().toISOString()
-        }
-      },
-      include: {
-        vulnerability: true
-      }
-    });
-
-    res.status(201).json(finding);
-
-  } catch (error) {
-    console.error('Error creating finding:', error);
-
-    if (error.code === 'P2002') {
-      return res.status(409).json({
-        error: 'A finding for this vulnerability already exists in this project.'
-      });
-    }
-
-    if (error.message === API_ERROR_MESSAGES.RATE_LIMIT_EXCEEDED) {
-      return res.status(429).json({ error: error.message });
-    }
-
-    if (error.message === API_ERROR_MESSAGES.INVALID_CVE_FORMAT) {
-      return res.status(400).json({ error: error.message });
-    }
-
-    res.status(500).json({
-      error: 'An error occurred while creating the finding.'
-    });
-  }
 });
 
 export default router;

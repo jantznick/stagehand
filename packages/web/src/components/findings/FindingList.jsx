@@ -7,8 +7,11 @@ import {
   getSortedRowModel,
   useReactTable,
 } from '@tanstack/react-table';
-import { ChevronUp, ChevronDown, Plus } from 'lucide-react';
+import { ChevronUp, ChevronDown } from 'lucide-react';
 import FindingDetailsModal from './FindingDetailsModal';
+
+// A placeholder for a real permission hook/utility
+const usePermissions = () => ({ canEdit: true });
 
 const SEVERITY_STYLES = {
   CRITICAL: 'bg-red-500/10 text-red-400 border-red-500/20',
@@ -34,10 +37,8 @@ const FindingList = (props) => {
     error: state.error,
     fetchFindings: state.fetchFindings,
   }));
-
-  const [columnFilters, setColumnFilters] = useState([]);
-  const [sorting, setSorting] = useState([]);
-  const [selectedFinding, setSelectedFinding] = useState(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const { canEdit } = usePermissions();
 
   useEffect(() => {
     if (props.project.id) {
@@ -206,6 +207,17 @@ const FindingList = (props) => {
 
   return (
     <div className="space-y-4">
+        <div className="mb-4 flex items-center justify-between">
+            <h2 className="text-xl font-semibold">Security Findings</h2>
+            {canEdit && (
+                <button
+                    onClick={() => setIsModalOpen(true)}
+                    className="rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-indigo-700"
+                >
+                    Add Finding
+                </button>
+            )}
+        </div>
         <div className="flex items-center justify-between gap-4">
             <div className="flex items-center gap-4 flex-1">
               <input
@@ -278,4 +290,4 @@ const FindingList = (props) => {
   );
 };
 
-export default FindingList; 
+export default FindingList;

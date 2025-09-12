@@ -97,6 +97,14 @@ enum ScanStatus {
   IMPORTED
 }
 
+enum JobStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  COMPLETED_WITH_ERRORS
+  FAILED
+}
+
 model User {
   id        String   @id @default(cuid())
   email     String   @unique
@@ -117,6 +125,7 @@ model User {
   scmIntegrations          SCMIntegration[]
   securityToolIntegrations SecurityToolIntegration[]
   initiatedScans           ScanExecution[]
+  bulkUploadJobs           BulkUploadJob[]
 }
 
 model Session {
@@ -247,6 +256,7 @@ model Project {
 
   findings       Finding[]
   scanExecutions ScanExecution[]
+  bulkUploadJobs BulkUploadJob[]
 }
 
 model ProjectRelationship {
@@ -634,4 +644,26 @@ model ScanExecution {
   @@index([status])
   @@index([provider])
   @@index([targetUrl])
+}
+
+model BulkUploadJob {
+  id               String    @id @default(cuid())
+  status           JobStatus @default(PENDING)
+  originalFilename String
+  storedFilepath   String
+  errorReportPath  String?
+  totalRows        Int       @default(0)
+  processedRows    Int       @default(0)
+  failedRows       Int       @default(0)
+  errorMessage     String?   @db.Text
+  projectId        String
+  project          Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  initiatedById    String
+  initiatedBy      User      @relation(fields: [initiatedById], references: [id], onDelete: Cascade)
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+  completedAt      DateTime?
+
+  @@index([projectId])
+  @@index([status])
 }

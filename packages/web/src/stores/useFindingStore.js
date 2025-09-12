@@ -1,212 +1,116 @@
 import { create } from 'zustand';
-import { immer } from 'zustand/middleware/immer';
+import { devtools } from 'zustand/middleware';
 
-const useFindingStore = create(
-  immer((set) => ({
-    // Findings state
-    findings: {}, // Store findings per project
-    lastFetched: {}, // Store timestamps per project
-
-    // Loading states
+const useFindingStore = create(devtools((set, get) => ({
+    // State for displaying findings
+    findings: [],
     isLoading: false,
-    isSearching: false,
-    isCreating: false,
-
-    // Error states
     error: null,
+
+    // State for creating/searching findings
+    vulnerabilitySearchResults: [],
+    isSearching: false,
     searchError: null,
+    isCreating: false,
     createError: null,
 
-    // Search state
-    searchResults: [],
+    // --- Actions ---
 
+    /**
+     * Fetches all findings for a given project.
+     * @param {string} projectId - The ID of the project.
+     */
     fetchFindings: async (projectId) => {
-      if (!projectId) return;
-
-      set((state) => {
-        state.isLoading = true;
-        state.error = null;
-      });
-
-      try {
-        const response = await fetch(`/api/v1/projects/${projectId}/findings`);
-
-        if (!response.ok) {
-          throw new Error('Failed to fetch findings');
-        }
-
-        const findingsData = await response.json();
-
-        set((state) => {
-          state.findings[projectId] = findingsData;
-          state.isLoading = false;
-          state.lastFetched[projectId] = new Date(); // Set timestamp for the specific project
-        });
-      } catch (error) {
-        set((state) => {
-          state.error = error.message;
-          state.isLoading = false;
-        });
-        console.error('Error fetching findings:', error);
-      }
-    },
-
-    syncFindings: async (integrationId, projectIds) => {
-        set((state) => {
-            state.isLoading = true;
-            state.error = null;
-        });
-
+        set({ isLoading: true, error: null });
         try {
-            const response = await fetch(`/api/v1/integrations/${integrationId}/sync`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ projectIds }),
-            });
-
+            const response = await fetch(`/api/v1/projects/${projectId}/findings`);
             if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.error || 'Failed to initiate sync');
+                throw new Error('Failed to fetch findings.');
             }
-
-            // Optionally, you could return a success message or handle the 202 response
-            set((state) => {
-                state.isLoading = false;
-            });
-
-            return { success: true, message: 'Sync process initiated.' };
-
+            const findings = await response.json();
+            set({ findings, isLoading: false });
         } catch (error) {
-            set((state) => {
-                state.error = error.message;
-                state.isLoading = false;
-            });
-            console.error('Error syncing findings:', error);
-            return { success: false, error: error.message };
+            set({ error: error.message, isLoading: false });
         }
     },
 
-    // Search vulnerabilities
+    /**
+     * Searches for vulnerabilities in the local database.
+     * @param {string} query - The search query.
+     */
     searchVulnerabilities: async (query) => {
-      if (!query || query.length < 3) return;
-
-      set((state) => {
-        state.isSearching = true;
-        state.searchError = null;
-      });
-
-      try {
-        const response = await fetch(`/api/v1/vulnerabilities/search?q=${encodeURIComponent(query)}`);
-
-        if (!response.ok) {
-          throw new Error('Failed to search vulnerabilities');
+        if (!query) {
+            set({ vulnerabilitySearchResults: [], isSearching: false });
+            return;
         }
-
-        const { vulnerabilities } = await response.json();
-
-        set((state) => {
-          state.searchResults = vulnerabilities;
-          state.isSearching = false;
-        });
-      } catch (error) {
-        set((state) => {
-          state.searchError = error.message;
-          state.isSearching = false;
-        });
-        console.error('Error searching vulnerabilities:', error);
-      }
+        set({ isSearching: true, searchError: null });
+        try {
+            const response = await fetch(`/api/v1/vulnerabilities/search?q=${encodeURIComponent(query)}`);
+            if (!response.ok) {
+                throw new Error('Failed to search vulnerabilities.');
+            }
+            const data = await response.json();
+            set({ vulnerabilitySearchResults: data.vulnerabilities, isSearching: false });
+        } catch (error) {
+            set({ searchError: error.message, isSearching: false });
+        }
     },
 
-    // Look up external vulnerability by ID
-    lookupExternalVulnerability: async (id) => {
-      set((state) => {
-        state.isSearching = true;
-        state.searchError = null;
-      });
-
-      try {
-        const response = await fetch(`/api/v1/vulnerabilities/external/${id}`);
-
-        if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.error || 'Failed to lookup vulnerability');
+    /**
+     * Looks up a single vulnerability from an external source.
+     * @param {string} cveId - The CVE ID to look up.
+     * @returns {Promise<object|null>} The vulnerability data or null if an error occurs.
+     */
+    lookupExternalVulnerability: async (cveId) => {
+        set({ isSearching: true, searchError: null });
+        try {
+            const response = await fetch(`/api/v1/vulnerabilities/external/${cveId}`);
+            if (!response.ok) {
+                const errData = await response.json();
+                throw new Error(errData.error || 'Failed to look up external vulnerability.');
+            }
+            const vulnerability = await response.json();
+            set({ isSearching: false });
+            return vulnerability;
+        } catch (error) {
+            set({ searchError: error.message, isSearching: false });
+            return null;
         }
-
-        const vulnerability = await response.json();
-
-        set((state) => {
-          state.isSearching = false;
-          // Add to search results so it can be selected
-          state.searchResults = [vulnerability];
-        });
-
-        return vulnerability;
-      } catch (error) {
-        set((state) => {
-          state.searchError = error.message;
-          state.isSearching = false;
-        });
-        console.error('Error looking up vulnerability:', error);
-        return null;
-      }
     },
 
-    // Create a manual finding
-    createFinding: async (projectId, findingData) => {
-      if (!projectId || !findingData) return null;
-
-      set((state) => {
-        state.isCreating = true;
-        state.createError = null;
-      });
-
-      try {
-        const response = await fetch(`/api/v1/projects/${projectId}/findings`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(findingData),
-        });
-
-        if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.error || 'Failed to create finding');
+    /**
+     * Creates a new manual finding for a project.
+     * @param {string} projectId - The ID of the project.
+     * @param {object} findingData - The data for the new finding.
+     */
+    createManualFinding: async (projectId, findingData) => {
+        set({ isCreating: true, createError: null });
+        try {
+            const response = await fetch(`/api/v1/projects/${projectId}/findings`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(findingData),
+            });
+            if (!response.ok) {
+                const errData = await response.json();
+                throw new Error(errData.error || 'Failed to create finding.');
+            }
+            const newFinding = await response.json();
+            set((state) => ({
+                findings: [newFinding, ...state.findings],
+                isCreating: false,
+            }));
+        } catch (error) {
+            set({ createError: error.message, isCreating: false });
         }
-
-        const finding = await response.json();
-
-        set((state) => {
-          // Add the new finding to the project's findings list
-          if (!state.findings[projectId]) {
-            state.findings[projectId] = [];
-          }
-          state.findings[projectId].unshift(finding);
-          state.isCreating = false;
-        });
-
-        return finding;
-      } catch (error) {
-        set((state) => {
-          state.createError = error.message;
-          state.isCreating = false;
-        });
-        console.error('Error creating finding:', error);
-        return null;
-      }
     },
 
-    // Clear search results and errors
+    /**
+     * Clears the search results and errors.
+     */
     clearSearch: () => {
-      set((state) => {
-        state.searchResults = [];
-        state.searchError = null;
-        state.isSearching = false;
-      });
-    }
-  }))
-);
+        set({ vulnerabilitySearchResults: [], searchError: null, isSearching: false });
+    },
+}));
 
-export default useFindingStore; 
+export default useFindingStore;

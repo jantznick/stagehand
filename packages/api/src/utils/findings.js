@@ -1,6 +1,8 @@
 import { PrismaClient } from '@prisma/client';
 import { Octokit } from 'octokit';
 import { decrypt } from './crypto.js';
+import { getTraceableVulnerabilities } from './traceable.js';
+import { lookupExternalVulnerability } from './vulnerabilityLookup.js';
 
 const prisma = new PrismaClient();
 
@@ -205,162 +207,135 @@ export const syncGitHubFindings = async (integrationId, projectIds) => {
 };
 
 /**
- * Fetches Snyk issues for linked projects and upserts them into the database.
- * @param {string} integrationId - The ID of the SecurityToolIntegration.
+ * Synchronizes security findings from a Traceable integration for specified projects.
+ * @param {string} integrationId - The ID of the SecurityToolIntegration for Traceable.
  * @param {string[]} projectIds - An array of project IDs to sync.
  */
-export const syncSnykFindings = async (integrationId, projectIds) => {
-  console.log(`[Snyk Sync] Starting sync for integration ID: ${integrationId}`);
-  let syncLog;
-  let findingsAdded = 0;
-  let findingsUpdated = 0;
-  const syncedProjectNames = [];
+export async function syncTraceableFindings(integrationId, projectIds) {
+    console.log(`Starting Traceable sync for integration ${integrationId} and projects: ${projectIds.join(', ')}`);
 
-  try {
-    syncLog = await prisma.integrationSyncLog.create({
-      data: {
-        securityToolIntegrationId: integrationId,
-        status: 'IN_PROGRESS',
-        startTime: new Date(),
-      }
+    const integration = await prisma.securityToolIntegration.findUnique({
+        where: { id: integrationId },
     });
 
-    const integration = await prisma.securityToolIntegration.findUnique({ where: { id: integrationId } });
-    if (!integration) throw new Error('SecurityToolIntegration not found.');
+    if (!integration || integration.provider !== 'Traceable') {
+        console.error(`Traceable integration with ID ${integrationId} not found.`);
+        return;
+    }
 
     const credentials = JSON.parse(decrypt(integration.encryptedCredentials));
-    const { apiToken, orgId } = credentials;
-    if (!apiToken || !orgId) throw new Error('Integration is missing API token or Organization ID.');
 
     for (const projectId of projectIds) {
-      const project = await prisma.project.findUnique({ where: { id: projectId } });
-      const snykProjectId = project?.toolSpecificIds?.snyk;
-
-      if (!project || !snykProjectId) {
-        console.warn(`[Snyk Sync] Project ${projectId} is not linked to a Snyk project, skipping.`);
-        continue;
-      }
-      console.log(`[Snyk Sync] Processing Snyk project ID: ${snykProjectId} for Stagehand project: ${project.name}`);
-      syncedProjectNames.push(project.name);
-
-      const snykIssuesUrl = `https://api.snyk.io/v1/org/${orgId}/project/${snykProjectId}/issues`;
-      const snykResponse = await fetch(snykIssuesUrl, {
-        method: 'POST', // Snyk API requires POST for filtering issues
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `token ${apiToken}`,
-        },
-        body: JSON.stringify({
-            filters: {
-                severities: ['critical', 'high', 'medium', 'low'],
-                types: ['vuln'],
-                ignored: false,
+        try {
+            const project = await prisma.project.findUnique({ where: { id: projectId } });
+            if (!project) {
+                console.warn(`[Traceable Sync] Project with ID ${projectId} not found. Skipping.`);
+                continue;
             }
-        })
-      });
 
-      if (!snykResponse.ok) {
-        const errorData = await snykResponse.json();
-        throw new Error(`Snyk API error for project ${snykProjectId}: ${errorData.message || snykResponse.statusText}`);
-      }
-
-      const { issues } = await snykResponse.json();
-      console.log(`[Snyk Sync] Found ${issues.length} issues for Snyk project ${snykProjectId}.`);
-
-      for (const issue of issues) {
-        const { id: snykIssueId, issueData, pkgName, version, isFixed, introducedDate } = issue;
-
-        // 1. Upsert Vulnerability
-        const vulnerability = await prisma.vulnerability.upsert({
-            where: { vulnerabilityId_source: { vulnerabilityId: snykIssueId, source: 'Snyk' } },
-            update: {
-                title: issueData.title,
-                description: issueData.description,
-                severity: issueData.severity.toUpperCase(),
-                remediation: issueData.remediation,
-                references: { urls: (issueData.references || []).map(ref => ref.url) },
-                type: 'SCA',
-            },
-            create: {
-                vulnerabilityId: snykIssueId,
-                source: 'Snyk',
-                type: 'SCA',
-                title: issueData.title,
-                description: issueData.description,
-                severity: issueData.severity.toUpperCase(),
-                remediation: issueData.remediation,
-                references: { urls: (issueData.references || []).map(ref => ref.url) },
-            },
-        });
-
-        // 2. Find or Create the Finding
-        const existingFinding = await prisma.finding.findUnique({
-          where: {
-            projectId_vulnerabilityId_source: {
-              projectId: projectId,
-              vulnerabilityId: vulnerability.vulnerabilityId,
-              source: vulnerability.source
+            const traceableServiceId = project.toolSpecificIds?.traceableServiceId;
+            if (!traceableServiceId) {
+                console.warn(`[Traceable Sync] Project ${project.name} (${projectId}) is not linked to a Traceable service. Skipping.`);
+                continue;
             }
-          }
-        });
 
-        if (existingFinding) {
-          await prisma.finding.update({
-            where: { id: existingFinding.id },
-            data: {
-              lastSeenAt: new Date(),
-              status: isFixed ? 'RESOLVED' : 'NEW',
-              metadata: {
-                dependencyName: pkgName,
-                version: version,
-              },
+            const findings = await getTraceableVulnerabilities(credentials, traceableServiceId);
+            console.log(`[Traceable Sync] Found ${findings.length} findings for project ${project.name} (service ${traceableServiceId}).`);
+
+            for (const finding of findings) {
+                let vulnerabilityRecord;
+                const source = 'TRACEABLE';
+
+                if (finding.cve) {
+                    // Enriched vulnerability via CVE
+                    const enrichedData = await lookupExternalVulnerability(finding.cve);
+                    if (enrichedData) {
+                        vulnerabilityRecord = await prisma.vulnerability.upsert({
+                            where: { vulnerabilityId_source: { vulnerabilityId: finding.cve, source } },
+                            update: {
+                                title: enrichedData.title,
+                                description: enrichedData.description,
+                                severity: enrichedData.severity,
+                                cvssScore: enrichedData.cvssScore,
+                                remediation: enrichedData.remediation,
+                                references: enrichedData.references,
+                                type: 'CVE',
+                            },
+                            create: {
+                                vulnerabilityId: finding.cve,
+                                source,
+                                title: enrichedData.title,
+                                description: enrichedData.description,
+                                severity: enrichedData.severity,
+                                cvssScore: enrichedData.cvssScore,
+                                remediation: enrichedData.remediation,
+                                references: enrichedData.references,
+                                type: 'CVE',
+                            },
+                        });
+                    }
+                } 
+                
+                if (!vulnerabilityRecord) {
+                    // Vulnerability from Traceable data (if no CVE or lookup failed)
+                    const vulnerabilityId = finding.title.replace(/\s+/g, '-').toUpperCase(); // Create a stable ID
+                    vulnerabilityRecord = await prisma.vulnerability.upsert({
+                        where: { vulnerabilityId_source: { vulnerabilityId, source } },
+                        update: {
+                            title: finding.title,
+                            description: finding.description || 'No description provided.',
+                            severity: finding.severity.toUpperCase(),
+                            remediation: finding.remediation,
+                        },
+                        create: {
+                            vulnerabilityId,
+                            source,
+                            title: finding.title,
+                            description: finding.description || 'No description provided.',
+                            severity: finding.severity.toUpperCase(),
+                            remediation: finding.remediation,
+                            type: 'CUSTOM',
+                        },
+                    });
+                }
+
+                // Upsert the Finding record
+                await prisma.finding.upsert({
+                    where: {
+                        projectId_vulnerabilityId_source: {
+                            projectId,
+                            vulnerabilityId: vulnerabilityRecord.vulnerabilityId,
+                            source,
+                        },
+                    },
+                    update: {
+                        lastSeenAt: new Date(),
+                        status: 'NEW', // Or logic to preserve status
+                        metadata: {
+                            traceableFindingId: finding.id,
+                            threatCategory: finding.threat_category,
+                            apiEndpointPath: finding.api_endpoint_path,
+                            httpMethod: finding.http_method,
+                        },
+                    },
+                    create: {
+                        projectId,
+                        vulnerabilityId: vulnerabilityRecord.vulnerabilityId,
+                        source,
+                        type: 'APISEC',
+                        status: 'NEW',
+                        metadata: {
+                            traceableFindingId: finding.id,
+                            threatCategory: finding.threat_category,
+                            apiEndpointPath: finding.api_endpoint_path,
+                            httpMethod: finding.http_method,
+                        },
+                    },
+                });
             }
-          });
-          findingsUpdated++;
-          console.log(`[Snyk Sync] Updated finding for vulnerability: ${vulnerability.vulnerabilityId}`);
-        } else {
-          await prisma.finding.create({
-            data: {
-              project: { connect: { id: projectId } },
-              vulnerability: { connect: { vulnerabilityId_source: { vulnerabilityId: vulnerability.vulnerabilityId, source: 'Snyk' } } },
-              status: isFixed ? 'RESOLVED' : 'NEW',
-              firstSeenAt: introducedDate,
-              lastSeenAt: new Date(),
-              metadata: {
-                dependencyName: pkgName,
-                version: version,
-              },
-            }
-          });
-          findingsAdded++;
-          console.log(`[Snyk Sync] Created new finding for vulnerability: ${vulnerability.vulnerabilityId}`);
+        } catch (error) {
+            console.error(`[Traceable Sync] Failed to process project ${projectId}:`, error);
         }
-      }
     }
-
-    await prisma.integrationSyncLog.update({
-      where: { id: syncLog.id },
-      data: {
-        status: 'SUCCESS',
-        endTime: new Date(),
-        findingsAdded,
-        findingsUpdated,
-        syncedProjectsJson: syncedProjectNames,
-      }
-    });
-    console.log(`[Snyk Sync] Successfully completed sync for integration ID: ${integrationId}. Added: ${findingsAdded}, Updated: ${findingsUpdated}.`);
-
-  } catch (error) {
-    console.error(`[Snyk Sync] Error during sync process for integration ${integrationId}:`, error);
-    if (syncLog) {
-      await prisma.integrationSyncLog.update({
-        where: { id: syncLog.id },
-        data: {
-          status: 'FAILURE',
-          endTime: new Date(),
-          errorMessage: error.message,
-        }
-      });
-    }
-  }
-}; 
+    console.log(`Finished Traceable sync for integration ${integrationId}.`);
+}

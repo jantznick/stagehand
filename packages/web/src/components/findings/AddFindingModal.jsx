@@ -64,6 +64,12 @@ export default function AddFindingModal({ isOpen, onClose, projectId }) {
     }
   };
 
+  const handleClose = () => {
+    setSelectedVulnerability(null);
+    setNotes('');
+    onClose();
+  };
+
   if (!isOpen) return null;
 
   return (

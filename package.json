@@ -6,7 +6,7 @@
     "packages/*"
   ],
   "scripts": {
-    "dev": "npm run dev --workspaces --if-present",
+    "dev": "npm run dev --workspace=api & npm run dev --workspace=web",
     "dev:docs": "npm run start --workspace=packages/docs",
     "build": "npm run build --workspaces",
     "build:docs": "npm run build --workspace=packages/docs",

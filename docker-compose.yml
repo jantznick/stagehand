@@ -66,27 +66,38 @@ services:
     depends_on:
       - api
 
-  # zap:
-  #   image: softwaresecurityproject/zap-stable:latest
-  #   container_name: stagehand-zap
-  #   command: bash /init-zap.sh
-  #   ports:
-  #     - "8080:8080"
-  #   environment:
-  #     - ZAP_PORT=8080
-  #   volumes:
-  #     - zap-data:/zap/wrk
-  #     - zap-sessions:/home/zap/.ZAP
-  #     - ./scripts/init-zap.sh:/init-zap.sh:ro
-  #   restart: unless-stopped
-  #   deploy:
-  #     resources:
-  #       limits:
-  #         memory: 3g
-  #       reservations:
-  #         memory: 1g
+  semgrep-scanner:
+    build:
+      context: ./packages/semgrep-scanner
+      dockerfile: Dockerfile
+    working_dir: /usr/src/app
+    command: npm run dev
+    container_name: stagehand-semgrep-scanner
+    ports:
+      - "3003:8080" # Map internal port 8080 to host port 3003
+    volumes:
+      - ./packages/semgrep-scanner:/usr/src/app
+      - /usr/src/app/node_modules
+    env_file: ".env"
+    depends_on:
+      - api
+
+  zap:
+    image: softwaresecurityproject/zap-stable:latest
+    container_name: stagehand-zap
+    command: bash -c "/zap/zap.sh -daemon -port 8080 -host 0.0.0.0 -config api.key=${ZAP_API_KEY}"
+    ports:
+      - "8080:8080"
+    volumes:
+      - zap-data:/zap/wrk
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 3g
+        reservations:
+          memory: 1g
 
 volumes:
-  stagehand-db-data: 
-  # zap-data:
-  # zap-sessions:
+  stagehand-db-data:
+  zap-data:

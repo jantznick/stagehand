@@ -13,6 +13,7 @@ import RepoStats from './RepoStats';
 import FindingList from '../findings/FindingList';
 import FindingsSeverityChart from '../findings/FindingsSeverityChart';
 import DastScanManager from './DastScanManager';
+import SastScanManager from './SastScanManager';
 import AddFindingModal from '../../components/findings/AddFindingModal';
 
 import { Plus } from 'lucide-react';
@@ -358,6 +359,9 @@ const ApplicationDetails = ({ project }) => {
 
 				{activeTab === 'Security' && (
 					<div className="space-y-8">
+						{/* SAST Scanning Section */}
+						<SastScanManager project={project} />
+
 						{/* DAST Scanning Section */}
 						<DastScanManager project={project} />
 

@@ -394,4 +394,12 @@ docker logs stagehand-zap
 
 For detailed API documentation, see [API Documentation - DAST Scans](api/dast-scans.md).
 
-For frontend component details, see [Frontend Components - Applications](frontend/components/applications.md). 
+For frontend component details, see [Frontend Components - Applications](frontend/components/applications.md).
+
+## Architecture Note: Refactoring to a Resilient Callback Pattern
+
+The current implementation uses a polling mechanism where the main API orchestrates the entire scan lifecycle. While simple, this creates a single point of failure; if the main API restarts, it loses track of the running scan.
+
+A more resilient architecture has been designed for the SAST scanning feature, which uses a secure callback pattern. In this model, the scanner service is responsible for reporting its completion and results back to a secure, internal-only endpoint on the main API.
+
+**Recommendation:** This DAST/ZAP integration should be refactored in the future to adopt this more robust callback pattern to improve system resiliency. 

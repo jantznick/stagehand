@@ -12,7 +12,6 @@ import HierarchySettings from '../components/settings/HierarchySettings';
 import DomainManagement from '../components/settings/DomainManagement';
 import OIDCSettings from '../components/settings/OIDCSettings';
 import { ShieldAlert, ArrowLeft, Trash2 } from 'lucide-react';
-import { resetAllStores } from '../stores/reset.js';
 import IntegrationManager from '../components/integrations/IntegrationManager';
 
 const TABS = ['General', 'Integrations', 'Access Management', 'Authentication', 'Danger Zone'];

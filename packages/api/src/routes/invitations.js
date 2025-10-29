@@ -7,7 +7,7 @@ import { hasPermission } from '../utils/permissions.js';
 import crypto from 'crypto';
 import { sendEmail } from '../utils/email.js';
 import React from 'react';
-import { UserInvitation } from '../../../emails/emails/UserInvitation.jsx';
+import UserInvitation from '../../../emails/emails/UserInvitation.jsx';
 
 const prisma = new PrismaClient();
 const router = Router();

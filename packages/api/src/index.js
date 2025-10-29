@@ -1,33 +1,41 @@
-const express = require('express');
-require('dotenv').config();
-const cookieParser = require('cookie-parser');
-const session = require('express-session');
-const passport = require('passport');
-const { PrismaSessionStore } = require('@quixo3/prisma-session-store');
-const { PrismaClient } = require('@prisma/client');
-const { readFileSync } = require('fs');
-const { join } = require('path');
+import express from 'express';
+import dotenv from 'dotenv';
+import cookieParser from 'cookie-parser';
+import session from 'express-session';
+import passport from 'passport';
+import { PrismaSessionStore } from '@quixo3/prisma-session-store';
+import { PrismaClient } from '@prisma/client';
+import { readFileSync } from 'fs';
+import { join, dirname } from 'path';
+import { fileURLToPath } from 'url';
 
-const swaggerUi = require('swagger-ui-express');
-const configurePassport = require('./utils/passport.js');
-const authRoutes = require('./routes/auth.js');
-const companyRoutes = require('./routes/company.js');
-const teamRoutes = require('./routes/teams.js');
-const projectRoutes = require('./routes/projects.js');
-const hierarchyRoutes = require('./routes/hierarchy.js');
-const organizationRoutes = require('./routes/organizations.js');
-const membershipRoutes = require('./routes/memberships.js');
-const invitationRoutes = require('./routes/invitations.js');
-const oidcRoutes = require('./routes/oidc.js');
-const technologyRoutes = require('./routes/technologies.js');
-const relationshipRoutes = require('./routes/relationships.js');
-const integrationRoutes = require('./routes/integrations.js');
-const securityToolRoutes = require('./routes/securityTools.js');
-const findingsRoutes = require('./routes/findings.js');
-const dastScanRoutes = require('./routes/dastScans.js');
-const sastScanRoutes = require('./routes/sastScans.js');
-const vulnerabilitiesRoutes = require('./routes/vulnerabilities.js');
-const internalRoutes = require('./routes/internal.js');
+import swaggerUi from 'swagger-ui-express';
+import configurePassport from './utils/passport.js';
+import authRoutes from './routes/auth.js';
+import companyRoutes from './routes/company.js';
+import teamRoutes from './routes/teams.js';
+import projectRoutes from './routes/projects.js';
+import hierarchyRoutes from './routes/hierarchy.js';
+import organizationRoutes from './routes/organizations.js';
+import membershipRoutes from './routes/memberships.js';
+import invitationRoutes from './routes/invitations.js';
+import oidcRoutes from './routes/oidc.js';
+import technologyRoutes from './routes/technologies.js';
+import relationshipRoutes from './routes/relationships.js';
+import integrationRoutes from './routes/integrations.js';
+import securityToolRoutes from './routes/securityTools.js';
+import findingsRoutes from './routes/findings.js';
+import dastScanRoutes from './routes/dastScans.js';
+import sastScanRoutes from './routes/sastScans.js';
+import vulnerabilitiesRoutes from './routes/vulnerabilities.js';
+import internalRoutes from './routes/internal.js';
+import adminRoutes from './routes/admin.js';
+import { instanceResolver } from './middleware/instanceResolver.js';
+
+dotenv.config();
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 const app = express();
 const port = process.env.PORT || 3001;
@@ -42,13 +50,14 @@ const openApiSpec = JSON.parse(readFileSync(join(__dirname, 'openapi', 'openapi-
 // Middleware
 app.use(cookieParser());
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
 // Session middleware
 app.use(
   session({
     secret: process.env.SESSION_SECRET || 'a-very-strong-secret-in-development',
-    resave: false,
-    saveUninitialized: false,
+    resave: true,
+    saveUninitialized: true,
     cookie: {
       secure: process.env.NODE_ENV === 'production',
       httpOnly: true,
@@ -61,6 +70,9 @@ app.use(
     }),
   })
 );
+
+// Resolve the instance from the hostname before any other routes
+app.use(instanceResolver);
 
 // Passport middleware
 app.use(passport.initialize());
@@ -96,6 +108,7 @@ app.use('/api/v1/projects/:projectId/dast', dastScanRoutes);
 app.use('/api/v1/projects/:projectId/sast', sastScanRoutes);
 app.use('/api/v1/vulnerabilities', vulnerabilitiesRoutes);
 app.use('/api/v1/internal', internalRoutes);
+app.use('/api/v1/admin', adminRoutes);
 
 app.listen(port, () => {
   console.log(`API server listening on port ${port}`);

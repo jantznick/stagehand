@@ -111,10 +111,19 @@ router.post('/register', async (req, res) => {
       });
     } else {
       // If no auto-join, create a new org, a default company, and then the user.
+      const orgName = `${email.split('@')[0]}'s Organization`;
+      let hostname = email.split('@')[0].toLowerCase().replace(/[^a-z0-9]/g, '');
+      
+      // Ensure hostname is unique
+      const existingOrg = await prisma.organization.findUnique({ where: { hostname } });
+      if (existingOrg) {
+        hostname = `${hostname}${crypto.randomBytes(4).toString('hex')}`;
+      }
+
       const newOrg = await prisma.organization.create({
             data: {
-          name: `${email.split('@')[0]}'s Organization`,
-          accountType: accountType || 'STANDARD',
+          name: orgName,
+          hostname: hostname,
           companies: {
             create: { name: 'Default Company' },
           },
@@ -215,9 +224,21 @@ router.post('/login', async (req, res, next) => {
     try {
         const user = await prisma.user.findUnique({
             where: { email },
+            ...(req.organization && {
+				include: {
+					memberships: {
+						where: {
+							organizationId: req.organization.id
+						}
+					}
+				}
+            })
         });
 
+		console.log(user)
+		
         if (!user || !user.password) {
+            // Generic error to prevent user enumeration
             return res.status(401).json({ error: 'Invalid credentials.' });
         }
 
@@ -244,11 +265,28 @@ router.post('/login', async (req, res, next) => {
             })
           });
           
-          req.login(updatedUser, (err) => {
-            if (err) { return next(err); }
-            return res.status(200).json(sanitizeUser(updatedUser));
-          });
-          return;
+		  return res.status(403).json({ error: 'You have not verified your email. Please check your email for a new verification link' });
+        }
+
+		if (!req.organization) {
+			// Super Admin Path
+			if (user.isSuperAdmin) {
+				req.login(user, (err) => {
+					if (err) { return next(err); }
+					return res.status(200).json(sanitizeUser(user));
+				});
+				return;
+			} else {
+				return res.status(403).json({ error: 'Access denied. Please use your organization-specific login domain.' });
+			}
+		}
+
+		if (user.isSuperAdmin) {
+			return res.status(403).json({ error: 'Super admins cannot log into tenant accounts.' });
+		}
+
+		if (!user.memberships || user.memberships.length === 0) {
+            return res.status(403).json({ error: 'You are not a member of this organization.' });
         }
 
         req.login(user, (err) => {
@@ -456,28 +494,36 @@ router.get('/me', protect, (req, res) => {
     res.json(sanitizeUser(req.user));
 });
 
+// Check the current session and return user and organization data
+router.get('/session', protect, (req, res) => {
+    if (!req.organization) {
+        // This could happen for a super admin not on an instance domain.
+        // The frontend should handle this case.
+        return res.json({ user: sanitizeUser(req.user), organization: null });
+    }
+    res.json({ user: sanitizeUser(req.user), organization: req.organization });
+});
+
 // Check if OIDC/SSO is enabled for email domain
 router.get('/check-oidc', async (req, res) => {
-  const { email } = req.query;
-  if (!email || !email.includes('@')) { return res.json({ ssoEnabled: false }); }
-  const domain = email.split('@')[1].toLowerCase();
+  if (!req.organization) {
+    return res.json({ ssoEnabled: false });
+  }
+  const { id } = req.organization;
 
   try {
-    const autoJoinDomain = await prisma.autoJoinDomain.findFirst({
-      where: { domain, status: 'VERIFIED' },
-      include: { organization: { include: { oidcConfiguration: true } } }
+    const oidcConfiguration = await prisma.oIDCConfiguration.findUnique({
+      where: { organizationId: id },
     });
-
-    if (!autoJoinDomain?.organization?.oidcConfiguration) {
+    
+    if (!oidcConfiguration || !oidcConfiguration.isEnabled) {
       return res.json({ ssoEnabled: false });
     }
 
-    const { oidcConfiguration, id } = autoJoinDomain.organization;
-      return res.json({
+    return res.json({
         ssoEnabled: true,
-      buttonText: oidcConfiguration.buttonText || 'Login with SSO',
-      organizationId: id
-      });
+        buttonText: oidcConfiguration.buttonText || 'Login with SSO',
+    });
   } catch (error) {
     console.error('Error checking OIDC status:', error);
     res.status(500).json({ error: 'Server error checking OIDC status.' });

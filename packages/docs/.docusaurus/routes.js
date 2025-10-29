@@ -39,15 +39,15 @@ export default [
   },
   {
     path: '/',
-    component: ComponentCreator('/', '0e4'),
+    component: ComponentCreator('/', '201'),
     routes: [
       {
         path: '/',
-        component: ComponentCreator('/', 'b7e'),
+        component: ComponentCreator('/', '179'),
         routes: [
           {
             path: '/',
-            component: ComponentCreator('/', '6f7'),
+            component: ComponentCreator('/', 'b30'),
             routes: [
               {
                 path: '/api-reference',
@@ -300,6 +300,11 @@ export default [
                 component: ComponentCreator('/frontend/stores/useUIStore', '608'),
                 exact: true,
                 sidebar: "docsSidebar"
+              },
+              {
+                path: '/sast-scanning-feature',
+                component: ComponentCreator('/sast-scanning-feature', 'e4e'),
+                exact: true
               },
               {
                 path: '/',

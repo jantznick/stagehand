@@ -34,6 +34,9 @@ CREATE TYPE "ScanStatus" AS ENUM ('PENDING', 'QUEUED', 'RUNNING', 'COMPLETED', '
 -- CreateEnum
 CREATE TYPE "FindingStatus" AS ENUM ('NEW', 'TRIAGED', 'IN_PROGRESS', 'RESOLVED', 'IGNORED');
 
+-- CreateEnum
+CREATE TYPE "FeatureStatus" AS ENUM ('ACTIVE', 'DISABLED', 'PROMO');
+
 -- CreateTable
 CREATE TABLE "User" (
     "id" TEXT NOT NULL,
@@ -41,6 +44,7 @@ CREATE TABLE "User" (
     "password" TEXT,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
+    "isSuperAdmin" BOOLEAN NOT NULL DEFAULT false,
     "emailVerified" BOOLEAN NOT NULL DEFAULT false,
     "verificationToken" TEXT,
     "verificationTokenExpiresAt" TIMESTAMP(3),
@@ -54,7 +58,6 @@ CREATE TABLE "Session" (
     "sid" TEXT NOT NULL,
     "data" TEXT NOT NULL,
     "expiresAt" TIMESTAMP(3) NOT NULL,
-    "oIDCConfigurationId" TEXT,
 
     CONSTRAINT "Session_pkey" PRIMARY KEY ("id")
 );
@@ -64,11 +67,12 @@ CREATE TABLE "Organization" (
     "id" TEXT NOT NULL,
     "name" TEXT NOT NULL,
     "description" TEXT,
-    "accountType" TEXT NOT NULL DEFAULT 'STANDARD',
+    "hostname" TEXT,
     "hierarchyDisplayNames" JSONB,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
     "defaultCompanyId" TEXT,
+    "planId" TEXT,
 
     CONSTRAINT "Organization_pkey" PRIMARY KEY ("id")
 );
@@ -233,7 +237,6 @@ CREATE TABLE "AutoJoinDomain" (
     "organizationId" TEXT,
     "companyId" TEXT,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "sessionId" TEXT,
 
     CONSTRAINT "AutoJoinDomain_pkey" PRIMARY KEY ("id")
 );
@@ -296,7 +299,6 @@ CREATE TABLE "SCMIntegration" (
     "projectId" TEXT,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
-    "sessionId" TEXT,
 
     CONSTRAINT "SCMIntegration_pkey" PRIMARY KEY ("id")
 );
@@ -313,7 +315,6 @@ CREATE TABLE "SecurityToolIntegration" (
     "organizationId" TEXT,
     "companyId" TEXT,
     "teamId" TEXT,
-    "sessionId" TEXT,
 
     CONSTRAINT "SecurityToolIntegration_pkey" PRIMARY KEY ("id")
 );
@@ -338,8 +339,7 @@ CREATE TABLE "IntegrationSyncLog" (
 CREATE TABLE "Vulnerability" (
     "id" TEXT NOT NULL,
     "vulnerabilityId" TEXT NOT NULL,
-    "source" TEXT NOT NULL,
-    "type" "SecurityToolType",
+    "type" TEXT,
     "title" TEXT NOT NULL,
     "description" TEXT NOT NULL,
     "severity" TEXT NOT NULL,
@@ -357,8 +357,10 @@ CREATE TABLE "Finding" (
     "id" TEXT NOT NULL,
     "status" "FindingStatus" NOT NULL DEFAULT 'NEW',
     "projectId" TEXT NOT NULL,
-    "vulnerabilityId" TEXT NOT NULL,
     "source" TEXT NOT NULL,
+    "type" "SecurityToolType",
+    "vulnerabilityId" TEXT NOT NULL,
+    "url" TEXT,
     "metadata" JSONB,
     "firstSeenAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "lastSeenAt" TIMESTAMP(3) NOT NULL,
@@ -403,6 +405,34 @@ CREATE TABLE "ScanExecution" (
 );
 
 -- CreateTable
+CREATE TABLE "Plan" (
+    "id" TEXT NOT NULL,
+    "name" TEXT NOT NULL,
+    "description" TEXT,
+
+    CONSTRAINT "Plan_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "Feature" (
+    "id" TEXT NOT NULL,
+    "key" TEXT NOT NULL,
+    "description" TEXT,
+
+    CONSTRAINT "Feature_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "OrganizationFeature" (
+    "id" TEXT NOT NULL,
+    "status" "FeatureStatus" NOT NULL DEFAULT 'DISABLED',
+    "organizationId" TEXT NOT NULL,
+    "featureId" TEXT NOT NULL,
+
+    CONSTRAINT "OrganizationFeature_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
 CREATE TABLE "_DirectProjectSecurityToolIntegrations" (
     "A" TEXT NOT NULL,
     "B" TEXT NOT NULL,
@@ -410,11 +440,22 @@ CREATE TABLE "_DirectProjectSecurityToolIntegrations" (
     CONSTRAINT "_DirectProjectSecurityToolIntegrations_AB_pkey" PRIMARY KEY ("A","B")
 );
 
+-- CreateTable
+CREATE TABLE "_FeatureToPlan" (
+    "A" TEXT NOT NULL,
+    "B" TEXT NOT NULL,
+
+    CONSTRAINT "_FeatureToPlan_AB_pkey" PRIMARY KEY ("A","B")
+);
+
 -- CreateIndex
 CREATE UNIQUE INDEX "User_email_key" ON "User"("email");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "Session_sid_key" ON "Session"("sid");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Organization_hostname_key" ON "Organization"("hostname");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "ProjectRelationship_sourceProjectId_targetProjectId_type_key" ON "ProjectRelationship"("sourceProjectId", "targetProjectId", "type");
@@ -465,12 +506,6 @@ CREATE UNIQUE INDEX "ProjectDependency_projectId_name_version_key" ON "ProjectDe
 CREATE UNIQUE INDEX "AutoJoinDomain_verificationCode_key" ON "AutoJoinDomain"("verificationCode");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "AutoJoinDomain_domain_organizationId_key" ON "AutoJoinDomain"("domain", "organizationId");
-
--- CreateIndex
-CREATE UNIQUE INDEX "AutoJoinDomain_domain_companyId_key" ON "AutoJoinDomain"("domain", "companyId");
-
--- CreateIndex
 CREATE UNIQUE INDEX "OIDCConfiguration_organizationId_key" ON "OIDCConfiguration"("organizationId");
 
 -- CreateIndex
@@ -492,10 +527,13 @@ CREATE INDEX "IntegrationSyncLog_scmIntegrationId_idx" ON "IntegrationSyncLog"("
 CREATE INDEX "IntegrationSyncLog_securityToolIntegrationId_idx" ON "IntegrationSyncLog"("securityToolIntegrationId");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "Vulnerability_vulnerabilityId_source_key" ON "Vulnerability"("vulnerabilityId", "source");
+CREATE UNIQUE INDEX "Vulnerability_vulnerabilityId_key" ON "Vulnerability"("vulnerabilityId");
 
 -- CreateIndex
 CREATE INDEX "Finding_projectId_idx" ON "Finding"("projectId");
+
+-- CreateIndex
+CREATE INDEX "Finding_url_idx" ON "Finding"("url");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "Finding_projectId_vulnerabilityId_source_key" ON "Finding"("projectId", "vulnerabilityId", "source");
@@ -513,10 +551,22 @@ CREATE INDEX "ScanExecution_provider_idx" ON "ScanExecution"("provider");
 CREATE INDEX "ScanExecution_targetUrl_idx" ON "ScanExecution"("targetUrl");
 
 -- CreateIndex
+CREATE UNIQUE INDEX "Plan_name_key" ON "Plan"("name");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Feature_key_key" ON "Feature"("key");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "OrganizationFeature_organizationId_featureId_key" ON "OrganizationFeature"("organizationId", "featureId");
+
+-- CreateIndex
 CREATE INDEX "_DirectProjectSecurityToolIntegrations_B_index" ON "_DirectProjectSecurityToolIntegrations"("B");
 
+-- CreateIndex
+CREATE INDEX "_FeatureToPlan_B_index" ON "_FeatureToPlan"("B");
+
 -- AddForeignKey
-ALTER TABLE "Session" ADD CONSTRAINT "Session_oIDCConfigurationId_fkey" FOREIGN KEY ("oIDCConfigurationId") REFERENCES "OIDCConfiguration"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+ALTER TABLE "Organization" ADD CONSTRAINT "Organization_planId_fkey" FOREIGN KEY ("planId") REFERENCES "Plan"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Company" ADD CONSTRAINT "Company_organizationId_fkey" FOREIGN KEY ("organizationId") REFERENCES "Organization"("id") ON DELETE CASCADE ON UPDATE CASCADE;
@@ -585,9 +635,6 @@ ALTER TABLE "AutoJoinDomain" ADD CONSTRAINT "AutoJoinDomain_organizationId_fkey"
 ALTER TABLE "AutoJoinDomain" ADD CONSTRAINT "AutoJoinDomain_companyId_fkey" FOREIGN KEY ("companyId") REFERENCES "Company"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "AutoJoinDomain" ADD CONSTRAINT "AutoJoinDomain_sessionId_fkey" FOREIGN KEY ("sessionId") REFERENCES "Session"("id") ON DELETE SET NULL ON UPDATE CASCADE;
-
--- AddForeignKey
 ALTER TABLE "OIDCConfiguration" ADD CONSTRAINT "OIDCConfiguration_organizationId_fkey" FOREIGN KEY ("organizationId") REFERENCES "Organization"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
@@ -612,9 +659,6 @@ ALTER TABLE "SCMIntegration" ADD CONSTRAINT "SCMIntegration_teamId_fkey" FOREIGN
 ALTER TABLE "SCMIntegration" ADD CONSTRAINT "SCMIntegration_projectId_fkey" FOREIGN KEY ("projectId") REFERENCES "Project"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "SCMIntegration" ADD CONSTRAINT "SCMIntegration_sessionId_fkey" FOREIGN KEY ("sessionId") REFERENCES "Session"("id") ON DELETE SET NULL ON UPDATE CASCADE;
-
--- AddForeignKey
 ALTER TABLE "SecurityToolIntegration" ADD CONSTRAINT "SecurityToolIntegration_createdById_fkey" FOREIGN KEY ("createdById") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
@@ -627,9 +671,6 @@ ALTER TABLE "SecurityToolIntegration" ADD CONSTRAINT "SecurityToolIntegration_co
 ALTER TABLE "SecurityToolIntegration" ADD CONSTRAINT "SecurityToolIntegration_teamId_fkey" FOREIGN KEY ("teamId") REFERENCES "Team"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "SecurityToolIntegration" ADD CONSTRAINT "SecurityToolIntegration_sessionId_fkey" FOREIGN KEY ("sessionId") REFERENCES "Session"("id") ON DELETE SET NULL ON UPDATE CASCADE;
-
--- AddForeignKey
 ALTER TABLE "IntegrationSyncLog" ADD CONSTRAINT "IntegrationSyncLog_scmIntegrationId_fkey" FOREIGN KEY ("scmIntegrationId") REFERENCES "SCMIntegration"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
@@ -639,7 +680,7 @@ ALTER TABLE "IntegrationSyncLog" ADD CONSTRAINT "IntegrationSyncLog_securityTool
 ALTER TABLE "Finding" ADD CONSTRAINT "Finding_projectId_fkey" FOREIGN KEY ("projectId") REFERENCES "Project"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Finding" ADD CONSTRAINT "Finding_vulnerabilityId_source_fkey" FOREIGN KEY ("vulnerabilityId", "source") REFERENCES "Vulnerability"("vulnerabilityId", "source") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "Finding" ADD CONSTRAINT "Finding_vulnerabilityId_fkey" FOREIGN KEY ("vulnerabilityId") REFERENCES "Vulnerability"("vulnerabilityId") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "ScanExecution" ADD CONSTRAINT "ScanExecution_projectId_fkey" FOREIGN KEY ("projectId") REFERENCES "Project"("id") ON DELETE CASCADE ON UPDATE CASCADE;
@@ -654,7 +695,19 @@ ALTER TABLE "ScanExecution" ADD CONSTRAINT "ScanExecution_syncLogId_fkey" FOREIG
 ALTER TABLE "ScanExecution" ADD CONSTRAINT "ScanExecution_initiatedById_fkey" FOREIGN KEY ("initiatedById") REFERENCES "User"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE "OrganizationFeature" ADD CONSTRAINT "OrganizationFeature_organizationId_fkey" FOREIGN KEY ("organizationId") REFERENCES "Organization"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "OrganizationFeature" ADD CONSTRAINT "OrganizationFeature_featureId_fkey" FOREIGN KEY ("featureId") REFERENCES "Feature"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
 ALTER TABLE "_DirectProjectSecurityToolIntegrations" ADD CONSTRAINT "_DirectProjectSecurityToolIntegrations_A_fkey" FOREIGN KEY ("A") REFERENCES "Project"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "_DirectProjectSecurityToolIntegrations" ADD CONSTRAINT "_DirectProjectSecurityToolIntegrations_B_fkey" FOREIGN KEY ("B") REFERENCES "SecurityToolIntegration"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "_FeatureToPlan" ADD CONSTRAINT "_FeatureToPlan_A_fkey" FOREIGN KEY ("A") REFERENCES "Feature"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "_FeatureToPlan" ADD CONSTRAINT "_FeatureToPlan_B_fkey" FOREIGN KEY ("B") REFERENCES "Plan"("id") ON DELETE CASCADE ON UPDATE CASCADE;

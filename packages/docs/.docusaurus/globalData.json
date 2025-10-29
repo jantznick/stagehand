@@ -223,6 +223,10 @@
             {
               "id": "index",
               "path": "/"
+            },
+            {
+              "id": "sast-scanning-feature",
+              "path": "/sast-scanning-feature"
             }
           ],
           "draftIds": [],

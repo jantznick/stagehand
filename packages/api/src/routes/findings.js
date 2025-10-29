@@ -1,19 +1,22 @@
 // Security findings routes - OpenAPI documentation moved to packages/api/src/openapi/
 
-const express = require('express');
-const { PrismaClient } = require('@prisma/client');
-const { protect } = require('../middleware/authMiddleware');
-const { hasPermission } = require('../utils/permissions'); // Assuming a permissions utility exists
+import { Router } from 'express';
+import { PrismaClient } from '@prisma/client';
+import { protect } from '../middleware/authMiddleware.js';
+import { hasPermission } from '../utils/permissions.js';
 
+const router = Router({ mergeParams: true });
 const prisma = new PrismaClient();
-const router = express.Router({ mergeParams: true });
+
+// All routes in this file are protected
+router.use(protect);
 
 /**
  * @route   GET /
  * @desc    Get all findings for a project
  * @access  Private
  */
-router.get('/', protect, async (req, res) => {
+router.get('/', async (req, res) => {
     const { projectId } = req.params;
 
     const findings = await prisma.finding.findMany({
@@ -32,4 +35,4 @@ router.get('/', protect, async (req, res) => {
 });
 
 
-module.exports = router;
+export default router;

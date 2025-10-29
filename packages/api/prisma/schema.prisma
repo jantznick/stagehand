@@ -104,6 +104,8 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  isSuperAdmin Boolean @default(false)
+
   emailVerified              Boolean   @default(false)
   verificationToken          String?
   verificationTokenExpiresAt DateTime?
@@ -120,26 +122,24 @@ model User {
 }
 
 model Session {
-  id                       String                    @id @default(cuid())
-  sid                      String                    @unique
-  data                     String
-  expiresAt                DateTime
-  autoJoinDomains          AutoJoinDomain[]
-  oidcConfiguration        OIDCConfiguration?        @relation(fields: [oIDCConfigurationId], references: [id])
-  integrations             SCMIntegration[]
-  securityToolIntegrations SecurityToolIntegration[]
-  oIDCConfigurationId      String?
+  id        String   @id @default(cuid())
+  sid       String   @unique
+  data      String
+  expiresAt DateTime
 }
 
 model Organization {
   id                    String   @id @default(cuid())
   name                  String
   description           String?
-  accountType           String   @default("STANDARD") // STANDARD or ENTERPRISE
+  hostname              String?  @unique
   hierarchyDisplayNames Json?
   createdAt             DateTime @default(now())
   updatedAt             DateTime @updatedAt
   defaultCompanyId      String?
+
+  planId String?
+  plan   Plan?   @relation(fields: [planId], references: [id])
 
   companies                Company[]
   memberships              Membership[]
@@ -147,6 +147,7 @@ model Organization {
   oidcConfiguration        OIDCConfiguration?
   integrations             SCMIntegration[]
   securityToolIntegrations SecurityToolIntegration[]
+  features                 OrganizationFeature[]
 }
 
 model Company {
@@ -391,11 +392,6 @@ model AutoJoinDomain {
   company   Company? @relation(fields: [companyId], references: [id], onDelete: Cascade)
 
   createdAt DateTime @default(now())
-  Session   Session? @relation(fields: [sessionId], references: [id])
-  sessionId String?
-
-  @@unique([domain, organizationId])
-  @@unique([domain, companyId])
 }
 
 model OIDCConfiguration {
@@ -415,7 +411,6 @@ model OIDCConfiguration {
 
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
-  Session   Session[]
 }
 
 model PasswordResetToken {
@@ -467,8 +462,6 @@ model SCMIntegration {
   createdAt DateTime             @default(now())
   updatedAt DateTime             @updatedAt
   syncLogs  IntegrationSyncLog[]
-  Session   Session?             @relation(fields: [sessionId], references: [id])
-  sessionId String?
 }
 
 model SecurityToolIntegration {
@@ -498,8 +491,6 @@ model SecurityToolIntegration {
 
   syncLogs       IntegrationSyncLog[]
   scanExecutions ScanExecution[]
-  Session        Session?             @relation(fields: [sessionId], references: [id])
-  sessionId      String?
 }
 
 model IntegrationSyncLog {
@@ -634,4 +625,37 @@ model ScanExecution {
   @@index([status])
   @@index([provider])
   @@index([targetUrl])
+}
+
+enum FeatureStatus {
+  ACTIVE
+  DISABLED
+  PROMO
+}
+
+model Plan {
+  id            String         @id @default(cuid())
+  name          String         @unique
+  description   String?
+  organizations Organization[]
+  features      Feature[]      @relation()
+}
+
+model Feature {
+  id          String                @id @default(cuid())
+  key         String                @unique
+  description String?
+  plans       Plan[]                @relation()
+  orgFeatures OrganizationFeature[]
+}
+
+model OrganizationFeature {
+  id             String        @id @default(cuid())
+  status         FeatureStatus @default(DISABLED)
+  organizationId String
+  organization   Organization  @relation(fields: [organizationId], references: [id])
+  featureId      String
+  feature        Feature       @relation(fields: [featureId], references: [id])
+
+  @@unique([organizationId, featureId])
 }

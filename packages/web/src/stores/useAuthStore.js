@@ -1,15 +1,16 @@
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
-import { resetAllStores } from './reset';
 import useHierarchyStore from './useHierarchyStore';
+import useInstanceStore from './useInstanceStore';
 
 export const useAuthStore = create(
-  persist(
     (set, get) => ({
       user: null,
       isLoading: false,
       error: null,
-      setUser: (user) => set({ user }),
+      isSuperAdmin: false, // Add super admin flag
+      setUser: (user) => {
+        set({ user, isSuperAdmin: user ? user.isSuperAdmin : false });
+      },
       
       login: async (email, password) => {
         set({ isLoading: true, error: null });
@@ -23,10 +24,8 @@ export const useAuthStore = create(
             if (!response.ok) {
                 throw new Error(data.error || 'Login failed');
             }
-            set({ user: data, isLoading: false });
-            if (data.emailVerified) {
-                useHierarchyStore.getState().fetchHierarchy();
-            }
+            // After login, check the full session to get user and org data
+            await get().checkAuth();
             return data;
         } catch (error) {
             set({ isLoading: false, error: error.message });
@@ -51,8 +50,8 @@ export const useAuthStore = create(
                 set({ isLoading: false });
                 return data;
             }
-            set({ user: data, isLoading: false });
-            // Don't fetch hierarchy here, user needs to verify first
+             // After registration, check the full session to get user and org data
+            await get().checkAuth();
             return data;
         } catch (error) {
             set({ isLoading: false, error: error.message });
@@ -67,8 +66,10 @@ export const useAuthStore = create(
         } catch (error) {
             console.error("Logout API call failed", error);
         } finally {
-            resetAllStores();
-            set({ user: null, isLoading: false, error: null });
+            // Clear both auth and instance stores
+            set({ user: null, isSuperAdmin: false, isLoading: false, error: null });
+            useInstanceStore.getState().clearInstance();
+            useHierarchyStore.getState().clearHierarchy();
         }
       },
       acceptInvitation: async (token, password, { useMagicLink = false } = {}) => {
@@ -88,9 +89,8 @@ export const useAuthStore = create(
                 set({ isLoading: false });
                 return data;
             }
-            // Otherwise, log the user in
-            set({ user: data, isLoading: false });
-            useHierarchyStore.getState().fetchHierarchy();
+            // Otherwise, log the user in by checking the session
+            await get().checkAuth();
             return data;
         } catch (error) {
             set({ isLoading: false, error: error.message });
@@ -100,16 +100,21 @@ export const useAuthStore = create(
       checkAuth: async () => {
         set({ isLoading: true });
         try {
-            const response = await fetch('/api/v1/auth/me');
+            const response = await fetch('/api/v1/auth/session');
             if (response.ok) {
-                const user = await response.json();
-                set({ user, isAuthenticated: true, isLoading: false });
+                const { user, organization } = await response.json();
+                set({ user, isSuperAdmin: user.isSuperAdmin, isAuthenticated: true, isLoading: false });
+                if (organization) {
+                    useInstanceStore.getState().setInstance(organization);
+                } else {
+                    useInstanceStore.getState().clearInstance();
+                }
             } else {
-                set({ user: null, isAuthenticated: false, isLoading: false });
+                get().logout(); // If session is invalid, trigger a full logout
             }
         } catch (error) {
             console.log("Error checking auth", error);
-            set({ user: null, isAuthenticated: false, isLoading: false, error: error.message });
+            get().logout(); // On error, trigger a full logout
         }
       },
       verifyEmail: async (token) => {
@@ -124,8 +129,8 @@ export const useAuthStore = create(
           if (!response.ok) {
             throw new Error(data.error || 'Email verification failed.');
           }
+          // Update user in store, don't need to re-fetch session
           set({ user: data, isLoading: false });
-          // Now that user is verified, fetch their hierarchy data
           useHierarchyStore.getState().fetchHierarchy();
           return data;
         } catch (error) {
@@ -193,10 +198,8 @@ export const useAuthStore = create(
           if (!response.ok) {
             throw new Error(data.error || 'Magic link login failed.');
           }
-          set({ user: data, isLoading: false });
-          if (data.emailVerified) {
-              useHierarchyStore.getState().fetchHierarchy();
-          }
+          // After magic link verification, check the full session
+          await get().checkAuth();
           return data;
         } catch (error) {
           set({ isLoading: false, error: error.message });
@@ -216,10 +219,6 @@ export const useAuthStore = create(
         return response.json();
       },
     }),
-    {
-      name: 'user-storage', 
-    }
-  )
 ); 
 
 export default useAuthStore; 

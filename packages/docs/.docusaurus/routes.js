@@ -307,6 +307,11 @@ export default [
                 sidebar: "docsSidebar"
               },
               {
+                path: '/sast-scanning-feature',
+                component: ComponentCreator('/sast-scanning-feature', 'e4e'),
+                exact: true
+              },
+              {
                 path: '/',
                 component: ComponentCreator('/', 'c48'),
                 exact: true

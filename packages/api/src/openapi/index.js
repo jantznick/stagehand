@@ -38,6 +38,8 @@ import * as membershipPaths from './paths/membership.js';
 import * as integrationPaths from './paths/integration.js';
 import * as securityToolPaths from './paths/securityTool.js';
 import * as dastScanPaths from './paths/dastScan.js';
+import * as sastScanPaths from './paths/sastScans.js';
+import * as internalPaths from './paths/internal.js';
 
 // Combine all schemas
 const schemas = {
@@ -76,6 +78,8 @@ const paths = {
   ...integrationPaths.integrationPaths,
   ...securityToolPaths.securityToolPaths,
   ...dastScanPaths.dastScanPaths,
+  ...sastScanPaths.sastScanPaths,
+  ...internalPaths.internalPaths,
 };
 
 // Build the complete OpenAPI specification

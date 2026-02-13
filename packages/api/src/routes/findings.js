@@ -8,9 +8,11 @@ import { hasPermission, checkPermission } from '../utils/permissions.js';
 import { lookupVulnerability, validateVulnerabilityId } from '../utils/vulnerabilityLookup.js';
 import { API_ERROR_MESSAGES } from '../config/vulnerability-apis.js';
 
+const router = Router({ mergeParams: true });
 const prisma = new PrismaClient();
-const router = Router();
 
+// All routes in this file are protected
+router.use(protect);
 // Configure Multer for file uploads
 const upload = multer({ dest: 'uploads/' });
 
@@ -52,112 +54,26 @@ router.get('/:projectId/findings', protect, async (req, res) => {
 });
 
 /**
- * POST /api/v1/projects/:projectId/findings
- * Create a manual finding for a project
+ * @route   GET /
+ * @desc    Get all findings for a project
+ * @access  Private
  */
-router.post('/:projectId/findings', protect, async (req, res) => {
-  const { projectId } = req.params;
-  const { vulnerabilityId, source = 'Manual Entry', status = 'NEW', metadata = {} } = req.body;
+router.get('/', async (req, res) => {
+    const { projectId } = req.params;
 
-  try {
-    // Verify the user has ADMIN or EDITOR permission
-    const canEdit = await hasPermission(req.user, ['ADMIN', 'EDITOR'], 'project', projectId);
-
-    if (!canEdit) {
-      return res.status(403).json({
-        error: 'Access denied. You must be an ADMIN or EDITOR to create findings.'
-      });
-    }
-
-    let vulnerability;
-
-    // If it's a CVE/GHSA ID, fetch from external source if not in database
-    if (validateVulnerabilityId(vulnerabilityId)) {
-      // Check if vulnerability exists in database
-      vulnerability = await prisma.vulnerability.findUnique({
+    const findings = await prisma.finding.findMany({
         where: {
-          vulnerabilityId
+            projectId: projectId,
         },
-        select: {
-          id: true,
-          vulnerabilityId: true,
-          title: true,
-          description: true,
-          type: true,
-          severity: true,
-          cvssScore: true,
-          remediation: true,
-          references: true,
-          createdAt: true,
-          updatedAt: true
+        include: {
+            vulnerability: true
+        },
+        orderBy: {
+            lastSeenAt: 'desc'
         }
-      });
-
-      if (!vulnerability) {
-        // Lookup from external source and create in database
-        const vulnData = await lookupVulnerability(vulnerabilityId);
-        vulnerability = await prisma.vulnerability.create({
-          data: vulnData
-        });
-      }
-    } else {
-      // For non-CVE/GHSA IDs, vulnerability must already exist in database
-      // For non-CVE/GHSA IDs, the vulnerability must already exist in the database.
-      // We find it by its unique vulnerabilityId.
-      vulnerability = await prisma.vulnerability.findUnique({
-        where: {
-          vulnerabilityId
-        }
-      });
-
-      if (!vulnerability) {
-        return res.status(404).json({
-          error: 'Vulnerability not found. For manual entries, vulnerability must exist in database.'
-        });
-      }
-    }
-
-    // Create the finding
-    const finding = await prisma.finding.create({
-      data: {
-        projectId,
-        source,
-        status,
-        vulnerabilityId: vulnerability.vulnerabilityId,
-        metadata: {
-          ...metadata,
-          enteredBy: req.user.id,
-          entryDate: new Date().toISOString()
-        }
-      },
-      include: {
-        vulnerability: true
-      }
     });
 
-    res.status(201).json(finding);
-
-  } catch (error) {
-    console.error('Error creating finding:', error);
-
-    if (error.code === 'P2002') {
-      return res.status(409).json({
-        error: 'A finding for this vulnerability already exists in this project.'
-      });
-    }
-
-    if (error.message === API_ERROR_MESSAGES.RATE_LIMIT_EXCEEDED) {
-      return res.status(429).json({ error: error.message });
-    }
-
-    if (error.message === API_ERROR_MESSAGES.INVALID_CVE_FORMAT) {
-      return res.status(400).json({ error: error.message });
-    }
-
-    res.status(500).json({
-      error: 'An error occurred while creating the finding.'
-    });
-  }
+    res.json(findings);
 });
 
 // POST /api/v1/projects/:projectId/findings/bulk-upload

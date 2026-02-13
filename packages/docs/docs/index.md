@@ -33,7 +33,7 @@ Stagehand is a comprehensive platform for managing software development organiza
 - **Security Integration** - Connect with tools like Snyk for vulnerability scanning
 - **Source Control Management** - GitHub App integration for repository management
 - **Architecture Visualization** - Dependency graphs and project relationships
-- **Access Control** - Role-based permissions across the hierarchy
+- **Access Control** - Permission-based access control across the hierarchy
 
 ## Getting Started
 

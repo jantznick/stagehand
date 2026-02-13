@@ -3,7 +3,7 @@
 import { Router } from 'express';
 import { PrismaClient } from '@prisma/client';
 import { protect } from '../middleware/authMiddleware.js';
-import { getVisibleResourceIds, hasPermission } from '../utils/permissions.js';
+import { checkPermission, getVisibleResourceIds } from '../utils/permissions.js';
 
 const prisma = new PrismaClient();
 const router = Router();
@@ -16,7 +16,7 @@ router.get('/:id', async (req, res) => {
     const { id } = req.params;
 
     // Authorization: Check if the user has at least READER access to the team
-    const canView = await hasPermission(req.user, ['ADMIN', 'EDITOR', 'READER'], 'team', id);
+    const canView = await checkPermission(req.user, 'team:read', 'team', id);
     if (!canView) {
         return res.status(403).json({ error: 'You are not authorized to view this team.' });
     }
@@ -63,37 +63,39 @@ router.post('/', async (req, res) => {
         return res.status(400).json({ error: 'Name and companyId are required.' });
     }
 
+    // Authorization: User must have permission to create teams in the parent company.
+    const canCreate = await checkPermission(req.user, 'team:create', 'company', companyId);
+    if (!canCreate) {
+        return res.status(403).json({ error: 'You are not authorized to create a team in this company.' });
+    }
+    
     try {
-        // First, get the company to find its parent organization
-        const company = await prisma.company.findUnique({
-            where: { id: companyId },
-            select: { organizationId: true }
-        });
-
+        const company = await prisma.company.findUnique({ where: { id: companyId } });
         if (!company) {
             return res.status(404).json({ error: 'Company not found.' });
         }
 
-        // Authorization: User must be ADMIN/EDITOR of the company OR an ADMIN of the parent organization.
-        const canCreateInCompany = await hasPermission(req.user, ['ADMIN', 'EDITOR'], 'company', companyId);
-        const isOrgAdmin = await hasPermission(req.user, 'ADMIN', 'organization', company.organizationId);
-
-        if (!canCreateInCompany && !isOrgAdmin) {
-            return res.status(403).json({ error: 'You are not authorized to create a team in this company.' });
-        }
-    
         const newTeam = await prisma.team.create({
             data: { name, description, companyId }
         });
 
         // The creator automatically becomes an ADMIN of the new team.
-        await prisma.membership.create({
-            data: {
-                userId: req.user.id,
-                teamId: newTeam.id,
-                role: 'ADMIN'
+        const adminRole = await prisma.role.findFirst({
+            where: {
+                name: 'Admin',
+                organizationId: company.organizationId
             }
         });
+
+        if (adminRole) {
+            await prisma.membership.create({
+                data: {
+                    userId: req.user.id,
+                    teamId: newTeam.id,
+                    roleId: adminRole.id
+                }
+            });
+        }
 
         res.status(201).json(newTeam);
 
@@ -108,8 +110,8 @@ router.put('/:id', async (req, res) => {
     const { id } = req.params;
     const { name, description } = req.body;
 
-    // Authorization: User must be an ADMIN of the team to update it.
-    const canUpdate = await hasPermission(req.user, 'ADMIN', 'team', id);
+    // Authorization: User must have permission to update the team.
+    const canUpdate = await checkPermission(req.user, 'team:update', 'team', id);
     if (!canUpdate) {
         return res.status(403).json({ error: 'You are not authorized to update this team.' });
     }
@@ -130,8 +132,8 @@ router.put('/:id', async (req, res) => {
 router.delete('/:id', async (req, res) => {
     const { id } = req.params;
 
-    // Authorization: User must be an ADMIN of the team to delete it.
-    const canDelete = await hasPermission(req.user, 'ADMIN', 'team', id);
+    // Authorization: User must have permission to delete the team.
+    const canDelete = await checkPermission(req.user, 'team:delete', 'team', id);
     if (!canDelete) {
         return res.status(403).json({ error: 'You are not authorized to delete this team.' });
     }

@@ -1,4 +1,5 @@
 import React, { useEffect } from 'react';
+import { Toaster } from 'react-hot-toast';
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import useAuthStore from './stores/useAuthStore';
 import useHierarchyStore from './stores/useHierarchyStore';
@@ -66,31 +67,43 @@ const AppContent = () => {
                     } />
                     <Route path="/reset-password" element={<ResetPasswordPage />} />
                     <Route path="/verify" element={<VerifyEmailPage />} />
-                    <Route 
-                        path="/dashboard" 
-                        element={<PrivateRoute><DashboardPage /></PrivateRoute>} 
+                    <Route
+                        path="/dashboard"
+                        element={<PrivateRoute><DashboardPage /></PrivateRoute>}
                     />
-                    <Route 
-                        path="/company/:companyId" 
-                        element={<PrivateRoute><DashboardPage /></PrivateRoute>} 
+                    <Route
+                        path="/company/:companyId"
+                        element={<PrivateRoute><DashboardPage /></PrivateRoute>}
                     />
-                    <Route 
-                        path="/teams/:teamId" 
-                        element={<PrivateRoute><DashboardPage /></PrivateRoute>} 
+                    <Route
+                        path="/teams/:teamId"
+                        element={<PrivateRoute><DashboardPage /></PrivateRoute>}
                     />
-                    <Route 
-                        path="/projects/:projectId" 
-                        element={<PrivateRoute><DashboardPage /></PrivateRoute>} 
+                    <Route
+                        path="/projects/:projectId"
+                        element={<PrivateRoute><DashboardPage /></PrivateRoute>}
                     />
-                    <Route 
-                        path="/settings/:itemType/:id" 
-                        element={<PrivateRoute><SettingsPage /></PrivateRoute>} 
+                    <Route
+                        path="/settings/:itemType/:id"
+                        element={<PrivateRoute><SettingsPage /></PrivateRoute>}
                     />
                     <Route path="/*" element={
                         !user ? <Navigate to="/login" /> : <Navigate to={!user.emailVerified ? "/verify" : "/dashboard"} />
                     } />
                 </Routes>
             </main>
+            <Toaster
+                position="bottom-right"
+                toastOptions={{
+                    className: '',
+                    style: {
+                        margin: '10px',
+                        background: '#333',
+                        color: '#fff',
+                        zIndex: 1000,
+                    },
+                }}
+            />
         </div>
     );
 };

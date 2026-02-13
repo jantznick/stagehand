@@ -312,9 +312,9 @@ enum ScanStatus {
 ## Security Considerations
 
 ### Access Control Implementation
-- **Scan Launching:** Requires ADMIN or EDITOR role
-- **Scan Viewing:** Available to all project members
-- **Permission Integration:** Uses existing role-based system
+- **Scan Launching:** Requires `'project:update'` permission.
+- **Scan Viewing:** Requires `'project:read'` permission.
+- **Permission Integration:** Uses the new granular, permission-based system.
 - **Project Scoping:** All scans are project-specific
 
 ### Data Protection
@@ -335,7 +335,7 @@ enum ScanStatus {
 
 ### Existing System Integration
 - **Findings Workflow:** DAST results integrate seamlessly with existing vulnerability management
-- **Permission System:** Leverages current role-based access control
+- **Permission System:** Leverages the new permission-based access control (PBAC) model.
 - **Project Hierarchy:** Scans respect project boundaries and memberships
 - **Store Integration:** Uses existing Zustand stores for state management
 

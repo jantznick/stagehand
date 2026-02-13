@@ -7,10 +7,12 @@
 import { Router } from 'express';
 import { PrismaClient } from '@prisma/client';
 import { protect } from '../middleware/authMiddleware.js';
-import { getVisibleResourceIds, hasPermission, isMemberOfCompany } from '../utils/permissions.js';
+import { checkPermission, getVisibleResourceIds } from '../utils/permissions.js';
 import { getDescendants } from '../utils/hierarchy.js';
 import { decrypt } from '../utils/crypto.js';
 import { syncGitHubFindings } from '../utils/findings.js';
+import { scanRepositoryForTechnologies } from '../utils/repositoryScanner.js';
+import { addTechnologyToProject } from '../utils/technologies.js';
 
 const prisma = new PrismaClient();
 const router = Router();
@@ -23,7 +25,7 @@ router.get('/:id', async (req, res) => {
     const { id } = req.params;
 
     // Authorization: Check if the user has at least READER access to the project
-    const canView = await hasPermission(req.user, ['ADMIN', 'EDITOR', 'READER'], 'project', id);
+    const canView = await checkPermission(req.user, 'project:read', 'project', id);
     if (!canView) {
         return res.status(403).json({ error: 'You are not authorized to view this project.' });
     }
@@ -121,8 +123,8 @@ router.post('/', async (req, res) => {
         return res.status(400).json({ error: 'Name and teamId are required.' });
     }
 
-    // Authorization: User must be ADMIN or EDITOR of the parent team.
-    const canCreate = await hasPermission(req.user, ['ADMIN', 'EDITOR'], 'team', teamId);
+    // Authorization: User must be able to create projects in the parent team.
+    const canCreate = await checkPermission(req.user, 'project:create', 'team', teamId);
     if (!canCreate) {
         return res.status(403).json({ error: 'You are not authorized to create a project in this team.' });
     }
@@ -160,8 +162,8 @@ router.put('/:id', async (req, res) => {
         lastSecurityReview 
     } = req.body;
 
-    // Authorization: User must be an ADMIN or EDITOR of the project to update it.
-    const canUpdate = await hasPermission(req.user, ['ADMIN', 'EDITOR'], 'project', id);
+    // Authorization: User must have permission to update the project.
+    const canUpdate = await checkPermission(req.user, 'project:update', 'project', id);
     if (!canUpdate) {
         return res.status(403).json({ error: 'You are not authorized to update this project.' });
     }
@@ -200,8 +202,8 @@ router.put('/:id', async (req, res) => {
 router.delete('/:id', async (req, res) => {
     const { id } = req.params;
 
-    // Authorization: User must be an ADMIN of the project to delete it.
-    const canDelete = await hasPermission(req.user, 'ADMIN', 'project', id);
+    // Authorization: User must have permission to delete the project.
+    const canDelete = await checkPermission(req.user, 'project:delete', 'project', id);
     if (!canDelete) {
         return res.status(403).json({ error: 'You are not authorized to delete this project.' });
     }
@@ -219,7 +221,7 @@ router.delete('/:id', async (req, res) => {
 router.get('/:id/members', async (req, res) => {
     const { id } = req.params;
 
-    const canView = await hasPermission(req.user, ['ADMIN', 'EDITOR', 'READER'], 'project', id);
+    const canView = await checkPermission(req.user, 'project:read', 'project', id);
     if (!canView) {
         return res.status(403).json({ error: 'You are not authorized to view this project.' });
     }
@@ -271,7 +273,7 @@ router.post('/:id/contacts', async (req, res) => {
         return res.status(400).json({ error: 'Email, name, and role are required fields.' });
     }
 
-    const canUpdate = await hasPermission(req.user, ['ADMIN', 'EDITOR'], 'project', projectId);
+    const canUpdate = await checkPermission(req.user, 'project:update', 'project', projectId);
     if (!canUpdate) {
         return res.status(403).json({ error: 'You are not authorized to add contacts to this project.' });
     }
@@ -338,7 +340,7 @@ router.put('/:projectId/contacts/:contactId', async (req, res) => {
         return res.status(400).json({ error: 'Name, oldContactType, and newContactType are required.' });
     }
 
-    const canUpdate = await hasPermission(req.user, ['ADMIN', 'EDITOR'], 'project', projectId);
+    const canUpdate = await checkPermission(req.user, 'project:update', 'project', projectId);
     if (!canUpdate) {
         return res.status(403).json({ error: 'You are not authorized to update contacts for this project.' });
     }
@@ -405,7 +407,7 @@ router.delete('/:id/contacts/:contactId/:contactType', async (req, res) => {
         return res.status(400).json({ error: 'contactId and contactType are required.' });
     }
 
-    const canUpdate = await hasPermission(req.user, ['ADMIN', 'EDITOR'], 'project', projectId);
+    const canUpdate = await checkPermission(req.user, 'project:update', 'project', projectId);
     if (!canUpdate) {
         return res.status(403).json({ error: 'You are not authorized to remove contacts from this project.' });
     }
@@ -436,7 +438,7 @@ router.delete('/:id/contacts/:contactId/:contactType', async (req, res) => {
 router.get('/:id/technologies', async (req, res) => {
     const { id: projectId } = req.params;
 
-    const canView = await hasPermission(req.user, ['ADMIN', 'EDITOR', 'READER'], 'project', projectId);
+    const canView = await checkPermission(req.user, 'project:read', 'project', projectId);
     if (!canView) {
         return res.status(403).json({ error: 'You are not authorized to view this project.' });
     }
@@ -464,53 +466,22 @@ router.post('/:id/technologies', async (req, res) => {
         return res.status(400).json({ error: 'Technology name and type are required.' });
     }
 
-    const canUpdate = await hasPermission(req.user, ['ADMIN', 'EDITOR'], 'project', projectId);
+    const canUpdate = await checkPermission(req.user, 'project:update', 'project', projectId);
     if (!canUpdate) {
         return res.status(403).json({ error: 'You are not authorized to add technologies to this project.' });
     }
 
-    let technology; // Define here to be available in the catch block
-
     try {
-        if (technologyId) {
-            // Case 1: Adding a new version to an existing technology
-            technology = await prisma.technology.findUnique({ where: { id: technologyId } });
-            if (!technology) {
-                return res.status(404).json({ error: 'The specified technology does not exist.' });
-            }
-        } else if (name && type) {
-            // Case 2: Adding a new technology or a version of a potentially existing one
-            // Upsert the technology: find it by name/type or create it if it doesn't exist
-            technology = await prisma.technology.upsert({
-                where: { name_type: { name, type } },
-                update: {},
-                create: { name, type },
-            });
-        } else {
-            // If neither technologyId nor name/type is provided
-            return res.status(400).json({ error: 'Either technologyId or both name and type are required.' });
-        }
-        
-        // Now, create the link between the project and the technology
-        const newProjectTechnology = await prisma.projectTechnology.create({
-            data: {
-                projectId,
-                technologyId: technology.id,
-                version,
-                source: source || 'user-entered',
-            },
-            include: {
-                technology: true, // Include the full technology details in the response
-            },
-        });
-
+        const newProjectTechnology = await addTechnologyToProject(projectId, req.body);
         res.status(201).json(newProjectTechnology);
     } catch (error) {
-        if (error.code === 'P2002' && technology) {
-            // Unique constraint violation
-             return res.status(409).json({ error: `This project already has a record for technology '${technology.name}' (${technology.type}) with version '${version}'.` });
-        }
         console.error(`Error adding technology to project ${projectId}:`, error);
+        if (error.message.includes('already exists')) {
+            return res.status(409).json({ error: error.message });
+        }
+        if (error.message.includes('not exist')) {
+            return res.status(404).json({ error: error.message });
+        }
         res.status(500).json({ error: 'Failed to add technology.' });
     }
 });
@@ -520,7 +491,7 @@ router.put('/:id/technologies/:projectTechnologyId', async (req, res) => {
     const { id: projectId, projectTechnologyId } = req.params;
     const { version } = req.body;
 
-    const canUpdate = await hasPermission(req.user, ['ADMIN', 'EDITOR'], 'project', projectId);
+    const canUpdate = await checkPermission(req.user, 'project:update', 'project', projectId);
     if (!canUpdate) {
         return res.status(403).json({ error: 'You are not authorized to update technologies for this project.' });
     }
@@ -555,7 +526,7 @@ router.put('/:id/technologies/:projectTechnologyId', async (req, res) => {
 router.delete('/:id/technologies/:projectTechnologyId', async (req, res) => {
     const { id: projectId, projectTechnologyId } = req.params;
 
-    const canUpdate = await hasPermission(req.user, ['ADMIN', 'EDITOR'], 'project', projectId);
+    const canUpdate = await checkPermission(req.user, 'project:update', 'project', projectId);
     if (!canUpdate) {
         return res.status(403).json({ error: 'You are not authorized to remove technologies from this project.' });
     }
@@ -587,7 +558,7 @@ router.get('/graph', async (req, res) => {
     }
 
     // Authorize: Check if user is part of the company
-    const isMember = await isMemberOfCompany(userId, companyId);
+    const isMember = await checkPermission(req.user, 'company:read', 'company', companyId);
     if (!isMember) {
         return res.status(403).json({ error: 'You are not a member of this company.' });
     }
@@ -640,7 +611,7 @@ router.get('/:id/graph', async (req, res) => {
             return res.status(404).json({ error: 'Project not found.' });
         }
 
-        const isMember = await isMemberOfCompany(userId, project.team.companyId);
+        const isMember = await checkPermission(req.user, 'company:read', 'company', project.team.companyId);
         if (!isMember) {
             return res.status(403).json({ error: 'You are not authorized to view this project.' });
         }
@@ -703,7 +674,7 @@ router.get('/by-resource', async (req, res) => {
     }
 
     // First, ensure the user has permission to view the parent resource
-    const canView = await hasPermission(req.user, ['ADMIN', 'EDITOR', 'READER'], resourceType, resourceId);
+    const canView = await checkPermission(req.user, `${resourceType}:read`, resourceType, resourceId);
     if (!canView) {
         return res.status(403).json({ error: `You are not authorized to view projects for this ${resourceType}.` });
     }
@@ -754,12 +725,20 @@ router.post('/:id/link-repo', async (req, res) => {
     }
     
     // Authorization: Check if the user is an ADMIN or EDITOR of the project.
-    const canUpdate = await hasPermission(req.user, ['ADMIN', 'EDITOR'], 'project', id);
+    const canUpdate = await checkPermission(req.user, 'project:update', 'project', id);
     if (!canUpdate) {
         return res.status(403).json({ error: 'You are not authorized to update this project.' });
     }
 
     try {
+        const integration = await prisma.sCMIntegration.findUnique({
+            where: { id: scmIntegrationId },
+        });
+
+        if (!integration) {
+            return res.status(404).json({ error: 'SCM integration not found.' });
+        }
+        
         const updatedProject = await prisma.project.update({
             where: { id },
             data: { 
@@ -767,6 +746,9 @@ router.post('/:id/link-repo', async (req, res) => {
                 scmIntegrationId,
             }
         });
+
+        // Asynchronously scan the repository for technologies without blocking the response
+        scanRepositoryForTechnologies(id, repositoryUrl, integration);
 
         res.status(200).json(updatedProject);
 
@@ -785,7 +767,7 @@ router.get('/:id/repo-stats', async (req, res) => {
     const { id: projectId } = req.params;
 
     // Authorization check
-    const canView = await hasPermission(req.user, ['ADMIN', 'EDITOR', 'READER'], 'project', projectId);
+    const canView = await checkPermission(req.user, 'project:read', 'project', projectId);
     if (!canView) {
         return res.status(403).json({ error: 'You are not authorized to view this project.' });
     }
@@ -869,7 +851,7 @@ router.post('/:projectId/link-security-tool', protect, async (req, res) => {
   }
 
   try {
-    const canEdit = await hasPermission(req.user, ['ADMIN', 'EDITOR'], 'project', projectId);
+    const canEdit = await checkPermission(req.user, 'project:update', 'project', projectId);
     if (!canEdit) {
       return res.status(403).json({ error: 'You are not authorized to modify this project.' });
     }

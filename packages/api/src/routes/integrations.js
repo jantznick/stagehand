@@ -4,7 +4,7 @@ import { Router } from 'express';
 import { PrismaClient } from '@prisma/client';
 import jwt from 'jsonwebtoken';
 import { protect } from '../middleware/authMiddleware.js';
-import { hasPermission } from '../utils/permissions.js';
+import { checkPermission } from '../utils/permissions.js';
 import { encrypt, decrypt } from '../utils/crypto.js';
 import { syncGitHubFindings } from '../utils/findings.js';
 
@@ -30,7 +30,7 @@ router.post('/github/auth-start', async (req, res) => {
   }
 
   // Ensure user has permission to add an integration to this resource
-  const canManage = await hasPermission(req.user, ['ADMIN', 'EDITOR'], resourceType, resourceId);
+  const canManage = await checkPermission(req.user, 'integration:create', resourceType, resourceId);
   if (!canManage) {
     return res.status(403).json({ error: 'You are not authorized to add integrations to this resource.' });
   }
@@ -62,6 +62,14 @@ router.get('/github/callback', async (req, res) => {
         const decodedState = jwt.verify(state, process.env.JWT_SECRET);
         const { userId, resourceType, resourceId } = decodedState;
 
+        // --- Environment Variable Check ---
+        if (!process.env.GITHUB_APP_ID || !process.env.GITHUB_PRIVATE_KEY) {
+            console.error('FATAL: GITHUB_APP_ID or GITHUB_PRIVATE_KEY is not set in the environment.');
+            return res.status(500).json({ error: 'Server configuration error: Missing GitHub App credentials.' });
+        }
+
+        const privateKey = process.env.GITHUB_PRIVATE_KEY.replace(/\\n/g, '\n');
+
         const now = Math.floor(Date.now() / 1000);
         const appJwt = jwt.sign(
             {
@@ -69,7 +77,7 @@ router.get('/github/callback', async (req, res) => {
                 exp: now + (10 * 60),
                 iss: process.env.GITHUB_APP_ID,
             },
-            process.env.GITHUB_PRIVATE_KEY,
+            privateKey,
             {
                 algorithm: 'RS256',
             }
@@ -111,6 +119,13 @@ router.get('/github/callback', async (req, res) => {
                 [`${resourceType}Id`]: resourceId,
             }
         });
+
+        if (!process.env.WEB_URL) {
+            console.error('FATAL: WEB_URL is not set in the environment. Cannot redirect.');
+            // We can't redirect, but the integration was successful.
+            // Send a success response instead of leaving the user hanging.
+            return res.status(200).json({ message: 'GitHub integration successful, but redirect failed due to server configuration.' });
+        }
 
         const redirectUrl = new URL(`${process.env.WEB_URL}/settings/${resourceType}/${resourceId}`);
         redirectUrl.searchParams.set('integration_success', 'true');
@@ -182,7 +197,7 @@ router.get('/', async (req, res) => {
         return res.status(400).json({ error: 'resourceType and resourceId query parameters are required.' });
     }
 
-    const canView = await hasPermission(req.user, ['ADMIN', 'EDITOR', 'READER'], resourceType, resourceId);
+    const canView = await checkPermission(req.user, 'integration:read', resourceType, resourceId);
     if (!canView) {
         return res.status(403).json({ error: 'You are not authorized to view integrations for this resource.' });
     }
@@ -276,7 +291,7 @@ router.post('/:integrationId/sync', async (req, res) => {
     const resourceId = integration.organizationId || integration.companyId || integration.teamId;
     
     if (resourceId) {
-        const canView = await hasPermission(req.user, ['ADMIN', 'EDITOR', 'READER'], resourceType, resourceId);
+        const canView = await checkPermission(req.user, 'integration:sync', resourceType, resourceId);
         if (!canView) {
             return res.status(403).json({ error: 'You are not authorized to sync this integration.' });
         }
@@ -308,7 +323,20 @@ router.get('/:integrationId/sync-logs', async (req, res) => {
     const { integrationId } = req.params;
 
     try {
-        // Basic permission check can be added here if needed
+        const integration = await prisma.sCMIntegration.findUnique({ where: { id: integrationId } });
+        if (!integration) {
+            return res.status(404).json({ error: 'Integration not found.' });
+        }
+
+        const resourceType = ['organization', 'company', 'team', 'project'].find(r => integration[`${r}Id`]);
+        if (resourceType) {
+            const resourceId = integration[`${resourceType}Id`];
+            const canView = await checkPermission(req.user, 'integration:read', resourceType, resourceId);
+            if (!canView) {
+                return res.status(403).json({ error: 'You are not authorized to view logs for this integration.' });
+            }
+        }
+
         const logs = await prisma.integrationSyncLog.findMany({
             where: { scmIntegrationId: integrationId },
             orderBy: { startTime: 'desc' },
@@ -332,7 +360,7 @@ const canUserDeleteIntegration = async (user, integration) => {
     const resourceType = ['organization', 'company', 'team', 'project'].find(r => integration[`${r}Id`]);
     if (resourceType) {
         const resourceId = integration[`${resourceType}Id`];
-        return await hasPermission(user, ['ADMIN'], resourceType, resourceId);
+        return await checkPermission(user, 'integration:delete', resourceType, resourceId);
     }
 
     return false;

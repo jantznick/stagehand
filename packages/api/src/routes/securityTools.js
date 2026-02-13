@@ -3,7 +3,7 @@
 import { Router } from 'express';
 import { PrismaClient } from '@prisma/client';
 import { protect } from '../middleware/authMiddleware.js';
-import { hasPermission } from '../utils/permissions.js';
+import { checkPermission } from '../utils/permissions.js';
 import { encrypt, decrypt } from '../utils/crypto.js';
 import { syncSnykFindings } from '../utils/findings.js';
 
@@ -23,7 +23,7 @@ router.post('/', async (req, res) => {
     }
 
     try {
-        const canManage = await hasPermission(req.user, ['ADMIN'], resourceType, resourceId);
+        const canManage = await checkPermission(req.user, 'integration:create', resourceType, resourceId);
         if (!canManage) {
             return res.status(403).json({ error: 'You are not authorized to add integrations to this resource.' });
         }
@@ -58,7 +58,7 @@ router.get('/', async (req, res) => {
         return res.status(400).json({ error: 'resourceType and resourceId query parameters are required.' });
     }
 
-    const canView = await hasPermission(req.user, ['ADMIN', 'EDITOR', 'READER'], resourceType, resourceId);
+    const canView = await checkPermission(req.user, 'integration:read', resourceType, resourceId);
     if (!canView) {
         return res.status(403).json({ error: 'You are not authorized to view integrations for this resource.' });
     }
@@ -191,6 +191,15 @@ router.post('/:integrationId/sync', async (req, res) => {
         }
         
         // Basic permission check can go here if needed
+        const resourceType = integration.organizationId ? 'organization' : integration.companyId ? 'company' : 'team';
+        const resourceId = integration.organizationId || integration.companyId || integration.teamId;
+
+        if (resourceId) {
+            const canSync = await checkPermission(req.user, 'integration:sync', resourceType, resourceId);
+            if (!canSync) {
+                return res.status(403).json({ error: 'You are not authorized to sync this integration.' });
+            }
+        }
 
         // Do not await this call. This allows us to send an immediate response to the client.
         // The sync will run in the background.
@@ -215,7 +224,20 @@ router.get('/:integrationId/sync-logs', async (req, res) => {
     const { integrationId } = req.params;
 
     try {
-        // Basic permission check can be added here if needed
+        const integration = await prisma.securityToolIntegration.findUnique({ where: { id: integrationId } });
+        if (!integration) {
+            return res.status(404).json({ error: 'Integration not found.' });
+        }
+
+        const resourceType = ['organization', 'company', 'team', 'project'].find(r => integration[`${r}Id`]);
+        if (resourceType) {
+            const resourceId = integration[`${resourceType}Id`];
+            const canView = await checkPermission(req.user, 'integration:read', resourceType, resourceId);
+            if (!canView) {
+                return res.status(403).json({ error: 'You are not authorized to view logs for this integration.' });
+            }
+        }
+        
         const logs = await prisma.integrationSyncLog.findMany({
             where: { securityToolIntegrationId: integrationId },
             orderBy: { startTime: 'desc' },

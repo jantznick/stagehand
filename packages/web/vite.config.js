@@ -36,7 +36,7 @@ export default defineConfig(({ mode }) => {
       allowedHosts: ['acme.dev.stagehanddev.com', 'momentum.dev.stagehanddev.com', 'admin.dev.stagehanddev.com'],
       proxy: {
         '/api': {
-          target: 'http://localhost:3001',
+          target: env.VITE_API_PROXY_TARGET || 'http://localhost:3001',
           changeOrigin: true,
           configure: (proxy, options) => {
             proxy.on('proxyReq', (proxyReq, req, res) => {

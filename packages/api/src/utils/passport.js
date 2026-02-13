@@ -93,13 +93,16 @@ export const dynamicOidcStrategy = async (req, res, next) => {
           if (!user) {
             // JIT Provisioning
             const config = await prisma.oIDCConfiguration.findUnique({ where: { organizationId: req.session.oidc.organizationId } });
+            if (!config.defaultRoleId) {
+                return done(new Error('OIDC configuration is missing a default role for new users.'), null);
+            }
             user = await prisma.user.create({
               data: {
                 email,
                 emailVerified: true,
                 memberships: {
                   create: {
-                    role: config.defaultRole, // Use the configured default role
+                    roleId: config.defaultRoleId,
                     organizationId: req.session.oidc.organizationId,
                   },
                 },
@@ -116,11 +119,14 @@ export const dynamicOidcStrategy = async (req, res, next) => {
             if (!membership) {
               // Add user to the org if they aren't already a member
               const config = await prisma.oIDCConfiguration.findUnique({ where: { organizationId: req.session.oidc.organizationId } });
+              if (!config.defaultRoleId) {
+                return done(new Error('OIDC configuration is missing a default role for existing users.'), null);
+              }
               await prisma.membership.create({
                 data: {
                   userId: user.id,
                   organizationId: req.session.oidc.organizationId,
-                  role: config.defaultRole // Use the defaultRole from config
+                  roleId: config.defaultRoleId
                 }
               })
             }
@@ -153,6 +159,10 @@ export default function configurePassport() {
       // is handled by the instanceResolver middleware and attached to req.organization.
       const user = await prisma.user.findUnique({
         where: { id },
+        include: {
+          memberships: true,
+          teamMemberships: true,
+        },
       });
       
       if (user) {

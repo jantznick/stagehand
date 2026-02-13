@@ -3,13 +3,15 @@ import { X } from 'lucide-react';
 import useProjectStore from '../../stores/useProjectStore';
 import useIntegrationStore from '../../stores/useIntegrationStore';
 
-const SelectRepositoryModal = ({ isOpen, onClose, project }) => {
+const SelectRepositoryModal = ({ isOpen, onClose, project, integration, resourceType, resourceId }) => {
   const { integrations, loading: integrationsLoading, error: integrationsError, fetchIntegrations, clearIntegrations } = useIntegrationStore();
   const { linkRepositoryToProject } = useProjectStore();
 
   const [selectedIntegrationId, setSelectedIntegrationId] = useState('');
   const [repositories, setRepositories] = useState([]);
   const [selectedRepoUrl, setSelectedRepoUrl] = useState('');
+  const [projects, setProjects] = useState([]);
+  const [selectedProject, setSelectedProject] = useState('');
   const [repoLoading, setRepoLoading] = useState(false);
   const [repoError, setRepoError] = useState(null);
 
@@ -25,21 +27,46 @@ const SelectRepositoryModal = ({ isOpen, onClose, project }) => {
 
   useEffect(() => {
     const fetchAllIntegrations = async () => {
-        if (!isOpen || !project) return;
+        if (!isOpen) return;
         
         const resources = [];
-        if (project.id) resources.push({ type: 'project', id: project.id });
-        if (project.teamId) resources.push({ type: 'team', id: project.teamId });
-        if (project.team?.companyId) resources.push({ type: 'company', id: project.team.companyId });
-        if (project.team?.company?.organizationId) resources.push({ type: 'organization', id: project.team.company.organizationId });
+        if (project?.id) resources.push({ type: 'project', id: project.id });
+        if (project?.teamId) resources.push({ type: 'team', id: project.teamId });
+        if (project?.team?.companyId) resources.push({ type: 'company', id: project.team.companyId });
+        if (project?.team?.company?.organizationId) resources.push({ type: 'organization', id: project.team.company.organizationId });
 
-        // Sequentially fetch to allow the store to accumulate
-        for (const resource of resources) {
-            await fetchIntegrations(resource.type, resource.id);
+        // If an integration is passed directly, use it.
+        if (integration) {
+            useIntegrationStore.setState({ integrations: [integration] });
+            setSelectedIntegrationId(integration.id);
+            handleIntegrationChange(integration.id);
+        } else {
+            // Otherwise, fetch all available integrations for the hierarchy
+            for (const resource of resources) {
+                await fetchIntegrations(resource.type, resource.id);
+            }
         }
     };
     fetchAllIntegrations();
-  }, [isOpen, project, fetchIntegrations]);
+
+    if (isOpen && !project && resourceType && resourceId) {
+        // If no project is passed, fetch all projects for the resource
+        const fetchAllProjects = async () => {
+            try {
+                const res = await fetch(`/api/v1/projects/by-resource?resourceType=${resourceType}&resourceId=${resourceId}`);
+                if (!res.ok) {
+                    throw new Error(`Failed to fetch projects: ${res.statusText}`);
+                }
+                const data = await res.json();
+                setProjects(Array.isArray(data) ? data : []); // Ensure data is an array
+            } catch (err) {
+                setRepoError(err.message);
+                setProjects([]); // Reset to empty array on error
+            }
+        };
+        fetchAllProjects();
+    }
+  }, [isOpen, project, integration, fetchIntegrations]);
 
 
   const handleIntegrationChange = async (integrationId) => {
@@ -73,7 +100,7 @@ const SelectRepositoryModal = ({ isOpen, onClose, project }) => {
       setRepoLoading(true);
       setRepoError(null);
       try {
-          await linkRepositoryToProject(project.id, {
+          await linkRepositoryToProject(project ? project.id : selectedProject, {
               repositoryUrl: selectedRepoUrl,
               scmIntegrationId: selectedIntegrationId
           });
@@ -92,17 +119,28 @@ const SelectRepositoryModal = ({ isOpen, onClose, project }) => {
     <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
       <div className="bg-[var(--prussian-blue)] rounded-xl shadow-xl w-full max-w-xl mx-4 border border-white/10">
         <div className="flex items-center justify-between p-6 border-b border-white/10">
-          <h2 className="text-xl font-semibold text-[var(--vanilla)]">Link Repository to {project.name}</h2>
+          <h2 className="text-xl font-semibold text-[var(--vanilla)]">
+            {project ? `Link Repository to ${project.name}` : 'Link Repositories'}
+          </h2>
           <button onClick={onClose}><X size={20} /></button>
         </div>
         <div className="p-6 space-y-4">
-            <div className="w-full">
-                <label className="block text-sm font-medium text-gray-300 mb-1">Available Integrations</label>
-                <select value={selectedIntegrationId} onChange={e => handleIntegrationChange(e.target.value)} className="w-full p-2 bg-white/5 border border-white/10 rounded-lg" disabled={integrationsLoading}>
-                    <option value="">Select an integration...</option>
-                    {integrations.map(int => <option key={int.id} value={int.id}>{int.displayName} ({int.provider})</option>)}
-                </select>
-            </div>
+            {integration ? (
+                <div className="w-full">
+                    <label className="block text-sm font-medium text-gray-300 mb-1">Integration</label>
+                    <div className="w-full p-2 bg-black/20 border border-white/10 rounded-lg text-white/80">
+                        {integration.displayName} ({integration.provider})
+                    </div>
+                </div>
+            ) : (
+                <div className="w-full">
+                    <label className="block text-sm font-medium text-gray-300 mb-1">Available Integrations</label>
+                    <select value={selectedIntegrationId} onChange={e => handleIntegrationChange(e.target.value)} className="w-full p-2 bg-white/5 border border-white/10 rounded-lg" disabled={integrationsLoading}>
+                        <option value="">Select an integration...</option>
+                        {integrations.map(int => <option key={int.id} value={int.id}>{int.displayName} ({int.provider})</option>)}
+                    </select>
+                </div>
+            )}
             {(integrationsLoading || integrationsError) && (
                 <div className="text-sm">
                     {integrationsLoading && <p>Loading integrations...</p>}
@@ -116,6 +154,15 @@ const SelectRepositoryModal = ({ isOpen, onClose, project }) => {
                     {repositories.map(repo => <option key={repo.id} value={repo.html_url}>{repo.full_name}</option>)}
                 </select>
             </div>
+            {!project && (
+                <div className="w-full">
+                    <label className="block text-sm font-medium text-gray-300 mb-1">Project</label>
+                    <select value={selectedProject} onChange={e => setSelectedProject(e.target.value)} disabled={!selectedIntegrationId || repoLoading} className="w-full p-2 bg-white/5 border border-white/10 rounded-lg">
+                        <option value="">Select a project...</option>
+                        {Array.isArray(projects) && projects.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+                    </select>
+                </div>
+            )}
             {(repoLoading || repoError) && (
                 <div className="text-sm">
                     {repoLoading && <p>Loading repositories...</p>}

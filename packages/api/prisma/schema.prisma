@@ -1,6 +1,7 @@
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
+  url      = "postgresql://admin:password@localhost:5432/stagehand?schema=public"
 }
 
 generator client {
@@ -536,23 +537,20 @@ enum FindingStatus {
 
 model Vulnerability {
   id              String              @id @default(cuid())
-  vulnerabilityId String
-  source          String
-  type            SecurityToolType?
-
-  title       String
-  description String  @db.Text
-  severity    String
-  cvssScore   Float?
-  remediation String? @db.Text
-  references  Json?
+  // Canonical ID from the source, e.g., 'CVE-2023-1234' or 'GHSA-...'
+  vulnerabilityId String    @unique
+  type            String? // e.g., 'CVE', 'GHSA'
+  title           String
+  description     String    @db.Text
+  severity        String // e.g., 'CRITICAL', 'HIGH', 'MEDIUM', 'LOW'
+  cvssScore       Float?
+  remediation     String? @db.Text
+  references      Json? // List of URLs to advisories
 
   findings Finding[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-
-  @@unique([vulnerabilityId, source])
 }
 
 model Finding {
@@ -562,9 +560,11 @@ model Finding {
   projectId String
   project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
 
+  source          String              // Descriptive source string like "Stagehand DAST (OWASP ZAP)"
+  type            SecurityToolType?   // DAST, SAST, SCA, APISEC
+
   vulnerabilityId String
-  source          String
-  vulnerability   Vulnerability @relation(fields: [vulnerabilityId, source], references: [vulnerabilityId, source])
+  vulnerability   Vulnerability @relation(fields: [vulnerabilityId], references: [vulnerabilityId])
 
   url String?
 

@@ -10,7 +10,8 @@
     "build:openapi": "node src/openapi/build.js",
     "build": "npm run build:openapi",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "prisma:generate": "prisma generate"
+    "prisma:generate": "prisma generate",
+    "seed": "node prisma/seed.js"
   },
   "prisma": {
     "seed": "node prisma/seed.js"

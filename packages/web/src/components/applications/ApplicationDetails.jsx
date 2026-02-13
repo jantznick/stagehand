@@ -13,6 +13,9 @@ import RepoStats from './RepoStats';
 import FindingList from '../findings/FindingList';
 import FindingsSeverityChart from '../findings/FindingsSeverityChart';
 import DastScanManager from './DastScanManager';
+import AddFindingModal from '../../components/findings/AddFindingModal';
+
+import { Plus } from 'lucide-react';
 
 const TABS = ['Details', 'Security', 'Architecture', 'Contacts', 'Technologies'];
 
@@ -25,6 +28,7 @@ const ApplicationDetails = ({ project }) => {
 	const [isEditingType, setIsEditingType] = useState(false);
 	const [editingType, setEditingType] = useState(project.projectType || '');
 	const [syncError, setSyncError] = useState(null);
+	const [showAddModal, setShowAddModal] = useState(false);
 
 	const { updateProject: updateHierarchyProject, isLoading: isHierarchyLoading, fetchAndSetSelectedItem } = useHierarchyStore();
 	const { fetchRepoStats, repoStats, isStatsLoading, statsError } = useProjectStore();
@@ -365,6 +369,16 @@ const ApplicationDetails = ({ project }) => {
 									<p className="text-sm text-gray-400">Overview of findings from integrated security tools.</p>
 								</div>
 								<div className="flex items-center gap-4">
+									{/* Add Finding Button */}
+									{(
+										<button
+										onClick={() => setShowAddModal(true)}
+										className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
+										>
+										<Plus size={16} />
+										Add Finding
+										</button>
+									)}
 									<button
 										onClick={handleSync}
 										disabled={isFindingSyncing || isSecuritySyncing}
@@ -401,6 +415,11 @@ const ApplicationDetails = ({ project }) => {
 				{activeTab === 'Technologies' && (
 					<TechnologyManager project={project} />
 				)}
+						<AddFindingModal
+						  isOpen={showAddModal}
+						  onClose={() => setShowAddModal(false)}
+						  projectId={project.id}
+						/>
 			</div>
 		</div>
 	);

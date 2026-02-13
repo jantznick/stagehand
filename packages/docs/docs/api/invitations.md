@@ -23,7 +23,7 @@ Resends an invitation email to a pending user.
 
 A "pending" user is one who has been created in the system (e.g., by being added as a member to a project) but has not yet clicked the invitation link to set their password and activate their account.
 
-*   **Permissions:** Requires the requesting user to have `ADMIN` or `EDITOR` permissions on the resource to which the pending user was originally invited.
+*   **Permissions:** Requires the requesting user to have the `'*:members:manage'` permission on the resource to which the pending user was originally invited (e.g., `'project:members:manage'`).
 *   **Body (`application/json`):**
     *   `userId` (string, required): The ID of the pending user to whom the invitation should be resent.
 *   **Success Response (`200`):** `{ "message": "Invitation sent successfully" }`
@@ -32,7 +32,7 @@ A "pending" user is one who has been created in the system (e.g., by being added
 
 *   **Behavior:**
     1.  Finds the user by the provided `userId`.
-    2.  Verifies the user is in a pending state (i.e., they have not yet verified their email).
+    2.  Verifies the user is in a pending state (i.e., they have not yet set a password).
     3.  Finds the original membership record to determine which resource they were invited to.
     4.  Checks if the *requesting user* has permission to manage members for that resource.
     5.  Deletes the old invitation record.

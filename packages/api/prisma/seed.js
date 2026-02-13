@@ -4,11 +4,18 @@ import bcrypt from 'bcryptjs';
 const prisma = new PrismaClient();
 
 const modelNames = [
-	'Membership', 'Invitation', 'PasswordResetToken', 'LoginToken',
-	'ProjectContact', 'ProjectTechnology',
-	'Project', 'Team', 'AutoJoinDomain', 'OIDCConfiguration',
+    // Junction and linking tables
+    'Permission', 'Role', 'TeamMember', 'Membership',
+    'ProjectContact', 'ProjectTechnology',
+    // Token and invitation tables
+    'Invitation', 'PasswordResetToken', 'LoginToken',
+	// Core hierarchy
+	'Project', 'Team',
 	'Company', 'Organization',
-	'Contact', 'Technology', 'User'
+	'Contact', 'Technology', 'User',
+	'OrganizationFeature', 'Plan', 'Feature'
+    // Other models
+	'Contact', 'Technology', 'User', 'AutoJoinDomain', 'OIDCConfiguration'
 ];
 
 // Helper to create teams with projects
@@ -26,6 +33,55 @@ const createTeamsAndProjects = (teamNames, projectCountPerTeam) => {
 	}));
 };
 
+async function seedFeaturesAndPlans() {
+	console.log('Creating features...');
+	const features = {
+		sast: await prisma.feature.create({ data: { key: 'sast-scanning', description: 'Run SAST scans against repositories' } }),
+		dast: await prisma.feature.create({ data: { key: 'dast-scanning', description: 'Run DAST scans against applications' } }),
+		oidc: await prisma.feature.create({ data: { key: 'oidc-sso', description: 'Enable OIDC Single Sign-On' } }),
+		customRoles: await prisma.feature.create({ data: { key: 'custom-roles', description: 'Define custom roles and permissions' } })
+	};
+	console.log('Features created.');
+
+	console.log('Creating plans...');
+	const plans = {
+		basic: await prisma.plan.create({
+			data: {
+				name: 'Basic',
+				description: 'For small teams getting started.',
+			}
+		}),
+		premium: await prisma.plan.create({
+			data: {
+				name: 'Premium',
+				description: 'For growing businesses that need advanced features.',
+				features: {
+					connect: [
+						{ id: features.sast.id },
+						{ id: features.dast.id }
+					]
+				}
+			}
+		}),
+		enterprise: await prisma.plan.create({
+			data: {
+				name: 'Enterprise',
+				description: 'For large organizations with complex security and compliance needs.',
+				features: {
+					connect: [
+						{ id: features.sast.id },
+						{ id: features.dast.id },
+						{ id: features.oidc.id },
+						{ id: features.customRoles.id }
+					]
+				}
+			}
+		})
+	};
+	console.log('Plans created.');
+	return { features, plans };
+}
+
 async function main() {
 	console.log('--- Start seeding ---');
 
@@ -38,7 +94,44 @@ async function main() {
 	}
 	console.log('Previous data cleaned.');
 
-	// 2. Create Master Technologies
+	// 2. Create Features and Plans
+	const { features, plans } = await seedFeaturesAndPlans();
+	// 2. Define and Seed Permissions
+    console.log('Defining and seeding permissions...');
+    const permissionsToCreate = [
+        // Organization Permissions
+        { action: 'organization:read', resourceType: 'Organization', description: 'View organization details' },
+        { action: 'organization:update', resourceType: 'Organization', description: 'Update organization settings' },
+        { action: 'organization:delete', resourceType: 'Organization', description: 'Delete organization' },
+        { action: 'organization:members:manage', resourceType: 'Organization', description: 'Manage organization members' },
+
+        // Company Permissions
+        { action: 'company:read', resourceType: 'Company', description: 'View company details' },
+        { action: 'company:create', resourceType: 'Company', description: 'Create new companies' },
+        { action: 'company:update', resourceType: 'Company', description: 'Update company settings' },
+        { action: 'company:delete', resourceType: 'Company', description: 'Delete companies' },
+
+        // Team Permissions
+        { action: 'team:read', resourceType: 'Team', description: 'View team details' },
+        { action: 'team:create', resourceType: 'Team', description: 'Create new teams' },
+        { action: 'team:update', resourceType: 'Team', description: 'Update team settings' },
+        { action: 'team:delete', resourceType: 'Team', description: 'Delete teams' },
+
+        // Project Permissions
+        { action: 'project:read', resourceType: 'Project', description: 'View project details' },
+        { action: 'project:create', resourceType: 'Project', description: 'Create new projects' },
+        { action: 'project:update', resourceType: 'Project', description: 'Update project settings' },
+        { action: 'project:delete', resourceType: 'Project', description: 'Delete projects' },
+    ];
+
+    await prisma.permission.createMany({
+        data: permissionsToCreate,
+        skipDuplicates: true,
+    });
+    const allPermissions = await prisma.permission.findMany();
+    console.log('Permissions seeded.');
+
+	// 3. Create Master Technologies
 	console.log('Creating master technologies...');
 	const technologies = {
 		react: await prisma.technology.create({ data: { name: 'React', type: 'FRAMEWORK' } }),
@@ -53,20 +146,20 @@ async function main() {
 	};
 	console.log('Technologies created.');
 
-	// 3. Create Users
+	// 4. Create Users
 	console.log('Creating users...');
 	const password = await bcrypt.hash('password123', 10);
 	const users = {
-		aperture_admin: await prisma.user.create({ data: { email: 'admin@aperture.dev', password, emailVerified: true } }),
+		aperture_admin: await prisma.user.create({ data: { email: 'admin@acme.dev', password, emailVerified: true } }),
 		momentum_admin: await prisma.user.create({ data: { email: 'admin@momentum.co', password, emailVerified: true } }),
 		nexus_editor: await prisma.user.create({ data: { email: 'editor@nexus-cloud.com', password, emailVerified: true } }),
-		quantum_lead: await prisma.user.create({ data: { email: 'lead.quantum@aperture.dev', password, emailVerified: true } }),
+		quantum_lead: await prisma.user.create({ data: { email: 'lead.quantum@acme.dev', password, emailVerified: true } }),
 		velocity_reader: await prisma.user.create({ data: { email: 'reader@velocity.io', password, emailVerified: true } }),
-		multi_role_dev: await prisma.user.create({ data: { email: 'dev@aperture.dev', password, emailVerified: true } }),
+		multi_role_dev: await prisma.user.create({ data: { email: 'dev@acme.dev', password, emailVerified: true } }),
 	};
 	console.log('Users created.');
 
-	// 4. Create Contacts
+	// 5. Create Contacts
 	console.log('Creating contacts...');
 	const contacts = {
 		lead_contact: await prisma.contact.create({ data: { name: 'Casey Lead', email: users.quantum_lead.email, userId: users.quantum_lead.id } }),
@@ -76,12 +169,15 @@ async function main() {
 	};
 	console.log('Contacts created.');
 
-	// 5. Create Hierarchies
+	// 6. Create Hierarchies
+	console.log('Creating Acme Corp (ENTERPRISE) hierarchy...');
+	const acmeOrg = await prisma.organization.create({
 	console.log('Creating Aperture Labs (ENTERPRISE) hierarchy...');
 	const apertureOrg = await prisma.organization.create({
 		data: {
-			name: 'Aperture Labs',
-			accountType: 'ENTERPRISE',
+			name: 'Acme Corp',
+			hostname: 'acme',
+			planId: plans.enterprise.id,
 			companies: {
 				create: [
 					{
@@ -106,7 +202,13 @@ async function main() {
 	const momentumOrg = await prisma.organization.create({
 		data: {
 			name: 'Momentum Inc.',
-			accountType: 'STANDARD',
+			hostname: 'momentum',
+			planId: plans.premium.id,
+			features: {
+				create: [
+					{ featureId: features.oidc.id, status: 'PROMO' }
+				]
+			},
 			companies: {
 				create: [
 					{
@@ -120,7 +222,58 @@ async function main() {
 	});
 	console.log('Hierarchies created.');
 
-	// 6. Populate specific projects with extra data
+	// 7. Populate specific projects with extra data
+	const simulationsTeam = acmeOrg.companies.find(c => c.name === 'Quantum Innovations').teams.find(t => t.name === 'Simulations');
+	// 7. Create Default Roles for Each Organization
+    console.log('Creating default roles for organizations...');
+    const orgs = [apertureOrg, momentumOrg];
+    const rolesByOrg = {};
+
+    for (const org of orgs) {
+        const adminRole = await prisma.role.create({
+            data: {
+                name: 'Admin',
+                description: 'Full access to all resources and settings.',
+                isEditable: false,
+                organizationId: org.id,
+                permissions: {
+                    connect: allPermissions.map(p => ({ id: p.id }))
+                }
+            }
+        });
+
+        const editorRole = await prisma.role.create({
+            data: {
+                name: 'Editor',
+                description: 'Can view and edit resources, but not manage settings.',
+                isEditable: false,
+                organizationId: org.id,
+                permissions: {
+                    connect: allPermissions.filter(p => 
+                        !p.action.includes('delete') && p.action !== 'organization:members:manage'
+                    ).map(p => ({ id: p.id }))
+                }
+            }
+        });
+
+        const readerRole = await prisma.role.create({
+            data: {
+                name: 'Reader',
+                description: 'Can view resources, but cannot make any changes.',
+                isEditable: false,
+                organizationId: org.id,
+                permissions: {
+                    connect: allPermissions.filter(p => p.action.includes('read')).map(p => ({ id: p.id }))
+                }
+            }
+        });
+
+        rolesByOrg[org.id] = { adminRole, editorRole, readerRole };
+    }
+    console.log('Default roles created.');
+
+
+	// 8. Populate specific projects with extra data
 	const simulationsTeam = apertureOrg.companies.find(c => c.name === 'Quantum Innovations').teams.find(t => t.name === 'Simulations');
 	const projectToEnrich1 = simulationsTeam.projects[0];
 
@@ -152,7 +305,8 @@ async function main() {
 	});
 	console.log('Project enrichment complete.');
 
-	// 7. Assign Memberships
+	// 8. Assign Memberships
+	// 9. Assign Memberships
 	console.log('Assigning roles and permissions...');
 	// Fetch all entities for easy mapping
 	const allOrgs = await prisma.organization.findMany({ include: { companies: { include: { teams: { include: { projects: true } } } } } });
@@ -167,18 +321,30 @@ async function main() {
 	await prisma.membership.createMany({
 		data: [
 			// Aperture Labs Permissions
-			{ userId: users.aperture_admin.id, organizationId: orgMap['Aperture Labs'].id, role: 'ADMIN' },
+			{ userId: users.aperture_admin.id, organizationId: orgMap['Acme Corp'].id, role: 'ADMIN' },
 			{ userId: users.nexus_editor.id, companyId: companyMap.get('Nexus Cloud Services').id, role: 'EDITOR' },
 			{ userId: users.quantum_lead.id, teamId: teamMap.get('AI Research').id, role: 'ADMIN' },
 			{ userId: users.multi_role_dev.id, teamId: teamMap.get('Control Systems').id, role: 'EDITOR' },
 			{ userId: users.multi_role_dev.id, teamId: teamMap.get('Simulations').id, role: 'READER' },
+			{ userId: users.aperture_admin.id, organizationId: orgMap['Aperture Labs'].id, roleId: rolesByOrg[apertureOrg.id].adminRole.id },
+			{ userId: users.nexus_editor.id, companyId: companyMap.get('Nexus Cloud Services').id, roleId: rolesByOrg[apertureOrg.id].editorRole.id },
+			{ userId: users.quantum_lead.id, teamId: teamMap.get('AI Research').id, roleId: rolesByOrg[apertureOrg.id].adminRole.id },
+			{ userId: users.multi_role_dev.id, teamId: teamMap.get('Control Systems').id, roleId: rolesByOrg[apertureOrg.id].editorRole.id },
+			{ userId: users.multi_role_dev.id, teamId: teamMap.get('Simulations').id, roleId: rolesByOrg[apertureOrg.id].readerRole.id },
 
 			// Momentum Inc. Permissions
-			{ userId: users.momentum_admin.id, organizationId: orgMap['Momentum Inc.'].id, role: 'ADMIN' },
-			{ userId: users.velocity_reader.id, companyId: companyMap.get('Velocity Web Solutions').id, role: 'READER' }
+			{ userId: users.momentum_admin.id, organizationId: orgMap['Momentum Inc.'].id, roleId: rolesByOrg[momentumOrg.id].adminRole.id },
+			{ userId: users.velocity_reader.id, companyId: companyMap.get('Velocity Web Solutions').id, roleId: rolesByOrg[momentumOrg.id].readerRole.id }
 		]
 	});
 	console.log('Permissions assigned.');
+
+	// Make one user a super admin
+	await prisma.user.update({
+		where: { email: 'admin@acme.dev' },
+		data: { isSuperAdmin: true }
+	});
+	console.log('Super admin rights granted.');
 
 	console.log('--- Seeding finished successfully! ---');
 }

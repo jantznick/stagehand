@@ -27,33 +27,21 @@ export const dynamicOidcStrategy = async (req, res, next) => {
         organizationId = oidcConfig.organizationId;
       }
     } 
-    // SP-initiated flow: The organization ID is passed as a query parameter.
-    else if (req.query.organizationId) {
-      organizationId = req.query.organizationId;
+    // The instance resolver has already identified the organization.
+    else if (req.organization) {
+      organizationId = req.organization.id;
       oidcConfig = await prisma.oIDCConfiguration.findUnique({
         where: { organizationId: organizationId },
       });
     }
-    // IdP-initiated flow from providers like Okta that redirect with an issuer
-    else if (req.query.iss) {
-		console.log('dynamicOidcStrategy', req.query.iss);
-      oidcConfig = await prisma.oIDCConfiguration.findUnique({
-        where: { issuer: req.query.iss }
-      });
-      if (oidcConfig) {
-        organizationId = oidcConfig.organizationId;
-      }
-    }
-    // SP-initiated flow (callback): The organization ID was stored in the session.
-    else if (req.session?.oidc?.organizationId) {
-      organizationId = req.session.oidc.organizationId;
-      oidcConfig = await prisma.oIDCConfiguration.findUnique({
-          where: { organizationId: organizationId },
-      });
-    }
 
     if (!oidcConfig) {
-      return res.status(404).send('OIDC configuration not found.');
+      // If we are on an instance domain but there's no config, it's an error.
+      if (req.organization) {
+        return res.status(404).send('OIDC is not configured for this organization.');
+      }
+      // Otherwise, just continue, this might not be an OIDC request.
+      return next();
     }
 
     // Store the organizationId in the session to be used in the callback
@@ -105,13 +93,16 @@ export const dynamicOidcStrategy = async (req, res, next) => {
           if (!user) {
             // JIT Provisioning
             const config = await prisma.oIDCConfiguration.findUnique({ where: { organizationId: req.session.oidc.organizationId } });
+            if (!config.defaultRoleId) {
+                return done(new Error('OIDC configuration is missing a default role for new users.'), null);
+            }
             user = await prisma.user.create({
               data: {
                 email,
                 emailVerified: true,
                 memberships: {
                   create: {
-                    role: config.defaultRole, // Use the configured default role
+                    roleId: config.defaultRoleId,
                     organizationId: req.session.oidc.organizationId,
                   },
                 },
@@ -128,11 +119,14 @@ export const dynamicOidcStrategy = async (req, res, next) => {
             if (!membership) {
               // Add user to the org if they aren't already a member
               const config = await prisma.oIDCConfiguration.findUnique({ where: { organizationId: req.session.oidc.organizationId } });
+              if (!config.defaultRoleId) {
+                return done(new Error('OIDC configuration is missing a default role for existing users.'), null);
+              }
               await prisma.membership.create({
                 data: {
                   userId: user.id,
                   organizationId: req.session.oidc.organizationId,
-                  role: config.defaultRole // Use the defaultRole from config
+                  roleId: config.defaultRoleId
                 }
               })
             }
@@ -161,21 +155,16 @@ export default function configurePassport() {
 
   passport.deserializeUser(async (id, done) => {
     try {
+      // The user object is now simple. All organization/feature data
+      // is handled by the instanceResolver middleware and attached to req.organization.
       const user = await prisma.user.findUnique({
         where: { id },
         include: {
-          memberships: {
-            select: {
-              role: true,
-              organizationId: true,
-              companyId: true,
-              teamId: true,
-              projectId: true,
-            },
-          },
+          memberships: true,
+          teamMemberships: true,
         },
       });
-      // Exclude password before passing the user object along
+      
       if (user) {
         const { password, ...userWithoutPassword } = user;
         done(null, userWithoutPassword);

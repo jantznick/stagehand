@@ -1,5 +1,5 @@
 import express from 'express';
-import 'dotenv/config';
+import dotenv from 'dotenv';
 import cookieParser from 'cookie-parser';
 import session from 'express-session';
 import passport from 'passport';
@@ -8,9 +8,6 @@ import { PrismaClient } from '@prisma/client';
 import { readFileSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
 
 import swaggerUi from 'swagger-ui-express';
 import configurePassport from './utils/passport.js';
@@ -29,7 +26,16 @@ import integrationRoutes from './routes/integrations.js';
 import securityToolRoutes from './routes/securityTools.js';
 import findingsRoutes from './routes/findings.js';
 import dastScanRoutes from './routes/dastScans.js';
+import sastScanRoutes from './routes/sastScans.js';
 import vulnerabilitiesRoutes from './routes/vulnerabilities.js';
+import internalRoutes from './routes/internal.js';
+import adminRoutes from './routes/admin.js';
+import { instanceResolver } from './middleware/instanceResolver.js';
+
+dotenv.config();
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 const app = express();
 const port = process.env.PORT || 3001;
@@ -44,13 +50,14 @@ const openApiSpec = JSON.parse(readFileSync(join(__dirname, 'openapi', 'openapi-
 // Middleware
 app.use(cookieParser());
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
 // Session middleware
 app.use(
   session({
     secret: process.env.SESSION_SECRET || 'a-very-strong-secret-in-development',
-    resave: false,
-    saveUninitialized: false,
+    resave: true,
+    saveUninitialized: true,
     cookie: {
       secure: process.env.NODE_ENV === 'production',
       httpOnly: true,
@@ -63,6 +70,9 @@ app.use(
     }),
   })
 );
+
+// Resolve the instance from the hostname before any other routes
+app.use(instanceResolver);
 
 // Passport middleware
 app.use(passport.initialize());
@@ -93,9 +103,12 @@ app.use('/api/v1/technologies', technologyRoutes);
 app.use('/api/v1/relationships', relationshipRoutes);
 app.use('/api/v1/integrations', integrationRoutes);
 app.use('/api/v1/security-tools', securityToolRoutes);
-app.use('/api/v1/projects', findingsRoutes);
-app.use('/api/v1/projects', dastScanRoutes);
+app.use('/api/v1/projects/:projectId/findings', findingsRoutes);
+app.use('/api/v1/projects/:projectId/dast', dastScanRoutes);
+app.use('/api/v1/projects/:projectId/sast', sastScanRoutes);
 app.use('/api/v1/vulnerabilities', vulnerabilitiesRoutes);
+app.use('/api/v1/internal', internalRoutes);
+app.use('/api/v1/admin', adminRoutes);
 
 app.listen(port, () => {
   console.log(`API server listening on port ${port}`);

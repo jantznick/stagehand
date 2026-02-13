@@ -70,7 +70,7 @@ POST /api/projects/{projectId}/dast/scan
 ```
 
 #### Permissions Required
-- Project membership with `ADMIN` or `EDITOR` role
+- Requires `'project:update'` permission.
 
 #### Error Responses
 
@@ -137,7 +137,7 @@ GET /api/projects/{projectId}/dast/scans
 ```
 
 #### Permissions Required
-- Project membership (any role)
+- Requires `'project:read'` permission.
 
 ---
 
@@ -177,19 +177,8 @@ GET /api/projects/{projectId}/dast/scans/{scanId}
 }
 ```
 
-#### Status Values
-
-| Status | Description |
-|--------|-------------|
-| `PENDING` | Scan queued, waiting to start |
-| `QUEUED` | Scan queued in scanner |
-| `RUNNING` | Scan actively running |
-| `COMPLETED` | Scan finished successfully |
-| `FAILED` | Scan failed with error |
-| `CANCELLED` | Scan was cancelled |
-
 #### Permissions Required
-- Project membership (any role)
+- Requires `'project:read'` permission.
 
 ---
 
@@ -270,7 +259,7 @@ GET /api/projects/{projectId}/dast/scans/{scanId}/details
 ```
 
 #### Permissions Required
-- Project membership (any role)
+- Requires `'project:read'` permission.
 
 ---
 
@@ -296,15 +285,8 @@ DELETE /api/projects/{projectId}/dast/scans/{scanId}
 }
 ```
 
-#### Error Responses
-
-| Status | Code | Description |
-|--------|------|-------------|
-| 400 | `SCAN_NOT_CANCELLABLE` | Scan is not in a cancellable state |
-| 404 | `SCAN_NOT_FOUND` | Scan ID does not exist |
-
 #### Permissions Required
-- Project membership with `ADMIN` or `EDITOR` role
+- Requires `'project:update'` permission.
 
 ---
 
@@ -430,10 +412,10 @@ DAST scan results automatically create entries in the Findings API:
 
 ### With Permissions System
 
-DAST scanning integrates with the existing permissions system:
-- `ADMIN` and `EDITOR` roles can launch and cancel scans
-- All project members can view scan results
-- Permissions are inherited from project membership
+DAST scanning integrates with the new permissions system:
+- The `'project:update'` permission is required to launch and cancel scans.
+- The `'project:read'` permission is required to view scan results.
+- Permissions are inherited from parent resources (Team, Company, etc.).
 
 ### Real-time Updates
 

@@ -8300,6 +8300,166 @@
           }
         }
       }
+    },
+    "/projects/{projectId}/sast/scans": {
+      "post": {
+        "summary": "Launch a SAST scan",
+        "description": "Launches a new SAST scan for the specified project. The project must have a repository URL linked.",
+        "tags": [
+          "SAST Scans"
+        ],
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "projectId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "The ID of the project to scan."
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "SAST scan successfully queued.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "SAST scan successfully queued."
+                    },
+                    "scanExecutionId": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Access denied."
+          },
+          "404": {
+            "description": "Project not found or repository URL is not configured."
+          },
+          "500": {
+            "description": "An unexpected error occurred."
+          }
+        }
+      },
+      "get": {
+        "summary": "Get SAST scan history",
+        "description": "Retrieves a list of all SAST scan executions for a project.",
+        "tags": [
+          "SAST Scans"
+        ],
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "projectId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "The ID of the project."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A list of SAST scan executions.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ScanExecution"
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Access denied."
+          }
+        }
+      }
+    },
+    "/internal/scans/{scanId}/report": {
+      "post": {
+        "summary": "Report scan results",
+        "description": "An internal endpoint for scanner services to report back their results upon completion. This endpoint is protected by a shared secret.",
+        "tags": [
+          "Internal"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "scanId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "The ID of the scan execution this report belongs to."
+          },
+          {
+            "in": "header",
+            "name": "X-Internal-Secret",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "The shared secret to authenticate the internal service."
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "provider": {
+                    "type": "string",
+                    "example": "Semgrep"
+                  },
+                  "results": {
+                    "type": "array",
+                    "items": {
+                      "type": "object"
+                    },
+                    "description": "An array of finding objects from the scanner."
+                  },
+                  "error": {
+                    "type": "string",
+                    "description": "An error message if the scan failed."
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Report received successfully."
+          },
+          "403": {
+            "description": "Forbidden. The internal secret was invalid or missing."
+          }
+        }
+      }
     }
   },
   "security": [

@@ -31,7 +31,7 @@ The core of this file is the secure flow for installing the GitHub App:
 
 Initiates the GitHub App installation flow by generating a unique installation URL.
 
-*   **Permissions:** Requires `ADMIN` or `EDITOR` role on the target resource.
+*   **Permissions:** Requires `'integration:create'` permission on the target resource.
 *   **Body (`application/json`):**
     *   `resourceType` (string, required): The type of resource to associate the integration with (`'organization'`, `'company'`).
     *   `resourceId` (string, required): The ID of the resource.
@@ -54,7 +54,7 @@ The callback endpoint that GitHub redirects to after a user installs the app. Th
 
 Retrieves all SCM integrations configured for a specific resource.
 
-*   **Permissions:** Requires `READER`, `EDITOR`, or `ADMIN` role on the target resource.
+*   **Permissions:** Requires `'integration:read'` permission on the target resource.
 *   **Query Params:**
     *   `resourceType` (string, required): The type of resource.
     *   `resourceId` (string, required): The ID of the resource.
@@ -66,7 +66,7 @@ Retrieves all SCM integrations configured for a specific resource.
 
 Fetches a list of repositories that a specific SCM integration has access to.
 
-*   **Permissions:** Requires the user to be the one who created the integration.
+*   **Permissions:** Requires `'integration:read'` permission on the resource the integration is attached to.
 *   **Success Response (`200`):** An array of repository objects from the GitHub API.
 *   **Behavior:** Decrypts the integration's access token and uses it to call the GitHub API (`/installation/repositories`) to get the list of repositories the app has been granted access to.
 
@@ -76,7 +76,7 @@ Fetches a list of repositories that a specific SCM integration has access to.
 
 Deletes an SCM integration.
 
-*   **Permissions:** Requires the user to be the creator of the integration or an `ADMIN` of the resource it's attached to.
+*   **Permissions:** Requires `'integration:delete'` permission on the resource the integration is attached to.
 *   **Success Response (`204`):** No content.
 *   **Behavior:** This endpoint uses a database transaction to safely perform two actions:
     1.  It finds all projects currently linked to this integration and unlinks them (sets their `scmIntegrationId` to `null`).

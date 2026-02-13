@@ -3,7 +3,7 @@
 import express from 'express';
 import { PrismaClient } from '@prisma/client';
 import { protect } from '../middleware/authMiddleware.js';
-import { hasPermission } from '../utils/permissions.js';
+import { checkPermission } from '../utils/permissions.js';
 
 const router = express.Router();
 const prisma = new PrismaClient();
@@ -20,7 +20,7 @@ const canEditCompanyResources = async (req, res, next) => {
         return res.status(400).json({ error: 'Company ID is required.' });
     }
 
-    const hasEditPermission = await hasPermission(user, ['ADMIN', 'EDITOR'], 'company', companyId);
+    const hasEditPermission = await checkPermission(user, 'project:update', 'company', companyId);
     if (!hasEditPermission) {
         return res.status(403).json({ error: 'You do not have permission to edit resources in this company.' });
     }

@@ -3,7 +3,7 @@
 import { Router } from 'express';
 import { PrismaClient } from '@prisma/client';
 import { protect } from '../middleware/authMiddleware.js';
-import { hasPermission } from '../utils/permissions.js';
+import { hasPermission, checkPermission } from '../utils/permissions.js';
 import { lookupVulnerability, validateVulnerabilityId } from '../utils/vulnerabilityLookup.js';
 import { API_ERROR_MESSAGES } from '../config/vulnerability-apis.js';
 
@@ -18,7 +18,7 @@ router.get('/:projectId/findings', protect, async (req, res) => {
 
   try {
     // Verify the user has at least READER permission on the project or its parents.
-    const canView = await hasPermission(req.user, ['ADMIN', 'EDITOR', 'READER'], 'project', projectId);
+    const canView = await checkPermission(req.user, 'project:read', 'project', projectId);
 
     if (!canView) {
       return res.status(403).json({ error: 'Access denied. You do not have permission to view findings for this project.' });

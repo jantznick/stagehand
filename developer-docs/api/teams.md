@@ -21,7 +21,7 @@ Manages teams, which are groups of users within a company that typically own pro
 
 Retrieves a list of all teams the current user has access to.
 
-*   **Permissions:** Implicitly handled by the `getVisibleResourceIds` helper function.
+*   **Permissions:** Implicitly handled. The endpoint returns all teams the user has read access to.
 *   **Success Response (`200`):** An array of team objects.
 *   **Behavior:** Uses the `getVisibleResourceIds` helper to find all teams the user is a member of (either directly or through parent company/organization membership) and returns them.
 
@@ -31,7 +31,7 @@ Retrieves a list of all teams the current user has access to.
 
 Retrieves a single team by its ID, including a list of its associated projects.
 
-*   **Permissions:** Requires `READER`, `EDITOR`, or `ADMIN` role on the team.
+*   **Permissions:** Requires `'team:read'` permission on the team.
 *   **Success Response (`200`):** The team object, with a `projects` array included.
 *   **Behavior:** Fetches the team's details and populates the `projects` field with all projects that belong to this team.
 
@@ -41,7 +41,7 @@ Retrieves a single team by its ID, including a list of its associated projects.
 
 Creates a new team within a company.
 
-*   **Permissions:** Requires `ADMIN` or `EDITOR` role on the parent `companyId`, **or** `ADMIN` role on the company's parent organization. This allows org-level admins to manage teams throughout their organization.
+*   **Permissions:** Requires `'team:create'` permission on the parent `companyId`.
 *   **Body (`application/json`):**
     *   `name` (string, required): The name of the new team.
     *   `description` (string, optional): A description for the team.
@@ -49,7 +49,7 @@ Creates a new team within a company.
 *   **Success Response (`201`):** The newly created team object.
 *   **Behavior:**
     1.  Creates the new team record.
-    2.  **Automatic Membership:** Automatically creates a `Membership` record that makes the user who created the team an `ADMIN` of that team. This ensures the team is immediately manageable by its creator.
+    2.  **Automatic Membership:** Automatically creates a `Membership` record that assigns the creator the default "Admin" role for the new team. This ensures the team is immediately manageable by its creator.
 
 ---
 
@@ -57,7 +57,7 @@ Creates a new team within a company.
 
 Updates a team's details.
 
-*   **Permissions:** Requires `ADMIN` role on the team.
+*   **Permissions:** Requires `'team:update'` permission on the team.
 *   **Body (`application/json`):**
     *   `name` (string, optional): The new name for the team.
     *   `description` (string, optional): The new description for the team.
@@ -69,6 +69,6 @@ Updates a team's details.
 
 Deletes a team.
 
-*   **Permissions:** Requires `ADMIN` role on the team.
+*   **Permissions:** Requires `'team:delete'` permission on the team.
 *   **Success Response (`204`):** No content.
 *   **Behavior:** Deletes the team record. This can fail if child resources (like projects) exist. 

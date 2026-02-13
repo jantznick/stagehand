@@ -13,10 +13,9 @@ Manages companies, which are the primary tenants within an organization. In an e
 
 **Middleware:** All routes in this file are protected by the `protect` middleware.
 
-## Permissions Helpers
+## Permissions Helper
 
-*   `hasPermission(user, requiredRoles, entityType, entityId)`: Checks if the user has the required role on a specific entity.
-*   `getVisibleResourceIds(user, entityType)`: A utility from `src/utils/permissions.js` that traverses the user's memberships to return an array of all IDs for a given `entityType` (e.g., 'company') that the user has at least `READER` access to. This is essential for building list views that respect user permissions.
+*   `checkPermission(user, permissionString, resourceType, resourceId)`: A utility from `src/utils/permissions.js` that dynamically checks if a user has the required permission on a specific resource. It handles permissions inherited from parent resources, as well as those granted to the user's teams.
 
 ---
 
@@ -26,7 +25,7 @@ Manages companies, which are the primary tenants within an organization. In an e
 
 Retrieves a list of all companies the current user has access to.
 
-*   **Permissions:** Implicitly handled by the helper function.
+*   **Permissions:** Implicitly handled. The endpoint returns all companies the user has read access to.
 *   **Success Response (`200`):** An array of company objects.
 *   **Behavior:** Uses the `getVisibleResourceIds` helper to find all companies the user is a member of (either directly or by being a member of the parent organization) and returns them.
 
@@ -36,7 +35,7 @@ Retrieves a list of all companies the current user has access to.
 
 Retrieves a single company by its ID.
 
-*   **Permissions:** Requires `READER`, `EDITOR`, or `ADMIN` role on the company.
+*   **Permissions:** Requires `'company:read'` permission on the company.
 *   **Success Response (`200`):** The full company object.
 
 ---
@@ -45,13 +44,15 @@ Retrieves a single company by its ID.
 
 Creates a new company within an organization.
 
-*   **Permissions:** Requires `ADMIN` role on the parent `organizationId`.
+*   **Permissions:** Requires `'company:create'` permission on the parent `organizationId`.
 *   **Body (`application/json`):**
     *   `name` (string, required): The name of the new company.
     *   `description` (string, optional): A description for the company.
     *   `organizationId` (string, required): The ID of the organization this company will belong to.
 *   **Success Response (`201`):** The newly created company object.
-*   **Behavior:** Creates the new company record linked to the specified organization.
+*   **Behavior:** 
+    1.  Creates the new company record linked to the specified organization.
+    2.  **Automatic Membership:** Automatically assigns the creator the "Admin" role for the new company.
 
 ---
 
@@ -59,10 +60,10 @@ Creates a new company within an organization.
 
 Updates a company's details.
 
-*   **Permissions:** Requires `ADMIN` role on the company.
+*   **Permissions:** Requires `'company:update'` permission on the company.
 *   **Body (`application/json`):**
     *   `name` (string, optional): The new name.
-    *   `description` (string, optional): The new description.
+    *   `description` (string, optional): The new description for the company.
 *   **Success Response (`200`):** The updated company object.
 *   **Behavior:** Updates the `name` and/or `description` for the specified company.
 
@@ -72,7 +73,7 @@ Updates a company's details.
 
 Deletes a company.
 
-*   **Permissions:** Requires `ADMIN` role on the company.
+*   **Permissions:** Requires `'company:delete'` permission on the company.
 *   **Success Response (`204`):** No content.
 *   **Behavior:** Deletes the company record. Note: This may fail if there are database constraints (e.g., existing teams or projects that belong to the company) that prevent deletion.
 
@@ -82,7 +83,7 @@ Deletes a company.
 
 These endpoints function identically to the organization-level auto-join routes but are scoped to a specific company, allowing for more granular control in multi-company setups.
 
-*   `GET /:id/domains`: Gets all auto-join domains for the company. (Requires membership in the hierarchy).
-*   `POST /:id/domains`: Adds a new auto-join domain for the company. (Requires Company `ADMIN` role).
-*   `POST /:id/domains/:domainMappingId/verify`: Verifies a domain for the company via DNS. (Requires Company `ADMIN` role).
-*   `DELETE /:id/domains/:domainMappingId`: Deletes a domain configuration for the company. (Requires Company `ADMIN` role). 
+*   `GET /:id/domains`: Gets all auto-join domains for the company. (Requires `'company:update'` permission).
+*   `POST /:id/domains`: Adds a new auto-join domain for the company. (Requires `'company:update'` permission).
+*   `POST /:id/domains/:domainMappingId/verify`: Verifies a domain for the company via DNS. (Requires `'company:update'` permission).
+*   `DELETE /:id/domains/:domainMappingId`: Deletes a domain configuration for the company. (Requires `'company:update'` permission). 

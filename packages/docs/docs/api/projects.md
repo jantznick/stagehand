@@ -21,7 +21,7 @@ Manages projects, which represent the actual software applications, services, or
 
 Retrieves a list of all projects the current user has access to.
 
-*   **Permissions:** Implicitly handled by `getVisibleResourceIds`.
+*   **Permissions:** Implicitly handled. The endpoint returns all projects the user has read access to.
 *   **Success Response (`200`):** An array of project objects.
 *   **Behavior:** Uses the `getVisibleResourceIds` helper to find and return all projects the user has visibility on.
 
@@ -31,7 +31,7 @@ Retrieves a list of all projects the current user has access to.
 
 Retrieves a single project by its ID with extensive, enriched details.
 
-*   **Permissions:** Requires `READER`, `EDITOR`, or `ADMIN` role on the project.
+*   **Permissions:** Requires `'project:read'` permission on the project.
 *   **Success Response (`200`):** A single, detailed project object.
 
 *   **Behavior:**
@@ -44,7 +44,7 @@ Retrieves a single project by its ID with extensive, enriched details.
 
 Creates a new project within a team.
 
-*   **Permissions:** Requires `ADMIN` or `EDITOR` role on the parent `teamId`.
+*   **Permissions:** Requires `'project:create'` permission on the parent `teamId`.
 *   **Body (`application/json`):**
     *   `name` (string, required): The name of the new project.
     *   `description` (string, optional): A description for the project.
@@ -58,7 +58,7 @@ Creates a new project within a team.
 
 Updates the core metadata for a project.
 
-*   **Permissions:** Requires `ADMIN` or `EDITOR` role on the project.
+*   **Permissions:** Requires `'project:update'` permission on the project.
 *   **Body (`application/json`):** Contains numerous optional fields for project metadata, including:
     *   `name`, `description`, `applicationUrl`, `repositoryUrl`, `ciCdPipelineUrl`, `deploymentStatus`, `version`, and more.
 *   **Success Response (`200`):** The updated project object.
@@ -69,7 +69,7 @@ Updates the core metadata for a project.
 
 Deletes a project.
 
-*   **Permissions:** Requires `ADMIN` role on the project.
+*   **Permissions:** Requires `'project:delete'` permission on the project.
 *   **Success Response (`204`):** No content.
 *   **Behavior:** Deletes the project record and its associated relations.
 
@@ -81,7 +81,7 @@ Deletes a project.
 
 Retrieves a list of all users in the parent organization who could potentially be added as contacts to the project. This is used to populate dropdowns in the UI.
 
-*   **Permissions:** Requires `READER`, `EDITOR`, or `ADMIN` role on the project.
+*   **Permissions:** Requires `'project:read'` permission on the project.
 *   **Success Response (`200`):** An array of user objects.
 *   **Behavior:** Fetches all users in the project's parent organization and filters out any who are already contacts on the project to prevent duplicates.
 
@@ -91,7 +91,7 @@ Retrieves a list of all users in the parent organization who could potentially b
 
 Adds a contact to a project.
 
-*   **Permissions:** Requires `ADMIN` or `EDITOR` role on the project.
+*   **Permissions:** Requires `'project:update'` permission on the project.
 *   **Body (`application/json`):**
     *   `contactId` (string, required): The ID of the generic `Contact` record to add.
     *   `contactType` (string, required): The role of this contact on the project (e.g., 'Technical Lead', 'Product Manager').
@@ -104,7 +104,7 @@ Adds a contact to a project.
 
 Updates a contact's role on a project.
 
-*   **Permissions:** Requires `ADMIN` or `EDITOR` role on the project.
+*   **Permissions:** Requires `'project:update'` permission on the project.
 *   **Body (`application/json`):**
     *   `contactType` (string, required): The new role for the contact.
 *   **Success Response (`200`):** The updated `ProjectContact` object.
@@ -116,7 +116,7 @@ Updates a contact's role on a project.
 
 Removes a contact from a project.
 
-*   **Permissions:** Requires `ADMIN` or `EDITOR` role on the project.
+*   **Permissions:** Requires `'project:update'` permission on the project.
 *   **Success Response (`204`):** No content.
 *   **Behavior:** Deletes the `ProjectContact` link record.
 
@@ -128,7 +128,7 @@ Removes a contact from a project.
 
 Links a technology (e.g., 'React', 'Node.js') to a project.
 
-*   **Permissions:** Requires `ADMIN` or `EDITOR` role on the project.
+*   **Permissions:** Requires `'project:update'` permission on the project.
 *   **Body (`application/json`):**
     *   `technologyId` (string, required): The ID of the technology to add.
     *   `version` (string, optional): The version of the technology being used.
@@ -141,7 +141,7 @@ Links a technology (e.g., 'React', 'Node.js') to a project.
 
 Removes a technology from a project.
 
-*   **Permissions:** Requires `ADMIN` or `EDITOR` role on the project.
+*   **Permissions:** Requires `'project:update'` permission on the project.
 *   **Success Response (`204`):** No content.
 *   **Behavior:** Deletes the `ProjectTechnology` link record.
 
@@ -153,7 +153,7 @@ Removes a technology from a project.
 
 Links a project to a specific security tool configuration that has been set up at the company level.
 
-*   **Permissions:** Requires `ADMIN` or `EDITOR` role on the project.
+*   **Permissions:** Requires `'project:update'` permission on the project.
 *   **Body (`application/json`):**
     *   `toolConfigurationId` (string, required): The ID of the `ToolConfiguration` to link.
     *   `projectMappings` (object, required): A JSON object that maps project identifiers needed by the external tool (e.g., `{ "repository": "owner/repo" }` for GitHub).
@@ -166,7 +166,7 @@ Links a project to a specific security tool configuration that has been set up a
 
 Triggers a manual synchronization of security findings from a linked external tool.
 
-*   **Permissions:** Requires `ADMIN` or `EDITOR` role on the project.
+*   **Permissions:** Requires `'project:update'` permission on the project.
 *   **Body (`application/json`):**
     *   `toolType` (string, required): The type of tool to sync from (e.g., `'GITHUB'`).
 *   **Success Response (`200`):** A summary object, e.g., `{ "message": "Sync completed", "newFindings": 5, "updatedFindings": 2 }`.

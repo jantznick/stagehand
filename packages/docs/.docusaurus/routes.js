@@ -39,15 +39,15 @@ export default [
   },
   {
     path: '/',
-    component: ComponentCreator('/', '0e4'),
+    component: ComponentCreator('/', 'aa4'),
     routes: [
       {
         path: '/',
-        component: ComponentCreator('/', 'b7e'),
+        component: ComponentCreator('/', '71c'),
         routes: [
           {
             path: '/',
-            component: ComponentCreator('/', '6f7'),
+            component: ComponentCreator('/', '859'),
             routes: [
               {
                 path: '/api-reference',
@@ -150,6 +150,11 @@ export default [
                 component: ComponentCreator('/backend-architecture', '800'),
                 exact: true,
                 sidebar: "docsSidebar"
+              },
+              {
+                path: '/bulk-finding-upload-feature',
+                component: ComponentCreator('/bulk-finding-upload-feature', 'd89'),
+                exact: true
               },
               {
                 path: '/dast-implementation-changelog',

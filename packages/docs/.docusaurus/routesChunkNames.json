@@ -42,17 +42,17 @@
       "plugin": "plugin---docusaurus-debugb-38-ad3"
     }
   },
-  "/-0e4": {
+  "/-aa4": {
     "__comp": "__comp---theme-docs-root-5-e-9-0b6",
     "__context": {
       "plugin": "plugin---aba-d70"
     }
   },
-  "/-b7e": {
+  "/-71c": {
     "__comp": "__comp---theme-doc-version-roota-7-b-5de",
     "__props": "__props---22-d-307"
   },
-  "/-6f7": {
+  "/-859": {
     "__comp": "__comp---theme-doc-roota-94-67a"
   },
   "/api-reference-0dd": {
@@ -122,6 +122,10 @@
   "/backend-architecture-800": {
     "__comp": "__comp---theme-doc-item-178-a40",
     "content": "content---backend-architecture-946-fbe"
+  },
+  "/bulk-finding-upload-feature-d89": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---bulk-finding-upload-feature-796-aa2"
   },
   "/dast-implementation-changelog-129": {
     "__comp": "__comp---theme-doc-item-178-a40",

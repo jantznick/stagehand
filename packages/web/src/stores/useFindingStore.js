@@ -1,8 +1,9 @@
 import { create } from 'zustand';
 import { immer } from 'zustand/middleware/immer';
+import toast from 'react-hot-toast';
 
 const useFindingStore = create(
-  immer((set) => ({
+  immer((set, get) => ({
     // Findings state
     findings: {}, // Store findings per project
     lastFetched: {}, // Store timestamps per project
@@ -11,14 +12,20 @@ const useFindingStore = create(
     isLoading: false,
     isSearching: false,
     isCreating: false,
+    isUploading: false,
 
     // Error states
     error: null,
     searchError: null,
     createError: null,
+    uploadError: null,
 
     // Search state
     searchResults: [],
+
+    // Bulk upload state
+    jobStatus: null,
+    jobErrorFile: null,
 
     fetchFindings: async (projectId) => {
       if (!projectId) return;
@@ -205,8 +212,95 @@ const useFindingStore = create(
         state.searchError = null;
         state.isSearching = false;
       });
-    }
-  }))
+    },
+
+    bulkUploadFindings: async (projectId, file) => {
+      if (!projectId || !file) return;
+
+      set({ isUploading: true, uploadError: null, jobStatus: 'UPLOADING', jobErrorFile: null });
+      toast.loading('Uploading file...', { id: 'bulk-upload' });
+
+      try {
+        const formData = new FormData();
+        formData.append('file', file);
+
+        const response = await fetch(`/api/v1/projects/${projectId}/findings/bulk-upload`, {
+          method: 'POST',
+          body: formData,
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error || 'Failed to start upload');
+        }
+
+        const result = await response.json();
+        const { jobId } = result;
+
+        toast.loading('Processing file...', { id: jobId });
+        toast.dismiss('bulk-upload');
+        set({ jobStatus: 'PROCESSING' });
+
+        const poll = async () => {
+          const job = await get().getBulkUploadJobStatus(jobId);
+          if (job) {
+            if (['COMPLETED', 'COMPLETED_WITH_ERRORS', 'FAILED'].includes(job.status)) {
+              set({ isUploading: false, jobStatus: job.status, jobErrorFile: job.result?.errorFile || null });
+              switch (job.status) {
+                case 'COMPLETED':
+                  toast.success('Bulk upload completed successfully.', { id: jobId });
+                  get().refreshFindings(projectId);
+                  break;
+                case 'COMPLETED_WITH_ERRORS':
+                  toast.error('Bulk upload completed with errors.', { id: jobId, duration: 5000 });
+                  get().refreshFindings(projectId);
+                  break;
+                case 'FAILED':
+                  toast.error(`Bulk upload failed: ${job.result?.message || 'Unknown error'}`, { id: jobId, duration: 5000 });
+                  break;
+              }
+            } else {
+              setTimeout(poll, 3000);
+            }
+          } else {
+            toast.error('Could not retrieve upload status.', { id: jobId });
+            set({ isUploading: false, uploadError: 'Could not retrieve upload status.' });
+          }
+        };
+        setTimeout(poll, 3000);
+        return result;
+      } catch (error) {
+        toast.error(error.message, { id: 'bulk-upload' });
+        set({ uploadError: error.message, isUploading: false, jobStatus: 'FAILED' });
+        return null;
+      }
+    },
+
+    getBulkUploadJobStatus: async (jobId) => {
+      if (!jobId) return null;
+
+      try {
+        const response = await fetch(`/api/v1/projects/findings/bulk-upload/${jobId}`);
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error || 'Failed to get job status');
+        }
+
+        const job = await response.json();
+        return job;
+      } catch (error) {
+        console.error('Error getting job status:', error);
+        return null;
+      }
+    },
+
+    refreshFindings: async (projectId) => {
+      // This is just an alias for fetchFindings to be used for explicit refreshes.
+      const { fetchFindings } = useFindingStore.getState();
+      await fetchFindings(projectId);
+    },
+  })),
 );
 
-export default useFindingStore; 
+export default useFindingStore;

@@ -66,6 +66,24 @@ services:
     depends_on:
       - api
 
+  worker:
+    build:
+      context: .
+      dockerfile: packages/api/Dockerfile.dev
+    working_dir: /app
+    command: npm run start:worker --workspace=api
+    container_name: stagehand-worker
+    volumes:
+      - .:/app
+      - /app/node_modules
+      - uploads-data:/app/packages/api/uploads
+    env_file: ".env"
+    depends_on:
+      database:
+        condition: service_healthy
+    environment:
+      - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@database:5432/${POSTGRES_DB}?schema=public
+
   # zap:
   #   image: softwaresecurityproject/zap-stable:latest
   #   container_name: stagehand-zap
@@ -87,6 +105,7 @@ services:
   #         memory: 1g
 
 volumes:
-  stagehand-db-data: 
+  stagehand-db-data:
+  uploads-data:
   # zap-data:
   # zap-sessions:
